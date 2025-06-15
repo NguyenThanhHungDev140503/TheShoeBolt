@@ -1,16 +1,19 @@
 # NestJS Backend System
 
-A robust, production-ready backend system built with NestJS, featuring PostgreSQL, Redis, RabbitMQ, Stripe payments, and Resend email services.
+A robust, production-ready backend system built with NestJS, featuring PostgreSQL, Redis, RabbitMQ, Stripe payments, Resend email services, MongoDB for chat storage, and Elasticsearch for powerful search capabilities.
 
 ## 🚀 Features
 
 - **NestJS Framework**: Modern Node.js framework with TypeScript support
 - **PostgreSQL Database**: Reliable relational database with TypeORM
+- **MongoDB**: NoSQL database for chat message storage
+- **Elasticsearch**: Powerful search engine for chat history and user search
 - **Redis Caching**: High-performance caching for improved response times
 - **RabbitMQ Messaging**: Asynchronous message queuing system
 - **Stripe Integration**: Secure payment processing
 - **Resend Email Service**: Modern email delivery platform
 - **JWT Authentication**: Secure user authentication and authorization
+- **WebSockets**: Real-time chat functionality with Socket.IO
 - **API Documentation**: Comprehensive Swagger/OpenAPI documentation
 - **Error Handling**: Global exception filters and logging
 - **Request Validation**: DTO validation with class-validator
@@ -25,6 +28,8 @@ A robust, production-ready backend system built with NestJS, featuring PostgreSQ
 - PostgreSQL
 - Redis
 - RabbitMQ
+- MongoDB
+- Elasticsearch
 
 ## 🛠️ Installation
 
@@ -44,41 +49,7 @@ A robust, production-ready backend system built with NestJS, featuring PostgreSQ
    cp .env.example .env
    ```
    
-   Update the `.env` file with your configuration:
-   ```env
-   # Database Configuration
-   DB_HOST=localhost
-   DB_PORT=5432
-   DB_USERNAME=postgres
-   DB_PASSWORD=password
-   DB_NAME=nestjs_backend
-
-   # Redis Configuration
-   REDIS_HOST=localhost
-   REDIS_PORT=6379
-   REDIS_PASSWORD=
-   REDIS_DB=0
-
-   # RabbitMQ Configuration
-   RABBITMQ_URL=amqp://localhost:5672
-
-   # JWT Configuration
-   JWT_SECRET=your-super-secret-jwt-key
-
-   # Stripe Configuration
-   STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
-   STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
-
-   # Resend Configuration
-   RESEND_API_KEY=re_your_resend_api_key
-   RESEND_FROM_EMAIL=noreply@yourdomain.com
-
-   # Application Configuration
-   NODE_ENV=development
-   PORT=3000
-   CORS_ORIGIN=http://localhost:3000
-   FRONTEND_URL=http://localhost:3000
-   ```
+   Update the `.env` file with your configuration.
 
 ## 🐳 Docker Development
 
@@ -170,7 +141,10 @@ src/
 │   ├── payments/         # Stripe payment integration
 │   ├── emails/           # Resend email service
 │   ├── queues/           # RabbitMQ message queues
-│   └── health/           # Health check endpoints
+│   ├── health/           # Health check endpoints
+│   ├── chat/             # Real-time chat functionality
+│   ├── elasticsearch/    # Elasticsearch integration
+│   └── admin/            # Admin dashboard APIs
 ├── app.module.ts         # Root application module
 └── main.ts              # Application entry point
 ```
@@ -182,6 +156,35 @@ The system uses JWT-based authentication:
 1. **Register**: `POST /api/v1/auth/register`
 2. **Login**: `POST /api/v1/auth/login`
 3. **Protected Routes**: Include `Authorization: Bearer <token>` header
+
+## 💬 Chat System
+
+The chat system provides real-time communication capabilities:
+
+1. **Create Room**: `POST /api/v1/chat/rooms`
+2. **Get User Rooms**: `GET /api/v1/chat/rooms`
+3. **Get Room Messages**: `GET /api/v1/chat/rooms/:roomId/messages`
+4. **Send Message**: `POST /api/v1/chat/messages`
+5. **Mark as Read**: `POST /api/v1/chat/rooms/:roomId/read`
+6. **Search Messages**: `POST /api/v1/chat/search`
+
+WebSocket events:
+- `connection`: Connect to the WebSocket server
+- `joinRoom`: Join a chat room
+- `leaveRoom`: Leave a chat room
+- `sendMessage`: Send a message to a room
+- `typing`: Indicate user is typing
+- `newMessage`: Receive new messages
+- `userTyping`: Receive typing notifications
+- `userStatus`: User online/offline status updates
+
+## 🔍 Elasticsearch Integration
+
+The system uses Elasticsearch for powerful search capabilities:
+
+1. **Search Chat Messages**: `POST /api/v1/chat/search`
+2. **Admin Search**: `POST /api/v1/admin/chat/search`
+3. **User Search**: `GET /api/v1/admin/users/search`
 
 ## 💳 Payments
 
@@ -256,6 +259,12 @@ For support and questions:
 - Review the test files for usage examples
 
 ## 📝 Changelog
+
+### v1.1.0
+- Added real-time chat functionality with WebSockets
+- Integrated MongoDB for chat message storage
+- Added Elasticsearch for powerful search capabilities
+- Created admin dashboard APIs for chat monitoring
 
 ### v1.0.0
 - Initial release with full feature set

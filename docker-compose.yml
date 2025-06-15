@@ -14,6 +14,8 @@ services:
       - postgres
       - redis
       - rabbitmq
+      - elasticsearch
+      - mongodb
     networks:
       - nestjs-network
 
@@ -55,10 +57,35 @@ services:
     networks:
       - nestjs-network
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.4
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - nestjs-network
+
+  mongodb:
+    image: mongo:6-jammy
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - nestjs-network
+
 volumes:
   postgres_data:
   redis_data:
   rabbitmq_data:
+  elasticsearch_data:
+  mongodb_data:
 
 networks:
   nestjs-network:

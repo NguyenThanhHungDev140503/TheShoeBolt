@@ -4,12 +4,14 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ElasticsearchService } from '../elasticsearch/elasticsearch.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private readonly elasticsearchService: ElasticsearchService,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -22,7 +24,17 @@ export class UsersService {
     }
 
     const user = this.usersRepository.create(createUserDto);
-    return this.usersRepository.save(user);
+    const savedUser = await this.usersRepository.save(user);
+    
+    // Index the user in Elasticsearch
+    try {
+      await this.elasticsearchService.indexUser(savedUser);
+    } catch (error) {
+      // Log the error but don't fail the user creation
+      console.error(`Failed to index user in Elasticsearch: ${error.message}`);
+    }
+    
+    return savedUser;
   }
 
   async findAll(): Promise<User[]> {
@@ -61,11 +73,32 @@ export class UsersService {
     }
 
     await this.usersRepository.update(id, updateUserDto);
-    return this.findOne(id);
+    const updatedUser = await this.findOne(id);
+    
+    // Update the user in Elasticsearch
+    try {
+      await this.elasticsearchService.indexUser(updatedUser);
+    } catch (error) {
+      // Log the error but don't fail the user update
+      console.error(`Failed to update user in Elasticsearch: ${error.message}`);
+    }
+    
+    return updatedUser;
   }
 
   async remove(id: string): Promise<void> {
     const user = await this.findOne(id);
     await this.usersRepository.remove(user);
+    
+    // Delete the user from Elasticsearch
+    try {
+      await this.elasticsearchService.client.delete({
+        index: `${this.elasticsearchService.indexPrefix}users`,
+        id,
+      });
+    } catch (error) {
+      // Log the error but don't fail the user deletion
+      console.error(`Failed to delete user from Elasticsearch: ${error.message}`);
+    }
   }
 }

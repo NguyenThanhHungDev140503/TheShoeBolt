@@ -14,18 +14,22 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { EmailsModule } from './modules/emails/emails.module';
 import { QueuesModule } from './modules/queues/queues.module';
 import { HealthModule } from './modules/health/health.module';
+import { ElasticsearchModule } from './modules/elasticsearch/elasticsearch.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { databaseConfig } from './config/database.config';
 import { redisConfig } from './config/redis.config';
+import { elasticsearchConfig } from './config/elasticsearch.config';
+import { mongodbConfig } from './config/mongodb.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
-      load: [databaseConfig, redisConfig],
+      load: [databaseConfig, redisConfig, elasticsearchConfig, mongodbConfig],
     }),
     
     WinstonModule.forRoot({
@@ -80,6 +84,8 @@ import { redisConfig } from './config/redis.config';
     EmailsModule,
     QueuesModule,
     HealthModule,
+    ElasticsearchModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

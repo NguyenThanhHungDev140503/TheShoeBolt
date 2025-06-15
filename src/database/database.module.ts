@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { DataSource } from 'typeorm';
+import { MongooseModule } from '@nestjs/mongoose';
 import { User } from '../modules/users/entities/user.entity';
 import { Payment } from '../modules/payments/entities/payment.entity';
 
@@ -21,6 +21,13 @@ import { Payment } from '../modules/payments/entities/payment.entity';
         logging: configService.get('NODE_ENV') === 'development',
         migrations: ['dist/database/migrations/*.js'],
         migrationsRun: true,
+      }),
+      inject: [ConfigService],
+    }),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get('mongodb.uri'),
       }),
       inject: [ConfigService],
     }),
