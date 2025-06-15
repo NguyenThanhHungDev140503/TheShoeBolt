@@ -1,0 +1,234 @@
+# TheShoeBolt Project Intelligence (.clinerules)
+
+## Project Context
+TheShoeBolt là nền tảng e-commerce chuyên về giày dép, sử dụng NestJS với kiến trúc multi-database. Dự án đã có foundation tốt nhưng thiếu core business logic modules như Products, Shopping Cart và Orders.
+
+## Core Patterns & Conventions
+
+### Module Structure Pattern
+```typescript
+// Mỗi module tuân theo pattern:
+@Module({
+  imports: [DatabaseModule, SharedModule],
+  controllers: [FeatureController],
+  providers: [FeatureService],
+  exports: [FeatureService]
+})
+export class FeatureModule {}
+```
+
+### Database Strategy
+- **PostgreSQL**: Core business data (users, products, orders, payments)
+- **MongoDB**: Flexible data (chat messages, logs, user-generated content)
+- **Redis**: Caching, sessions, real-time data
+- **Elasticsearch**: Search indexing, analytics
+
+### Authentication & Authorization Pattern
+```typescript
+// Endpoint protection pattern
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin', 'user')
+@Controller('resource')
+export class ResourceController {}
+```
+
+### DTO Validation Pattern
+```typescript
+export class CreateResourceDto {
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+  
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+}
+```
+
+## Critical Missing Components
+
+### 1. Product Catalog System (Priority: Critical)
+- Product entity với variants (size, color, material)
+- Product images management
+- Categories và tags system
+- Inventory tracking per variant
+- Price management với discounts
+
+### 2. Shopping Cart & Orders (Priority: Critical)
+- Redis-based cart persistence
+- Order creation và status workflow
+- Inventory reservation system
+- Shipping integration
+
+### 3. File Upload System (Priority: High)
+- Image upload cho products
+- File validation và processing
+- Storage integration (AWS S3/CloudFlare)
+
+## Development Workflow Preferences
+
+### Code Organization
+- Place new modules trong `src/modules/`
+- Follow existing naming conventions: `feature.controller.ts`, `feature.service.ts`, `feature.module.ts`
+- Create DTOs trong `dto/` subfolder
+- Entities trong `entities/` subfolder
+- Schemas (MongoDB) trong `schemas/` subfolder
+
+### Database Patterns
+- Use TypeORM cho PostgreSQL entities
+- Use Mongoose cho MongoDB schemas
+- Always create proper relationships và indexes
+- Follow existing configuration patterns trong `src/config/`
+
+### Error Handling
+- Use custom exceptions extending HttpException
+- Leverage global exception filter
+- Provide meaningful error messages
+- Log errors appropriately
+
+### Validation Strategy
+- Use class-validator decorators trong DTOs
+- Implement business logic validation trong services
+- Use ValidationPipe globally
+- Transform và sanitize inputs
+
+## Technical Debt Priorities
+
+### High Priority
+1. Implement missing core modules (Products, Cart, Orders)
+2. Add comprehensive error handling cho business logic
+3. Implement proper logging strategy
+4. Add API rate limiting và security headers
+
+### Medium Priority
+1. Add comprehensive test suite
+2. Optimize database queries và add indexes
+3. Implement caching strategy with Redis
+4. Add API documentation với Swagger
+
+### Low Priority
+1. Performance monitoring setup
+2. Advanced analytics implementation
+3. Mobile API optimizations
+4. Third-party integrations
+
+## External Dependencies
+
+### Payment Gateways
+- Primary: Stripe (recommended for international)
+- Secondary: PayPal, local payment methods
+- Implementation: Strategy pattern for multiple providers
+
+### Email Services
+- Recommendation: SendGrid hoặc AWS SES
+- Features needed: Templates, tracking, bulk sending
+- Integration: Queue-based processing
+
+### File Storage
+- Recommendation: AWS S3 hoặc CloudFlare R2
+- Features: Image optimization, CDN delivery
+- Security: Signed URLs, access control
+
+## Performance Considerations
+
+### Database Optimization
+- Add indexes cho frequently queried fields
+- Use connection pooling (already configured)
+- Implement query result caching
+- Monitor slow queries
+
+### API Performance
+- Implement response caching with Redis
+- Use pagination cho large datasets
+- Optimize N+1 query problems
+- Add API response compression
+
+### Real-time Features
+- WebSocket connection management
+- Message queue để handle high volume
+- Rate limiting cho chat messages
+- Graceful degradation strategies
+
+## Security Patterns
+
+### Authentication Security
+- JWT token expiration management
+- Refresh token rotation
+- Rate limiting cho login attempts
+- Password complexity requirements
+
+### Data Protection
+- Input sanitization và validation
+- SQL injection prevention (TypeORM helps)
+- XSS protection headers
+- CSRF protection for sensitive operations
+
+### API Security
+- Request rate limiting
+- API key management for external integrations
+- CORS configuration
+- Security headers middleware
+
+## Deployment Patterns
+
+### Environment Management
+- Use Docker containers (already configured)
+- Environment-specific configurations
+- Secret management (avoid hardcoded secrets)
+- Health check endpoints (already implemented)
+
+### Database Management
+- Migration strategy with TypeORM
+- Database seeding for development
+- Backup và recovery procedures
+- Connection monitoring
+
+## Code Quality Standards
+
+### TypeScript Patterns
+- Use strict type checking
+- Implement proper interfaces
+- Use generics appropriately
+- Avoid any types
+
+### Testing Strategy
+- Unit tests cho services
+- Integration tests cho controllers
+- E2E tests cho critical user flows
+- Mock external dependencies
+
+### Documentation Requirements
+- API documentation với Swagger decorators
+- README với setup instructions  
+- Architecture decision records
+- Code comments cho complex business logic
+
+## User Experience Priorities
+
+### Customer Experience
+- Fast product search và filtering
+- Real-time inventory updates
+- Seamless checkout process
+- Order tracking capabilities
+
+### Admin Experience
+- Comprehensive dashboard
+- Bulk operations support
+- Analytics và reporting
+- Easy product management
+
+## Business Logic Patterns
+
+### E-commerce Workflows
+- Product discovery → Cart → Checkout → Payment → Fulfillment
+- Inventory management với reservation system
+- Order status tracking với notifications
+- Returns và refunds handling
+
+### Data Consistency
+- Use database transactions cho multi-step operations
+- Implement eventual consistency where appropriate
+- Handle race conditions trong inventory management
+- Audit trail cho important business events
+
+Các patterns và decisions này được thiết lập để đảm bảo dự án phát triển consistent, maintainable và scalable theo business requirements của e-commerce platform.

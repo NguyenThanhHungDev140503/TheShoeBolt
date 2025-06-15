@@ -1,45 +1,71 @@
-# Project Brief - NestJS Backend System
+# TheShoeBolt Project Brief
 
-## Tổng quan Dự án
-Hệ thống backend mạnh mẽ được xây dựng với NestJS, tích hợp đầy đủ các dịch vụ cần thiết cho một ứng dụng production-ready.
+## Mục Tiêu Dự Án
 
-## Mục tiêu Chính
-- Xây dựng API backend có khả năng mở rộng cao
-- Tích hợp đầy đủ các dịch vụ: Database, Cache, Message Queue, Payment, Email
-- Đảm bảo bảo mật và hiệu suất cao
-- Cung cấp documentation đầy đủ với Swagger
+TheShoeBolt là một nền tảng thương mại điện tử chuyên về giày dép, được xây dựng với NestJS framework. Dự án nhằm tạo ra một hệ thống bán hàng trực tuyến hoàn chỉnh với các tính năng hiện đại và khả năng mở rộng cao.
 
-## Phạm vi Dự án
+## Tầm Nhìn
+
+Trở thành một platform e-commerce giày dép hàng đầu với:
+- Trải nghiệm người dùng mượt mà
+- Hệ thống quản lý đơn hàng hiệu quả
+- Tích hợp thanh toán đa dạng
+- Khả năng tìm kiếm thông minh
+- Hỗ trợ khách hàng real-time
+
+## Phạm Vi Dự Án
+
 ### Core Features
-- Authentication & Authorization (JWT)
-- User Management
-- Payment Processing (Stripe)
-- Email Service (Resend)
-- Message Queue (RabbitMQ)
-- Caching (Redis)
-- Health Monitoring
+- **Quản lý sản phẩm**: Catalog giày với thông tin chi tiết, hình ảnh, size, màu sắc
+- **Hệ thống người dùng**: Đăng ký, đăng nhập, profile, lịch sử mua hàng
+- **Giỏ hàng & thanh toán**: Shopping cart, multiple payment methods
+- **Quản trị viên**: Admin dashboard cho quản lý toàn diện
+- **Tìm kiếm**: Elasticsearch integration cho search experience tốt
+- **Chat support**: Real-time customer support
+- **Email service**: Notifications, marketing campaigns
+- **Queue system**: Background job processing
 
-### Technical Stack
-- **Framework**: NestJS với TypeScript
-- **Database**: PostgreSQL với TypeORM
-- **Cache**: Redis
-- **Message Queue**: RabbitMQ
-- **Payment**: Stripe
-- **Email**: Resend
-- **Documentation**: Swagger/OpenAPI
-- **Containerization**: Docker & Docker Compose
+### Technical Scope
+- **Backend**: NestJS với TypeScript
+- **Database**: Multi-database (PostgreSQL, MongoDB, Redis, Elasticsearch)
+- **Authentication**: JWT-based với role-based access control
+- **Real-time**: WebSocket cho chat và notifications
+- **Infrastructure**: Docker containerization
+- **Monitoring**: Health checks và logging
 
-## Yêu cầu Phi chức năng
-- Khả năng chịu tải cao
-- Bảo mật mạnh mẽ
-- Logging và monitoring đầy đủ
-- Error handling toàn diện
-- API documentation chi tiết
+## Người Dùng Mục Tiêu
 
-## Deliverables
-- Backend API hoàn chỉnh
-- Docker configuration
-- Database migrations
-- API documentation
-- Testing suite
-- Production deployment guide
+1. **Khách hàng cuối**: Người mua giày trực tuyến
+2. **Admin**: Quản lý cửa hàng, sản phẩm, đơn hàng
+3. **Support staff**: Hỗ trợ khách hàng qua chat
+4. **Nhà phát triển**: Maintain và extend hệ thống
+
+## Tiêu Chí Thành Công
+
+- Platform ổn định với uptime > 99%
+- Response time < 200ms cho các API chính
+- Hỗ trợ concurrent users cao
+- User experience rating cao
+- Conversion rate tối ưu
+- Admin efficiency cải thiện đáng kể
+
+## Ràng Buộc & Giả Định
+
+### Technical Constraints
+- Sử dụng NestJS framework
+- TypeScript là ngôn ngữ chính
+- Docker cho deployment
+- Multi-database architecture
+
+### Business Constraints
+- Focus vào thị trường giày dép
+- B2C model chính
+- Online-first approach
+
+## Timeline & Milestones
+
+Dự án được phát triển theo các phase:
+1. **MVP Phase**: Core e-commerce functionality
+2. **Enhancement Phase**: Advanced features (search, chat, analytics)
+3. **Scale Phase**: Performance optimization, advanced admin features
+4. **Growth Phase**: Marketing tools, mobile app, API ecosystem
