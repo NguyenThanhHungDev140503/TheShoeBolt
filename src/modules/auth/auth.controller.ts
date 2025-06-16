@@ -1,12 +1,9 @@
-import { Controller, Post, Get, Body, UseGuards, Request, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { Controller, Get, Post, UseGuards, Request, Body } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './guards/local-auth.guard';
 import { ClerkAuthGuard } from './guards/clerk-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
-import { CreateUserDto } from '../users/dto/create-user.dto';
-import { LoginDto } from './dto/login.dto';
 import { UserRole } from '../users/entities/user.entity';
 
 @ApiTags('Authentication')
@@ -14,35 +11,40 @@ import { UserRole } from '../users/entities/user.entity';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('register')
-  @ApiOperation({ summary: 'Register a new user' })
-  @ApiBody({ type: CreateUserDto })
-  @ApiResponse({ status: 201, description: 'User successfully registered' })
-  @ApiResponse({ status: 409, description: 'User already exists' })
-  async register(@Body() createUserDto: CreateUserDto) {
-    return this.authService.register(createUserDto);
-  }
-
-  @UseGuards(LocalAuthGuard)
-  @Post('login')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Login user' })
-  @ApiBody({ type: LoginDto })
-  @ApiResponse({ status: 200, description: 'User successfully logged in' })
-  @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  @UseGuards(ClerkAuthGuard)
+  @Post('sync-user')
+  @ApiOperation({ summary: 'Sync authenticated Clerk user to local database' })
+  @ApiResponse({ status: 200, description: 'User synced successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiBearerAuth()
+  async syncUser(@Request() req) {
+    const localUser = await this.authService.syncUserFromClerk(req.user);
+    return {
+      message: 'User synced successfully',
+      user: {
+        id: localUser.id,
+        email: localUser.email,
+        firstName: localUser.firstName,
+        lastName: localUser.lastName,
+        role: localUser.role,
+      },
+    };
   }
 
   @UseGuards(ClerkAuthGuard)
   @Get('profile')
-  @ApiOperation({ summary: 'Get user profile (Clerk authenticated)' })
+  @ApiOperation({ summary: 'Get user profile' })
   @ApiResponse({ status: 200, description: 'User profile retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiBearerAuth()
   async getProfile(@Request() req) {
+    const localUser = await this.authService.getUserProfile(req.user.id);
     return {
       message: 'Profile retrieved successfully',
-      user: req.user,
+      user: {
+        ...req.user, // Clerk user data
+        localData: localUser, // Local database data
+      },
       session: {
         id: req.session?.id,
         status: req.session?.status,
@@ -53,10 +55,11 @@ export class AuthController {
   @UseGuards(ClerkAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Get('admin-only')
-  @ApiOperation({ summary: 'Admin only endpoint (Clerk authenticated)' })
+  @ApiOperation({ summary: 'Admin only endpoint' })
   @ApiResponse({ status: 200, description: 'Admin access granted' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
+  @ApiBearerAuth()
   async adminOnly(@Request() req) {
     return {
       message: 'Admin access granted',

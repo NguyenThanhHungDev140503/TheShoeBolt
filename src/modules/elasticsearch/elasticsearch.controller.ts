@@ -1,11 +1,11 @@
 import { Controller, Get, Post, Body, Query, UseGuards, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ElasticsearchService } from './elasticsearch.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 
 @ApiTags('Elasticsearch')
 @Controller('elasticsearch')
-@UseGuards(JwtAuthGuard)
+@UseGuards(ClerkAuthGuard)
 @ApiBearerAuth()
 export class ElasticsearchController {
   private readonly logger = new Logger(ElasticsearchController.name);

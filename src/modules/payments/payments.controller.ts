@@ -12,15 +12,15 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 
 @ApiTags('Payments')
 @Controller('payments')
+@UseGuards(ClerkAuthGuard)
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post('create-intent')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create payment intent' })
   @ApiResponse({ status: 201, description: 'Payment intent created successfully' })
@@ -29,7 +29,6 @@ export class PaymentsController {
   }
 
   @Post('confirm/:paymentIntentId')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Confirm payment' })
   @ApiResponse({ status: 200, description: 'Payment confirmed successfully' })
@@ -38,7 +37,6 @@ export class PaymentsController {
   }
 
   @Get('my-payments')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get user payments' })
   @ApiResponse({ status: 200, description: 'List of user payments' })
@@ -47,7 +45,6 @@ export class PaymentsController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get payment by ID' })
   @ApiResponse({ status: 200, description: 'Payment found' })

@@ -40,6 +40,9 @@ export class User {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ nullable: true })
+  clerkId: string;
+
   @OneToMany(() => Payment, (payment) => payment.user)
   payments: Payment[];
 

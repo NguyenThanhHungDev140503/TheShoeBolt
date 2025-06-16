@@ -10,10 +10,11 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger, UseGuards } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { Logger, UseGuards, Inject } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { CreateChatMessageDto } from './dto/create-chat-message.dto';
+import { clerkClient } from '@clerk/clerk-sdk-node';
+import { ClerkModuleOptions } from '../clerk/clerk.module';
 
 @WebSocketGateway({
   cors: {
@@ -28,7 +29,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
   constructor(
     private readonly chatService: ChatService,
-    private readonly jwtService: JwtService,
+    @Inject('CLERK_OPTIONS') private options: ClerkModuleOptions,
   ) {}
 
   afterInit(server: Server) {
@@ -37,7 +38,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
   async handleConnection(client: Socket) {
     try {
-      // Extract and verify JWT token
+      // Extract token from authorization header
       const token = client.handshake.auth.token || client.handshake.headers.authorization?.split(' ')[1];
       
       if (!token) {
@@ -46,28 +47,48 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         return;
       }
 
-      const payload = this.jwtService.verify(token);
-      const userId = payload.sub;
+      // Verify token using Clerk
+      try {
+        const sessionToken = await clerkClient.verifyToken(token, {
+          secretKey: this.options.secretKey,
+          issuer: `https://clerk.${this.options.publishableKey.split('_')[1]}.lcl.dev`,
+        });
+        
+        // Get session information
+        const session = await clerkClient.sessions.getSession(sessionToken.sid);
+        
+        if (!session || session.status !== 'active') {
+          throw new Error('Invalid or inactive session');
+        }
+        
+        // Get user information
+        const user = await clerkClient.users.getUser(session.userId);
+        const userId = user.id;
 
-      // Store the connection
-      this.connectedUsers.set(userId, client.id);
-      client.data.userId = userId;
+        // Store the connection
+        this.connectedUsers.set(userId, client.id);
+        client.data.userId = userId;
+        client.data.clerkUser = user;
+        client.data.session = session;
 
-      // Join rooms that the user is part of
-      const rooms = await this.chatService.getRoomsByUserId(userId);
-      rooms.forEach(room => {
-        client.join(room.id);
-      });
+        // Join rooms that the user is part of
+        const rooms = await this.chatService.getRoomsByUserId(userId);
+        rooms.forEach(room => {
+          client.join(room.id);
+        });
 
-      this.logger.log(`Client connected: ${client.id}, User: ${userId}`);
-      
-      // Emit online status to all clients
-      this.server.emit('userStatus', { userId, status: 'online' });
-      
-      // Send the list of online users to the newly connected client
-      const onlineUsers = Array.from(this.connectedUsers.keys());
-      client.emit('onlineUsers', onlineUsers);
-      
+        this.logger.log(`Client connected: ${client.id}, User: ${userId}`);
+        
+        // Emit online status to all clients
+        this.server.emit('userStatus', { userId, status: 'online' });
+        
+        // Send the list of online users to the newly connected client
+        const onlineUsers = Array.from(this.connectedUsers.keys());
+        client.emit('onlineUsers', onlineUsers);
+      } catch (error) {
+        this.logger.error(`Token verification failed: ${error.message}`);
+        client.disconnect();
+      }
     } catch (error) {
       this.logger.error(`Connection error: ${error.message}`);
       client.disconnect();

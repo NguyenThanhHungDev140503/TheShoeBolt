@@ -2,11 +2,11 @@ import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { EmailsService } from './emails.service';
 import { SendEmailDto } from './dto/send-email.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
 
 @ApiTags('Emails')
 @Controller('emails')
-@UseGuards(JwtAuthGuard)
+@UseGuards(ClerkAuthGuard)
 @ApiBearerAuth()
 export class EmailsController {
   constructor(private readonly emailsService: EmailsService) {}

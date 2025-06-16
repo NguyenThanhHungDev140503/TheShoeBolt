@@ -1,62 +1,50 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcryptjs';
+import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
-import { LoginDto } from './dto/login.dto';
-import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.usersService.findByEmail(email);
-    if (user && await bcrypt.compare(password, user.password)) {
-      const { password, ...result } = user;
-      return result;
-    }
-    return null;
-  }
-
-  async login(loginDto: LoginDto) {
-    const user = await this.validateUser(loginDto.email, loginDto.password);
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+  /**
+   * Sync user data từ Clerk vào local database
+   * Được gọi sau khi user authenticate thành công qua Clerk
+   */
+  async syncUserFromClerk(clerkUser: any) {
+    const existingUser = await this.usersService.findByEmail(clerkUser.email);
+    
+    if (!existingUser) {
+      // Create new user in local database
+      const userData: CreateUserDto = {
+        email: clerkUser.email,
+        firstName: clerkUser.firstName || '',
+        lastName: clerkUser.lastName || '',
+        password: 'clerk_managed', // Password không được quản lý local
+        role: clerkUser.publicMetadata?.role || 'user',
+      };
+      
+      return await this.usersService.create(userData);
     }
     
-    const payload = { email: user.email, sub: user.id, role: user.role };
-    return {
-      access_token: this.jwtService.sign(payload),
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-      },
-    };
-  }
-
-  async register(createUserDto: CreateUserDto) {
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    const user = await this.usersService.create({
-      ...createUserDto,
-      password: hashedPassword,
-    });
-    
-    const { password, ...result } = user;
-    return result;
-  }
-
-  async verifyJwt(token: string) {
-    try {
-      return this.jwtService.verify(token);
-    } catch (error) {
-      throw new UnauthorizedException('Invalid token');
+    // Update existing user data if needed
+    if (existingUser.firstName !== clerkUser.firstName || 
+        existingUser.lastName !== clerkUser.lastName) {
+      await this.usersService.update(existingUser.id, {
+        firstName: clerkUser.firstName,
+        lastName: clerkUser.lastName,
+      });
     }
+    
+    return existingUser;
+  }
+
+  /**
+   * Get user profile từ local database
+   * Dùng cho các endpoints cần thông tin user từ DB local
+   */
+  async getUserProfile(userId: string) {
+    return this.usersService.findOne(userId);
   }
 }
