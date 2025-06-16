@@ -16,6 +16,7 @@ import { QueuesModule } from './modules/queues/queues.module';
 import { HealthModule } from './modules/health/health.module';
 import { ElasticsearchModule } from './modules/elasticsearch/elasticsearch.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { ClerkModule } from './modules/clerk/clerk.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -86,6 +87,7 @@ import { mongodbConfig } from './config/mongodb.config';
     HealthModule,
     ElasticsearchModule,
     ChatModule,
+    ClerkModule.forRootAsync(),
   ],
   controllers: [AppController],
   providers: [AppService],

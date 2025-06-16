@@ -25,11 +25,46 @@ export class FeatureModule {}
 
 ### Authentication & Authorization Pattern
 ```typescript
-// Endpoint protection pattern
-@UseGuards(JwtAuthGuard, RolesGuard)
+// Endpoint protection pattern with Clerk
+@UseGuards(ClerkAuthGuard, RolesGuard)
 @Roles('admin', 'user')
 @Controller('resource')
 export class ResourceController {}
+```
+
+### Clerk Integration Patterns
+```typescript
+// ClerkModule configuration
+@Module({
+  imports: [
+    ClerkModule.forRootAsync({
+      useFactory: () => ({
+        secretKey: process.env.CLERK_SECRET_KEY,
+        publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+      }),
+    }),
+  ],
+})
+export class AppModule {}
+
+// ClerkAuthGuard implementation
+@Injectable()
+export class ClerkAuthGuard implements CanActivate {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const auth = await clerk.authenticateRequest(request, {
+      secretKey: this.configService.get('CLERK_SECRET_KEY'),
+    });
+    
+    if (!auth.isSignedIn) {
+      throw new UnauthorizedException('Invalid authentication');
+    }
+    
+    request.user = auth.userId;
+    request.sessionClaims = auth.sessionClaims;
+    return true;
+  }
+}
 ```
 
 ### DTO Validation Pattern
@@ -95,10 +130,11 @@ export class CreateResourceDto {
 ## Technical Debt Priorities
 
 ### High Priority
-1. Implement missing core modules (Products, Cart, Orders)
-2. Add comprehensive error handling cho business logic
-3. Implement proper logging strategy
-4. Add API rate limiting và security headers
+1. Complete Clerk authentication integration (In Progress)
+2. Implement missing core modules (Products, Cart, Orders)
+3. Add comprehensive error handling cho business logic
+4. Implement proper logging strategy
+5. Add API rate limiting và security headers
 
 ### Medium Priority
 1. Add comprehensive test suite
@@ -151,11 +187,13 @@ export class CreateResourceDto {
 
 ## Security Patterns
 
-### Authentication Security
-- JWT token expiration management
-- Refresh token rotation
-- Rate limiting cho login attempts
-- Password complexity requirements
+### Authentication Security (Clerk-based)
+- Clerk handles JWT token management and expiration
+- Session management through Clerk SDK
+- MFA support through Clerk configuration
+- Social login providers managed by Clerk
+- Rate limiting cho login attempts (implement at application level)
+- User lifecycle events via Clerk webhooks
 
 ### Data Protection
 - Input sanitization và validation

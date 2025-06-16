@@ -7,12 +7,13 @@
 - **Language**: TypeScript 5.x
 - **Runtime**: Node.js 18+
 - **Package Manager**: npm/yarn
+- **Authentication**: Clerk (bao gồm SDK `@clerk/clerk-sdk-node`)
 
 ### Databases & Storage
 
 #### Primary Database
 - **PostgreSQL**: Main relational data (users, products, orders)
-  - User profiles và authentication data
+  - User profiles (dữ liệu xác thực chính và quản lý phiên do Clerk xử lý)
   - Product catalog với variants (size, color)
   - Order management và transaction history
   - Inventory tracking
@@ -26,7 +27,7 @@
 
 #### Caching Layer
 - **Redis**: High-performance caching
-  - User sessions
+  - User sessions (Clerk quản lý phiên chính, Redis có thể cache thông tin phiên đã xác thực từ Clerk)
   - API response caching
   - Real-time data (cart contents)
   - Rate limiting data
@@ -119,22 +120,37 @@ const databaseConfig = {
 
 ### Authentication & Authorization Strategy
 
-**JWT-based Authentication với Role-Based Access Control**
+**Clerk-based Authentication với Role-Based Access Control (RBAC) trong NestJS**
+
+Clerk sẽ là nhà cung cấp nhận dạng (Identity Provider - IdP) chính, quản lý toàn bộ vòng đời người dùng, phiên, và các phương thức xác thực (bao gồm mật khẩu, social logins, MFA).
 
 ```typescript
 // Security implementation approach
 const securityStrategy = {
   authentication: {
-    method: "JWT (JSON Web Tokens)",
-    storage: "HTTP-only cookies + Authorization header",
-    expiration: "Access: 15min, Refresh: 7 days",
-    algorithms: ["RS256"]
+    provider: "Clerk (clerk.com)",
+    method: "Clerk SDK (`@clerk/clerk-sdk-node`) tích hợp vào NestJS.",
+    token_management: "Clerk quản lý việc tạo, xác minh và thu hồi JWTs/Session Tokens.",
+    features_handled_by_clerk: [
+      "User registration (sign-up)",
+      "User login (sign-in) with various methods (password, social, OTP, magic links)",
+      "Multi-Factor Authentication (MFA)",
+      "Session management (active sessions, session revocation)",
+      "User profile management (cơ bản, có thể mở rộng bằng metadata)",
+      "Organization management (nếu sử dụng tính năng Organizations của Clerk)"
+    ],
+    nestjs_integration: "Sử dụng `ClerkAuthGuard` tùy chỉnh để xác thực request dựa trên token của Clerk. Backend NestJS sẽ xác minh token bằng Clerk SDK."
+  },
+  user_management: {
+    primary_source: "Clerk (là nguồn chân lý cho thông tin định danh và xác thực người dùng)",
+    local_database_sync: "Có thể đồng bộ một phần thông tin người dùng (ví dụ: ID, email, metadata cơ bản) vào PostgreSQL để dễ dàng join với các dữ liệu business khác. Việc đồng bộ sẽ được thực hiện qua Clerk Webhooks (ví dụ: user.created, user.updated).",
+    user_entity_in_nestjs: "Bảng `User` trong PostgreSQL sẽ lưu trữ ID từ Clerk (ví dụ: `clerkUserId`) làm khóa ngoại hoặc định danh chính."
   },
   authorization: {
     model: "RBAC (Role-Based Access Control)",
-    roles: ["customer", "admin", "support", "manager"],
-    permissions: "Fine-grained per endpoint",
-    implementation: "NestJS Guards + Decorators"
+    roles_storage: "Vai trò người dùng (ví dụ: 'customer', 'admin', 'support') sẽ được lưu trữ trong `publicMetadata` của đối tượng User trên Clerk.",
+    permissions: "Fine-grained per endpoint (nếu cần, có thể quản lý permissions chi tiết hơn trong DB cục bộ và liên kết với vai trò từ Clerk).",
+    implementation: "Sử dụng `RolesGuard` của NestJS. Guard này sẽ đọc thông tin vai trò từ `request.auth.claims.public_metadata.roles` hoặc `request.user.publicMetadata.roles` (thông tin này được `ClerkAuthGuard` gắn vào request sau khi xác thực thành công)."
   }
 }
 ```
@@ -190,10 +206,11 @@ interface EnvironmentConfig {
   REDIS_URL: string;             // Redis
   ELASTICSEARCH_URL: string;     // Elasticsearch
   
-  // Authentication
-  JWT_SECRET: string;
-  JWT_EXPIRES_IN: string;
-  REFRESH_TOKEN_SECRET: string;
+  // Authentication (Clerk)
+  CLERK_SECRET_KEY: string; // Backend Secret Key từ Clerk Dashboard
+  CLERK_PUBLISHABLE_KEY: string; // Frontend Publishable Key từ Clerk Dashboard (có thể không cần ở backend nếu frontend xử lý)
+  CLERK_WEBHOOK_SECRET: string; // Secret để xác minh webhook từ Clerk (nếu dùng webhook)
+  // Các biến JWT cũ (JWT_SECRET, JWT_EXPIRES_IN, REFRESH_TOKEN_SECRET) sẽ không còn cần thiết.
   
   // External Services
   EMAIL_SERVICE_API_KEY: string;

@@ -28,7 +28,7 @@ Trở thành một platform e-commerce giày dép hàng đầu với:
 ### Technical Scope
 - **Backend**: NestJS với TypeScript
 - **Database**: Multi-database (PostgreSQL, MongoDB, Redis, Elasticsearch)
-- **Authentication**: JWT-based với role-based access control
+- **Authentication**: Clerk (quản lý người dùng, phiên, JWT, MFA, social logins) tích hợp với NestJS RBAC.
 - **Real-time**: WebSocket cho chat và notifications
 - **Infrastructure**: Docker containerization
 - **Monitoring**: Health checks và logging

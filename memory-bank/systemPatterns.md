@@ -54,9 +54,10 @@ export class UsersModule {}
 ```
 
 **Key Modules trong hệ thống:**
-- `UsersModule`: User management và authentication
+- `UsersModule`: User management (tương tác với Clerk và có thể cả DB cục bộ)
 - `AdminModule`: Administrative functions
-- `AuthModule`: Authentication và authorization
+- `AuthModule`: Authentication và authorization (sử dụng Clerk)
+- `ClerkModule`: Tích hợp và quản lý Clerk SDK
 - `ChatModule`: Real-time customer support
 - `PaymentsModule`: Payment processing
 - `EmailsModule`: Email notifications
@@ -118,17 +119,20 @@ export class CreateUserDto {
 
 ### 5. Guard Pattern
 
-**Authentication và Authorization:**
+**Authentication và Authorization (sử dụng Clerk):**
 
 ```typescript
-// JWT Authentication Guard
+// Clerk Authentication Guard (sẽ được tạo)
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {}
+export class ClerkAuthGuard implements CanActivate {
+  // Logic xác thực request sử dụng Clerk SDK
+  // Gắn thông tin user/auth vào request
+}
 
-// Role-based Authorization Guard  
+// Role-based Authorization Guard (sử dụng thông tin từ Clerk)
 @Injectable()
 export class RolesGuard implements CanActivate {
-  // Role checking logic
+  // Role checking logic, đọc vai trò từ user.publicMetadata (Clerk)
 }
 ```
 
@@ -148,8 +152,8 @@ export class ChatGateway implements OnGatewayConnection {
 ### 1. Request-Response Flow
 
 ```
-Client Request → Controller → Service → Repository → Database
-                ↓
+Client Request → ClerkAuthGuard → Controller → Service → Repository → Database
+(Token Validation by Clerk)      ↓
 Client ← Response Transform ← Business Logic ← Data Query
 ```
 
@@ -171,29 +175,32 @@ API Request → Queue Job → Background Worker → External Service
 
 ## Security Patterns
 
-### 1. JWT Authentication Strategy
+### 1. Clerk Authentication Strategy
+
+Clerk sẽ quản lý việc tạo và xác minh JWT. Backend NestJS sẽ sử dụng Clerk SDK để xác thực các token này.
 
 ```typescript
-@Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
-    super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET,
-    });
-  }
-}
+// ClerkAuthGuard (chi tiết hơn ở mục Guard Pattern)
+// Sẽ sử dụng clerk.authenticateRequest() để xác thực token.
+// Không cần JwtStrategy truyền thống nếu ClerkAuthGuard xử lý toàn bộ.
+
+// (Nếu vẫn dùng Passport với Clerk, JwtStrategy sẽ cần cấu hình để
+// xác minh token của Clerk, có thể qua JWKS URI của Clerk)
 ```
+Hệ thống sẽ dựa vào Clerk để quản lý phiên người dùng, MFA, social logins, v.v.
 
 ### 2. Role-Based Access Control (RBAC)
 
 ```typescript
 // Roles decorator pattern
 @Roles('admin', 'moderator')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(ClerkAuthGuard, RolesGuard) // Sử dụng ClerkAuthGuard
 @Post()
-adminOnlyEndpoint() {}
+adminOnlyEndpoint() {
+  // Logic của endpoint
+}
+// RolesGuard sẽ đọc thông tin vai trò từ user object do ClerkAuthGuard cung cấp,
+// thường là từ user.publicMetadata.roles.
 ```
 
 ### 3. Input Validation Pattern
