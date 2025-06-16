@@ -3,389 +3,170 @@
 ## Technology Stack
 
 ### Backend Core
-- **Framework**: NestJS 10.x
-- **Language**: TypeScript 5.x
-- **Runtime**: Node.js 18+
-- **Package Manager**: npm/yarn
-- **Authentication**: Clerk (bao gồm SDK `@clerk/clerk-sdk-node`)
+-   **Framework**: NestJS 10.x (TypeScript)
+-   **Language**: TypeScript 5.x
+-   **Runtime**: Node.js 18+ (hoặc LTS mới nhất)
+-   **Package Manager**: npm (hoặc yarn tùy theo sở thích team)
+-   **Authentication & User Management**: Clerk (SaaS) - `@clerk/clerk-sdk-node`, `@clerk/clerk-js` (cho frontend nếu cần).
 
 ### Databases & Storage
 
-#### Primary Database
-- **PostgreSQL**: Main relational data (users, products, orders)
-  - User profiles (dữ liệu xác thực chính và quản lý phiên do Clerk xử lý)
-  - Product catalog với variants (size, color)
-  - Order management và transaction history
-  - Inventory tracking
+#### Primary Relational Database
+-   **PostgreSQL 14+**: Lưu trữ dữ liệu có cấu trúc chính.
+    -   Thông tin người dùng (đồng bộ một phần từ Clerk, ví dụ: `clerk_user_id`, `email`, `custom_metadata` liên quan đến ứng dụng).
+    -   Danh mục sản phẩm chi tiết (tên, mô tả, giá, thuộc tính, biến thể size/màu).
+    -   Quản lý đơn hàng và lịch sử giao dịch.
+    -   Theo dõi tồn kho chi tiết theo từng biến thể sản phẩm.
+    -   Địa chỉ người dùng, thông tin vận chuyển.
+    -   Dữ liệu khuyến mãi, mã giảm giá.
+    -   Đánh giá sản phẩm, bộ sưu tập.
+-   **ORM**: TypeORM
 
-#### Document Database  
-- **MongoDB**: Unstructured data
-  - Chat messages và conversation history
-  - User activity logs
-  - Content management (reviews, comments)
-  - Session data
+#### Document Database (Cân nhắc cho các trường hợp cụ thể)
+-   **MongoDB (Cân nhắc)**: Cho dữ liệu phi cấu trúc hoặc thay đổi thường xuyên.
+    -   Tin nhắn chat và lịch sử hội thoại.
+    -   Logs hoạt động chi tiết của người dùng và hệ thống.
+    -   Nội dung đánh giá, bình luận (nếu cần schema linh hoạt hơn).
+-   **ODM**: Mongoose (nếu sử dụng MongoDB).
 
 #### Caching Layer
-- **Redis**: High-performance caching
-  - User sessions (Clerk quản lý phiên chính, Redis có thể cache thông tin phiên đã xác thực từ Clerk)
-  - API response caching
-  - Real-time data (cart contents)
-  - Rate limiting data
-  - WebSocket connection management
+-   **Redis**: Caching hiệu suất cao.
+    -   Cache các API response thường xuyên truy cập (danh sách sản phẩm, danh mục).
+    -   Lưu trữ tạm thời giỏ hàng của khách vãng lai.
+    -   Quản lý rate limiting cho API.
+    -   Có thể hỗ trợ WebSocket connection management hoặc Pub/Sub cho real-time.
 
 #### Search Engine
-- **Elasticsearch**: Advanced search capabilities
-  - Product search indexing
-  - User behavior analytics
-  - Search suggestions và autocomplete
-  - Business intelligence data
+-   **Elasticsearch**: Cho các tính năng tìm kiếm nâng cao và analytics.
+    -   Index dữ liệu sản phẩm để tìm kiếm full-text, tìm kiếm theo nhiều thuộc tính, gợi ý, tự động hoàn thành.
+    -   Phân tích hành vi người dùng liên quan đến tìm kiếm.
+    -   Hỗ trợ thống kê và báo cáo nghiệp vụ.
+
+#### File Storage
+-   **Cloud Storage (AWS S3, Google Cloud Storage, hoặc Cloudinary)**: Lưu trữ hình ảnh sản phẩm, avatar người dùng, và các tệp tin khác.
 
 ### Communication & Integration
 
 #### Real-time Communication
-- **WebSocket**: Socket.io integration
-  - Customer support chat
-  - Real-time notifications
-  - Order status updates
-  - Admin dashboard live metrics
+-   **WebSocket (Socket.IO hoặc thư viện WebSocket gốc của NestJS)**:
+    -   Chat hỗ trợ khách hàng.
+    -   Thông báo real-time (trạng thái đơn hàng, khuyến mãi mới).
 
-#### Message Queuing
-- **Queue System**: Background job processing
-  - Email sending queues
-  - Payment processing workflows
-  - Inventory updates
-  - Analytics data processing
+#### Message Queuing (Xử lý tác vụ nền)
+-   **RabbitMQ hoặc Kafka (Cân nhắc tùy độ phức tạp)**:
+    -   Gửi email (thông báo đơn hàng, marketing) một cách bất đồng bộ.
+    -   Xử lý các quy trình thanh toán phức tạp.
+    -   Cập nhật tồn kho sau khi đặt hàng/hủy hàng.
+    -   Xử lý dữ liệu analytics.
+    -   Xử lý webhook từ các dịch vụ bên thứ ba.
 
-#### External Integrations
-- **Payment Gateways**: Multiple payment processors
-- **Email Service**: Transactional và marketing emails
-- **SMS Service**: OTP và notifications
-- **Logistics APIs**: Shipping và tracking integration
+#### External Service Integrations
+-   **Payment Gateway**: Stripe (chính), có thể cân nhắc VNPay cho thị trường Việt Nam.
+-   **Email Service**: Resend.
+-   **Shipping Service APIs**: Tích hợp API của các đối tác vận chuyển để lấy giá, tạo vận đơn, theo dõi.
+-   **Authentication Service**: Clerk.
 
 ### Development & DevOps
 
 #### Containerization
-- **Docker**: Application containerization
-  - Multi-stage builds cho optimization
-  - Development environment consistency
-  - Production deployment standardization
+-   **Docker & Docker Compose**: Chuẩn hóa môi trường phát triển, staging và production. Multi-stage Docker builds để tối ưu image size.
 
 #### Database Management
-- **TypeORM**: PostgreSQL ORM
-  - Entity relationships management
-  - Migration system
-  - Query builder và raw SQL support
-- **Mongoose**: MongoDB ODM
-  - Schema definition và validation
-  - Middleware hooks
-  - Population và aggregation
+-   **TypeORM**: ORM chính cho PostgreSQL, quản lý migrations, entities, repositories.
+-   **Mongoose**: ODM nếu sử dụng MongoDB.
 
 #### Configuration Management
-- **Environment Variables**: 
-  - Development, staging, production configs
-  - Sensitive data management
-  - Feature flags
+-   **NestJS ConfigModule (`@nestjs/config`)**: Quản lý biến môi trường (`.env` files) cho các môi trường khác nhau (development, staging, production).
+
+#### API Documentation
+-   **Swagger (OpenAPI)**: Tự động tạo tài liệu API từ code (sử dụng `@nestjs/swagger`).
+
+#### Testing
+-   **Jest**: Framework chính cho unit tests và integration tests.
+-   **Supertest**: Cho E2E testing các API endpoints.
+-   **Code Coverage**: Đặt mục tiêu >80%.
 
 ## Architecture Decisions
 
 ### Database Strategy: Multi-Database Approach
+Sử dụng cơ sở dữ liệu phù hợp nhất cho từng loại dữ liệu và yêu cầu truy cập để tối ưu hiệu suất và khả năng mở rộng.
+-   **PostgreSQL**: Cho dữ liệu quan hệ, yêu cầu ACID, join phức tạp.
+-   **MongoDB (Cân nhắc)**: Cho dữ liệu linh hoạt, ghi nhiều, đọc nhanh các document đơn lẻ.
+-   **Redis**: Cho caching tốc độ cao, dữ liệu tạm thời.
+-   **Elasticsearch**: Cho tìm kiếm full-text, analytics.
 
-**Rationale**: Different data types require different storage solutions
+### Authentication & Authorization Strategy: Clerk + RBAC
+-   **Clerk**: Là Identity Provider (IdP) chính, xử lý toàn bộ vòng đời người dùng (đăng ký, đăng nhập, MFA, social login, quản lý phiên). Backend NestJS sẽ xác thực JWT do Clerk cung cấp thông qua `ClerkAuthGuard`.
+-   **Local User Data Sync**: Dữ liệu người dùng cơ bản (ID Clerk, email, và metadata cần thiết cho ứng dụng) có thể được đồng bộ vào bảng `User` trong PostgreSQL. Việc đồng bộ này được thực hiện thông qua Clerk Webhooks (ví dụ: `user.created`, `user.updated`). Bảng `User` cục bộ sẽ có cột `clerkUserId` để liên kết.
+-   **RBAC (Role-Based Access Control)**: Vai trò người dùng (ví dụ: `customer`, `admin`, `shipper`) được lưu trữ trong `publicMetadata` của đối tượng User trên Clerk. `RolesGuard` trong NestJS sẽ đọc thông tin vai trò này từ `request.auth.claims.public_metadata.roles` (sau khi `ClerkAuthGuard` xác thực thành công) để phân quyền truy cập API. Các quyền chi tiết (permissions) có thể được quản lý trong CSDL cục bộ và liên kết với vai trò từ Clerk nếu cần độ chi tiết cao hơn.
 
-```typescript
-// Database configuration structure
-const databaseConfig = {
-  postgresql: {
-    purpose: "ACID transactions, relational data",
-    entities: ["User", "Product", "Order", "Payment"],
-    features: ["Foreign keys", "Transactions", "Complex queries"]
-  },
-  mongodb: {
-    purpose: "Flexible schema, high write volume",
-    collections: ["ChatMessage", "UserLog", "Content"],
-    features: ["Rapid development", "Scalability", "JSON-like documents"]
-  },
-  redis: {
-    purpose: "High-speed caching and sessions",
-    dataTypes: ["Strings", "Hashes", "Lists", "Sets"],
-    features: ["Sub-millisecond latency", "Pub/Sub", "Atomic operations"]
-  },
-  elasticsearch: {
-    purpose: "Full-text search and analytics",
-    indices: ["products", "users", "orders"],
-    features: ["Complex search", "Aggregations", "Real-time analytics"]
-  }
-}
-```
-
-### Authentication & Authorization Strategy
-
-**Clerk-based Authentication với Role-Based Access Control (RBAC) trong NestJS**
-
-Clerk sẽ là nhà cung cấp nhận dạng (Identity Provider - IdP) chính, quản lý toàn bộ vòng đời người dùng, phiên, và các phương thức xác thực (bao gồm mật khẩu, social logins, MFA).
-
-```typescript
-// Security implementation approach
-const securityStrategy = {
-  authentication: {
-    provider: "Clerk (clerk.com)",
-    method: "Clerk SDK (`@clerk/clerk-sdk-node`) tích hợp vào NestJS.",
-    token_management: "Clerk quản lý việc tạo, xác minh và thu hồi JWTs/Session Tokens.",
-    features_handled_by_clerk: [
-      "User registration (sign-up)",
-      "User login (sign-in) with various methods (password, social, OTP, magic links)",
-      "Multi-Factor Authentication (MFA)",
-      "Session management (active sessions, session revocation)",
-      "User profile management (cơ bản, có thể mở rộng bằng metadata)",
-      "Organization management (nếu sử dụng tính năng Organizations của Clerk)"
-    ],
-    nestjs_integration: "Sử dụng `ClerkAuthGuard` tùy chỉnh để xác thực request dựa trên token của Clerk. Backend NestJS sẽ xác minh token bằng Clerk SDK."
-  },
-  user_management: {
-    primary_source: "Clerk (là nguồn chân lý cho thông tin định danh và xác thực người dùng)",
-    local_database_sync: "Có thể đồng bộ một phần thông tin người dùng (ví dụ: ID, email, metadata cơ bản) vào PostgreSQL để dễ dàng join với các dữ liệu business khác. Việc đồng bộ sẽ được thực hiện qua Clerk Webhooks (ví dụ: user.created, user.updated).",
-    user_entity_in_nestjs: "Bảng `User` trong PostgreSQL sẽ lưu trữ ID từ Clerk (ví dụ: `clerkUserId`) làm khóa ngoại hoặc định danh chính."
-  },
-  authorization: {
-    model: "RBAC (Role-Based Access Control)",
-    roles_storage: "Vai trò người dùng (ví dụ: 'customer', 'admin', 'support') sẽ được lưu trữ trong `publicMetadata` của đối tượng User trên Clerk.",
-    permissions: "Fine-grained per endpoint (nếu cần, có thể quản lý permissions chi tiết hơn trong DB cục bộ và liên kết với vai trò từ Clerk).",
-    implementation: "Sử dụng `RolesGuard` của NestJS. Guard này sẽ đọc thông tin vai trò từ `request.auth.claims.public_metadata.roles` hoặc `request.user.publicMetadata.roles` (thông tin này được `ClerkAuthGuard` gắn vào request sau khi xác thực thành công)."
-  }
-}
-```
-
-### Scalability Approach
-
-**Vertical Scaling First, Horizontal Scaling Ready**
-
-```typescript
-// Scalability design decisions
-const scalabilityStrategy = {
-  current: {
-    approach: "Modular Monolith",
-    benefits: ["Simple deployment", "Consistent transactions", "Lower complexity"],
-    limits: "Single instance scaling"
-  },
-  future: {
-    approach: "Microservices Migration Path",
-    modules: ["User Service", "Product Service", "Order Service", "Payment Service"],
-    communication: "Event-driven + HTTP APIs",
-    database: "Database per service pattern"
-  }
-}
-```
+### Scalability Approach: Modular Monolith, sẵn sàng cho Microservices
+-   **Hiện tại**: Phát triển dưới dạng Modular Monolith với NestJS. Các module được thiết kế độc lập, giao tiếp qua services hoặc events nội bộ.
+-   **Tương lai**: Nếu cần, các module có thể được tách thành các microservices riêng biệt. Giao tiếp giữa các services có thể dùng HTTP API hoặc Message Queues. Mỗi service có thể có database riêng (Database per service pattern).
 
 ## Development Environment
 
 ### Local Development Setup
+-   Node.js 18+
+-   npm/yarn
+-   Docker & Docker Compose
+-   PostgreSQL 14+ (qua Docker)
+-   Redis (qua Docker)
+-   Elasticsearch (qua Docker - tùy chọn)
+-   MongoDB (qua Docker - tùy chọn)
 
-```bash
-# Required software stack
-node --version          # >= 18.0.0
-npm --version           # >= 8.0.0
-docker --version        # >= 20.0.0
-docker-compose --version # >= 2.0.0
-postgresql --version    # >= 14.0
-redis-server --version  # >= 6.0
-```
-
-### Environment Configuration
-
-```typescript
-// Environment variables structure
-interface EnvironmentConfig {
-  // Application
-  NODE_ENV: 'development' | 'staging' | 'production';
-  PORT: number;
-  APP_URL: string;
-  
-  // Databases
-  DATABASE_URL: string;          // PostgreSQL
-  MONGODB_URI: string;           // MongoDB
-  REDIS_URL: string;             // Redis
-  ELASTICSEARCH_URL: string;     // Elasticsearch
-  
-  // Authentication (Clerk)
-  CLERK_SECRET_KEY: string; // Backend Secret Key từ Clerk Dashboard
-  CLERK_PUBLISHABLE_KEY: string; // Frontend Publishable Key từ Clerk Dashboard (có thể không cần ở backend nếu frontend xử lý)
-  CLERK_WEBHOOK_SECRET: string; // Secret để xác minh webhook từ Clerk (nếu dùng webhook)
-  // Các biến JWT cũ (JWT_SECRET, JWT_EXPIRES_IN, REFRESH_TOKEN_SECRET) sẽ không còn cần thiết.
-  
-  // External Services
-  EMAIL_SERVICE_API_KEY: string;
-  PAYMENT_GATEWAY_SECRET: string;
-  SMS_SERVICE_TOKEN: string;
-  
-  // Features
-  ENABLE_CHAT: boolean;
-  ENABLE_ANALYTICS: boolean;
-  DEBUG_MODE: boolean;
-}
-```
+### Environment Configuration (`.env` files)
+Quản lý các biến môi trường cho:
+-   Thông tin kết nối Databases (PostgreSQL, MongoDB, Redis, Elasticsearch).
+-   Khóa API cho Clerk (Secret Key, Publishable Key, Webhook Secret).
+-   Khóa API cho các dịch vụ bên ngoài (Resend, Stripe, Shipping partners).
+-   Cấu hình ứng dụng (Port, App URL, Node Env).
+-   Feature flags.
 
 ### Docker Compose Services
-
-```yaml
-# docker-compose.yml structure overview
-services:
-  app:              # Main NestJS application
-  postgres:         # Primary database
-  mongodb:          # Document database  
-  redis:            # Caching layer
-  elasticsearch:    # Search engine
-  nginx:            # Reverse proxy (production)
-```
+Cấu hình `docker-compose.yml` để khởi chạy các services cần thiết cho môi trường dev: `app` (NestJS), `postgres`, `redis`, (tùy chọn `mongodb`, `elasticsearch`).
 
 ## Technical Constraints & Decisions
 
 ### Performance Requirements
-
-```typescript
-const performanceTargets = {
-  api: {
-    responseTime: "< 200ms (95th percentile)",
-    throughput: "> 1000 requests/second",
-    uptime: "> 99.9%"
-  },
-  database: {
-    queryTime: "< 50ms average",
-    connections: "Pool size: 10-50",
-    indexing: "All search fields indexed"
-  },
-  frontend: {
-    loadTime: "< 2 seconds initial load",
-    interactivity: "< 100ms UI response",
-    caching: "Aggressive browser caching"
-  }
-}
-```
+-   API response time trung bình < 200ms (cho 95% percentile).
+-   Khả năng chịu tải > 100 người dùng đồng thời (MVP), mục tiêu > 1000 requests/giây.
+-   Tối ưu hóa truy vấn CSDL: sử dụng indexing, prepared statements.
+-   Caching hiệu quả cho các dữ liệu nóng.
 
 ### Security Constraints
-
-```typescript
-const securityRequirements = {
-  dataProtection: {
-    encryption: "AES-256 for sensitive data",
-    hashing: "bcrypt for passwords",
-    transmission: "TLS 1.3 minimum"
-  },
-  compliance: {
-    standards: ["OWASP Top 10", "PCI DSS Level 1"],
-    privacy: "GDPR compliant data handling",
-    auditing: "Comprehensive audit logs"
-  },
-  access: {
-    authentication: "Multi-factor where applicable",
-    sessions: "Secure session management",
-    api: "Rate limiting + API key validation"
-  }
-}
-```
+-   Tuân thủ OWASP Top 10.
+-   Mã hóa dữ liệu nhạy cảm (at rest và in transit).
+-   Bảo vệ chống các tấn công phổ biến (XSS, CSRF, SQL Injection - giảm thiểu qua ORM và validation).
+-   Xác thực đầu vào (Input Validation) nghiêm ngặt sử dụng DTOs và `class-validator`.
+-   Quản lý session an toàn (Clerk xử lý).
+-   Rate limiting cho API.
 
 ### Monitoring & Observability
-
-```typescript
-const observabilityStack = {
-  logging: {
-    library: "Winston + Morgan",
-    levels: ["error", "warn", "info", "debug"],
-    storage: "Structured logs to MongoDB + File system",
-    monitoring: "Error tracking với alerts"
-  },
-  metrics: {
-    collection: "Custom interceptors + Health checks",
-    storage: "Time-series data in Elasticsearch",
-    dashboards: "Admin panel metrics display"
-  },
-  tracing: {
-    requests: "Request correlation IDs",
-    database: "Query performance tracking",
-    external: "API call monitoring"
-  }
-}
-```
+-   **Logging**: Sử dụng thư viện logging có cấu trúc (ví dụ: Pino, Winston) tích hợp với NestJS Logger. Ghi log request/response, lỗi, các sự kiện quan trọng.
+-   **Health Checks**: Endpoint `/health` để kiểm tra tình trạng ứng dụng và các dependencies.
+-   **Error Tracking**: Tích hợp dịch vụ theo dõi lỗi (ví dụ: Sentry - cân nhắc).
 
 ### Development Workflow
-
-```typescript
-const developmentProcess = {
-  codeQuality: {
-    linting: "ESLint + Prettier",
-    testing: "Jest unit tests + E2E tests",
-    coverage: "> 80% code coverage target",
-    review: "Pull request reviews required"
-  },
-  deployment: {
-    environments: ["development", "staging", "production"],
-    strategy: "Blue-green deployment",
-    rollback: "Automated rollback capability",
-    monitoring: "Health checks post-deployment"
-  },
-  database: {
-    migrations: "TypeORM migration system",
-    seeding: "Automated test data seeding",
-    backup: "Automated daily backups",
-    versioning: "Schema version control"
-  }
-}
-```
+-   **Version Control**: Git (Github/Gitlab).
+-   **Code Quality**: ESLint, Prettier.
+-   **Testing**: Unit tests, Integration tests, E2E tests với Jest. Mục tiêu code coverage > 80%.
+-   **CI/CD**: Github Actions / Gitlab CI / Jenkins (cân nhắc) để tự động hóa build, test, deploy.
+-   **Database Migrations**: TypeORM migrations.
 
 ## Integration Architecture
 
 ### External Service Integration
-
-```typescript
-const externalIntegrations = {
-  payments: {
-    primary: "Stripe/PayPal integration",
-    fallback: "Multiple payment gateway support",
-    webhooks: "Async payment status updates",
-    security: "PCI DSS compliant handling"
-  },
-  shipping: {
-    carriers: ["FedEx", "UPS", "DHL", "Local carriers"],
-    tracking: "Real-time shipment tracking",
-    rates: "Dynamic shipping rate calculation",
-    labels: "Automated label generation"
-  },
-  communication: {
-    email: "Transactional + Marketing campaigns",
-    sms: "OTP + Order notifications",
-    push: "Mobile app notifications",
-    chat: "Real-time customer support"
-  }
-}
-```
+-   **Clerk**: Xác thực và quản lý người dùng.
+-   **Stripe**: Xử lý thanh toán. Webhook để cập nhật trạng thái giao dịch.
+-   **Resend**: Gửi email giao dịch và marketing. Webhook để theo dõi trạng thái email.
+-   **Shipping Partners**: API để lấy giá cước, tạo vận đơn, theo dõi. Webhook để cập nhật trạng thái giao hàng.
+-   **Cloud Storage**: Lưu trữ file.
 
 ### API Design Principles
+-   **RESTful API**: Thiết kế API theo chuẩn REST.
+-   **Versioning**: API versioning qua URL (ví dụ: `/api/v1/...`).
+-   **Documentation**: Swagger (OpenAPI) tự động tạo từ code.
+-   **Error Handling**: Chuẩn hóa mã lỗi và thông điệp lỗi.
 
-```typescript
-const apiDesign = {
-  restful: {
-    conventions: "RESTful API design patterns",
-    versioning: "URL path versioning (/api/v1/)",
-    documentation: "OpenAPI/Swagger specifications",
-    testing: "Comprehensive API test suite"
-  },
-  websocket: {
-    namespaces: "Feature-based namespaces",
-    authentication: "JWT token validation",
-    events: "Standardized event naming",
-    fallback: "Graceful degradation to HTTP polling"
-  },
-  graphql: {
-    future: "Considered for mobile app optimization",
-    benefits: "Reduced data transfer",
-    complexity: "Additional learning curve",
-    decision: "REST-first, GraphQL when needed"
-  }
-}
-```
-
-Technology stack này được chọn để đảm bảo:
-- **Scalability**: Có thể xử lý growth từ startup đến enterprise
-- **Maintainability**: Modern stack với good community support
-- **Performance**: Optimized cho e-commerce workloads
-- **Developer Experience**: Productive development environment
-- **Business Flexibility**: Easy to adapt cho changing requirements
+Công nghệ và kiến trúc này được lựa chọn để đảm bảo hệ thống TheShoeBolt có khả năng mở rộng, bảo trì, hiệu suất cao, an toàn và mang lại trải nghiệm tốt cho cả người dùng cuối và đội ngũ phát triển.

@@ -2,235 +2,147 @@
 
 ## Current Work Focus
 
-### Giai Đoạn Hiện Tại: **Project Initialization & Memory Bank Setup**
+### Giai Đoạn Hiện Tại: **Hoàn thiện Phân tích Thiết kế & Cập nhật PRD vào Taskmaster**
 
 **Ngày cập nhật**: 16/06/2025
 
+### Công Việc Vừa Hoàn Thành
+
+1.  **Đọc và Phân tích Tài liệu Kỹ thuật** ✅ Completed
+    *   ✅ Đọc toàn bộ tài liệu trong `doc/pttk`:
+        *   `Báo cáo Phân tích Cột Dữ liệu Tiềm năng cho Indexing.pdf`
+        *   `Báo cáo Đề xuất Prepared Statements cho Hệ thống TheShoe.pdf`
+        *   `Phân Tích ERD Hệ Thống Web Bán Giày (Report).pdf`
+        *   `StoreProcedure_Function.pdf`
+        *   `TheShoe.pdf` (SRS)
+        *   `api-routes.pdf`
+        *   `modules-report.pdf`
+    *   ✅ Tổng hợp thông tin chi tiết về yêu cầu chức năng, phi chức năng, kiến trúc hệ thống, cấu trúc dữ liệu, và các quyết định kỹ thuật.
+
+2.  **Cập nhật Product Requirements Document (PRD)** ✅ Completed
+    *   ✅ Tổng hợp thông tin từ các tài liệu phân tích thiết kế vào một PRD mới.
+    *   ✅ Ghi PRD cập nhật vào file `.taskmaster/docs/prd.txt`.
+
+3.  **Parse PRD vào Taskmaster AI** ✅ Completed
+    *   ✅ Sử dụng tool `parse_prd` để đưa nội dung từ `.taskmaster/docs/prd.txt` vào hệ thống Taskmaster.
+    *   ✅ Các tác vụ đã được tạo trong `/media/nguyenthanhhung/Code/TheShoeBolt/.taskmaster/tasks/tasks.json`.
+
 ### Công Việc Đang Thực Hiện
 
-1. **Memory Bank Initialization & Update** ✅ In Progress
-    - ✅ Created `projectbrief.md`
-    - ✅ Created `productContext.md`
-    - ✅ Updated `systemPatterns.md` (để phản ánh tích hợp Clerk)
-    - ✅ Updated `techContext.md` (để phản ánh tích hợp Clerk)
-    - 🔄 Updating `activeContext.md` - Current work focus (this file)
-    - ⏳ Next: Update `progress.md` - Implementation status (liên quan đến Clerk)
-    - ⏳ Next: Update `.clinerules` với project-specific intelligence (liên quan đến Clerk)
+1.  **Cập nhật Memory Bank dựa trên Tài liệu Kỹ thuật** 🔄 In Progress
+    *   ✅ Đã cập nhật `memory-bank/projectbrief.md`
+    *   ✅ Đã cập nhật `memory-bank/productContext.md`
+    *   ✅ Đã cập nhật `memory-bank/systemPatterns.md`
+    *   ✅ Đã cập nhật `memory-bank/techContext.md`
+    *   🔄 Đang cập nhật `memory-bank/activeContext.md` (file này)
+    *   ⏳ Tiếp theo: Cập nhật `memory-bank/progress.md`
 
-2. **Project Analysis** ✅ Completed
-    - ✅ Analyzed file structure và identified key modules
-    - ✅ Understood architecture: NestJS với multi-database setup
-    - ✅ Identified core features: e-commerce, chat, payments, search
-    - ✅ Mapped out technology stack và dependencies
+### Trạng Thái Module (Dựa trên phân tích tài liệu)
 
-3. **Authentication System Overhaul Planning: Integrating Clerk** 🔄 In Progress
-    - ✅ Decision made to integrate Clerk for authentication and user management.
-    - ✅ Initial research on Clerk and its Node.js SDK completed.
-    - ✅ High-level integration plan formulated.
-    - ✅ Phác thảo cấu trúc mã cho `ClerkModule` và `ClerkAuthGuard`.
-    - 🔄 Currently updating Memory Bank files to reflect this decision.
-    - ⏳ Next: Finalize technical details of Clerk SDK integration (e.g., `authenticateRequest` options).
-    - ⏳ Next: Start implementing `ClerkModule` and `ClerkAuthGuard`.
+| Module Chính (Theo `modules-report.pdf` & `api-routes.pdf`) | Trạng Thái Phân Tích | Ghi Chú Quan Trọng                                                                                                                               |
+| :--------------------------------------------------------- | :-------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
+| User Module                                                | ✅ Đã phân tích       | Quản lý người dùng, phân quyền (RBAC), tích hợp Clerk.                                                                                          |
+| Product Module                                             | ✅ Đã phân tích       | Quản lý sản phẩm, danh mục, bộ sưu tập, đánh giá.                                                                                                |
+| Cart Module                                                | ✅ Đã phân tích       | Quản lý giỏ hàng.                                                                                                                               |
+| Order Module                                               | ✅ Đã phân tích       | Quản lý đơn hàng, theo dõi trạng thái.                                                                                                          |
+| Checkout Module / Payment Module                           | ✅ Đã phân tích       | Xử lý thanh toán, tích hợp Stripe.                                                                                                               |
+| Promotion Module                                           | ✅ Đã phân tích       | Quản lý khuyến mãi, mã giảm giá.                                                                                                                 |
+| Notification Module                                        | ✅ Đã phân tích       | Gửi thông báo (email qua Resend, real-time).                                                                                                    |
+| Wishlist Module                                            | ✅ Đã phân tích       | Quản lý danh sách yêu thích/mong muốn.                                                                                                          |
+| Feedback Module / Chat Module                              | ✅ Đã phân tích       | Quản lý phản hồi, tin nhắn với admin (WebSocket).                                                                                                |
+| Analytics Module                                           | ✅ Đã phân tích       | Thống kê, báo cáo.                                                                                                                              |
+| Collection Module                                          | ✅ Đã phân tích       | Quản lý bộ sưu tập sản phẩm.                                                                                                                     |
+| Auth Module (Clerk)                                        | ✅ Đã phân tích       | Xác thực người dùng qua Clerk.                                                                                                                  |
+| Shipper Integration Module                                 | ✅ Đã phân tích       | Tích hợp với đơn vị vận chuyển.                                                                                                                  |
+| **Infrastructure Modules**                                 |                       |                                                                                                                                                 |
+| RBAC Module                                                | ✅ Đã phân tích       | Phân quyền chi tiết.                                                                                                                            |
+| Global Error Handling Module                               | ✅ Đã phân tích       | Xử lý lỗi tập trung.                                                                                                                            |
+| Database Module                                            | ✅ Đã phân tích       | Tương tác với PostgreSQL, TypeORM.                                                                                                               |
+| Email Service Module (Resend)                              | ✅ Đã phân tích       | Dịch vụ gửi email.                                                                                                                             |
+| Logging Module                                             | ✅ Đã phân tích       | Ghi log hệ thống.                                                                                                                                |
+| Cache Module (Redis)                                       | ✅ Đã phân tích       | Caching dữ liệu.                                                                                                                                |
+| File Storage Module                                        | ✅ Đã phân tích       | Lưu trữ tệp (hình ảnh sản phẩm).                                                                                                                |
+| Search Module (Elasticsearch)                              | ✅ Đã phân tích       | Tìm kiếm nâng cao.                                                                                                                              |
+| Message Queue Module                                       | ✅ Đã phân tích       | Xử lý tác vụ bất đồng bộ.                                                                                                                        |
+| API Gateway Module                                         | ✅ Đã phân tích       | Quản lý API (có thể là NestJS Gateway).                                                                                                         |
+| Webhook Handler Module                                     | ✅ Đã phân tích       | Xử lý webhook từ Stripe, Clerk, Resend, Shipper.                                                                                                |
+| Stripe Payment Gateway Module                              | ✅ Đã phân tích       | Module con của Checkout/Payment, chuyên trách tích hợp Stripe.                                                                                   |
 
-### Trạng Thái Module Analysis
+### Cấu trúc Cơ sở dữ liệu (Dựa trên ERD và báo cáo Indexing/Prepared Statements)
+-   **PostgreSQL** là CSDL chính.
+-   Các bảng quan trọng đã được xác định trong `Phân Tích ERD Hệ Thống Web Bán Giày (Report).pdf`.
+-   Các cột tiềm năng cho **indexing** đã được phân tích trong `Báo cáo Phân tích Cột Dữ liệu Tiềm năng cho Indexing.pdf` (ưu tiên Khóa Ngoại, cột trạng thái, cột tìm kiếm, ngày tháng).
+-   Các truy vấn thường xuyên và đề xuất sử dụng **Prepared Statements** đã được liệt kê trong `Báo cáo Đề xuất Prepared Statements cho Hệ thống TheShoe.pdf` để tối ưu hiệu suất.
+-   Logic nghiệp vụ phức tạp **không nên** đặt trong Stored Procedures/Functions (`StoreProcedure_Function.pdf`).
 
-| Module | Status | Key Findings |
-|--------|--------|--------------|
-| **Core App** | ✅ Analyzed | Main application với exception filters, interceptors |
-| **Auth Module** | 🔄 Re-evaluation Needed | JWT strategy, guards. Sẽ được thay thế/điều chỉnh lớn với Clerk. |
-| **Users Module** | 🔄 Re-evaluation Needed | User management với TypeORM. Sẽ cần tích hợp với Clerk để quản lý người dùng. |
-| **Admin Module** | ✅ Analyzed | Administrative functions. Các chức năng quản lý người dùng sẽ cần cập nhật để dùng Clerk. |
-| **Chat Module** | ✅ Analyzed | WebSocket gateway cho real-time communication |
-| **Payments Module** | ✅ Analyzed | Payment processing với entities |
-| **Emails Module** | ✅ Analyzed | Email service integration |
-| **Elasticsearch Module** | ✅ Analyzed | Search functionality |
-| **Queues Module** | ✅ Analyzed | Background job processing |
-| **Health Module** | ✅ Analyzed | Health check endpoints |
+## Recent Changes & Discoveries (Từ việc đọc tài liệu)
 
-### Database Configuration Analysis
-
-| Database | Purpose | Status | Configuration Files |
-|----------|---------|---------|-------------------|
-| **PostgreSQL** | Primary relational data | ✅ Configured | `database.config.ts`, `data-source.ts` |
-| **MongoDB** | Chat, logs, sessions | ✅ Configured | `mongodb.config.ts` |
-| **Redis** | Caching, sessions | ✅ Configured | `redis.config.ts` |
-| **Elasticsearch** | Search indexing | ✅ Configured | `elasticsearch.config.ts` |
-
-## Recent Changes & Discoveries
-
-### Key Architectural Patterns Identified
-
-1. **Modular Monolith Design**
-   - Clear module separation for microservices readiness
-   - Each module encapsulates specific business capability
-   - Shared infrastructure (database, auth) across modules
-
-2. **Multi-Database Strategy**
-   - PostgreSQL: Users, products, orders, payments
-   - MongoDB: Chat messages, logs, flexible schemas
-   - Redis: Caching, sessions, real-time data
-   - Elasticsearch: Search indexing, analytics
-
-3. **Security Implementation**
-   - Authentication sẽ chuyển sang Clerk (quản lý JWT, sessions, MFA, social logins).
-   - Role-based authorization (RBAC) sẽ sử dụng NestJS guards nhưng đọc vai trò từ metadata của Clerk.
-   - Input validation với DTOs và class-validator (vẫn giữ nguyên).
-
-4. **Real-time Capabilities**
-   - WebSocket integration cho chat system
-   - Real-time notifications và updates
-   - Background job processing với queues
-
-### Technical Debt & Opportunities Identified
-
-1. **Missing Components** (Opportunities)
-   - No product catalog module identified yet
-   - Shopping cart functionality not explicitly present
-   - Order management module not visible
-   - File upload/storage system not configured
-
-2. **Configuration Completeness**
-   - Environment variables setup cần verification
-   - Database connections cần testing
-   - External service integrations cần setup
-
-3. **Development Environment**
-   - Docker setup available nhưng cần verification
-   - Database migrations status unclear
-   - Test data seeding not evident
+-   Hệ thống có kiến trúc module rõ ràng, sử dụng NestJS.
+-   Xác thực người dùng được quản lý bởi Clerk.
+-   Thanh toán qua Stripe.
+-   Gửi email qua Resend.
+-   Có kế hoạch sử dụng Elasticsearch cho tìm kiếm và Redis cho caching.
+-   Đã có phân tích chi tiết về ERD, các API routes, và các module cần thiết.
+-   Đã có các đề xuất cụ thể về tối ưu hóa CSDL (indexing, prepared statements).
 
 ## Next Steps & Priorities
 
-### Immediate Actions (Next 1-2 Sessions)
+### Immediate Actions (Phiên làm việc này và kế tiếp)
 
-1. **Finalize Clerk Integration Plan & Memory Bank Update**
-    - ✅ Update `activeContext.md` (đang thực hiện).
-    - ✅ Update `progress.md` để phản ánh trạng thái tích hợp Clerk.
-    - ✅ Update `.clinerules` với các patterns liên quan đến Clerk.
-    - ✅ Hoàn thiện chi tiết kỹ thuật cho `clerk.authenticateRequest` và các thành phần Clerk khác.
+1.  **Hoàn tất Cập nhật Memory Bank:**
+    *   ✅ Cập nhật `activeContext.md` (đang thực hiện).
+    *   🔄 Cập nhật `progress.md` để phản ánh trạng thái phân tích và cập nhật PRD.
+    *   Cập nhật `.clinerules` nếu có các quy tắc hoặc patterns mới được rút ra từ các tài liệu kỹ thuật.
 
-2. **Implement Core Clerk Integration**
-    - 💻 Tạo và kiểm thử `ClerkModule`.
-    - 💻 Tạo và kiểm thử `ClerkAuthGuard`.
-    - 💻 Cập nhật `UsersModule` và `UsersService` để tương tác với Clerk.
-    - 💻 Cấu hình và kiểm thử Clerk Webhooks (nếu cần cho đồng bộ user).
+2.  **Rà soát Taskmaster Tasks:**
+    *   Kiểm tra các tác vụ đã được tạo trong Taskmaster AI sau khi parse PRD.
+    *   Đảm bảo các tác vụ phản ánh đúng các yêu cầu từ PRD mới.
 
-3. **Environment Verification (with Clerk)**
-    - 🔍 Cập nhật `.env.example` và `.env` với Clerk keys.
-    - 🔍 Verify Clerk SDK initialization và kết nối.
-    - 🔍 Test luồng xác thực cơ bản với Clerk.
+3.  **Lập kế hoạch cho các bước phát triển tiếp theo:**
+    *   Dựa trên PRD và các tác vụ trong Taskmaster, xác định các ưu tiên phát triển.
+    *   Có thể bắt đầu với việc thiết lập các module core và tích hợp các dịch vụ bên thứ ba (Clerk, Stripe, Resend).
 
-### Medium-term Goals (Next Few Sessions)
-
-1. **Refactor Auth & User Management for Clerk**
-    - 🔄 Hoàn thiện việc tích hợp Clerk vào `AuthModule` và `UsersModule`.
-    - 🔄 Đảm bảo RBAC hoạt động với vai trò từ Clerk.
-    - 🔄 Cập nhật `AdminModule` cho các chức năng quản lý người dùng qua Clerk.
-
-2. **Missing Module Implementation (Tiếp tục)**
-    - Products/Catalog management
-    - Shopping Cart functionality
-    - Order processing workflow
-    - File upload system
-
-3. **Integration Testing (bao gồm Clerk)**
-    - Database connectivity verification.
-    - Clerk authentication and user management flows.
-    - External service integration testing.
-    - WebSocket functionality validation.
-
-4. **Development Workflow Setup**
-    - Migration system verification (có thể cần điều chỉnh bảng User).
-    - Test data seeding implementation (bao gồm user test trên Clerk).
-    - Development scripts optimization.
+### Medium-term Goals
+-   Triển khai các module chức năng theo PRD.
+-   Áp dụng các đề xuất tối ưu CSDL (indexing, prepared statements).
+-   Xây dựng hệ thống test (unit, integration, e2e).
 
 ### Long-term Objectives
-
-1. **Feature Enhancement**
-   - Advanced search functionality
-   - Recommendation engine
-   - Analytics dashboard
-   - Mobile API optimization
-
-2. **Performance Optimization**
-   - Caching strategy implementation
-   - Database query optimization
-   - API response time improvement
-
-3. **Production Readiness**
-   - Security audit và hardening
-   - Monitoring và logging setup
-   - Deployment pipeline creation
+-   Hoàn thiện tất cả các tính năng.
+-   Tối ưu hóa hiệu suất và bảo mật.
+-   Chuẩn bị cho việc triển khai (deployment).
 
 ## Current Understanding & Assumptions
 
 ### What We Know
-- ✅ NestJS-based e-commerce platform for shoes
-- ✅ Multi-database architecture properly designed
-- ✅ Authentication/authorization system sẽ được quản lý bởi Clerk.
-- ✅ Real-time chat functionality implemented.
-- ✅ Payment processing capability exists.
-- ✅ Email service integration ready
-- ✅ Background job processing available
+-   Yêu cầu chức năng và phi chức năng của hệ thống đã được định nghĩa chi tiết trong các tài liệu PTTK và SRS.
+-   Kiến trúc hệ thống, các module chính, và công nghệ sử dụng đã được xác định.
+-   Đã có các phân tích sâu về CSDL, API và các module.
+-   PRD đã được cập nhật và đưa vào Taskmaster AI.
 
 ### What Needs Clarification
-- ❓ Current development status (MVP vs full features).
-- ❓ Product catalog implementation status.
-- ❓ Shopping cart và order management implementation.
-- ❓ Chi tiết cấu hình Clerk (ví dụ: social providers, MFA policies).
-- ❓ Kế hoạch di chuyển người dùng hiện tại (nếu có) sang Clerk.
-- ❓ Frontend application existence và cách nó sẽ tích hợp với Clerk UI components / SDK.
-- ❓ Production deployment status.
+-   Mức độ ưu tiên cụ thể cho từng nhóm chức năng/module sau khi PRD được parse.
+-   Kế hoạch chi tiết cho việc di chuyển dữ liệu người dùng hiện tại (nếu có) sang Clerk.
+-   Chi tiết về frontend và cách tích hợp với backend API và Clerk UI components.
 
 ### Assumptions Made
-- 💭 Project is in early-to-mid development phase
-- 💭 Core infrastructure setup completed
-- 💭 Business logic implementation in progress
-- 💭 Focus on backend API development currently
-- 💭 Frontend integration planned but not primary focus yet
+-   Các tài liệu PTTK là nguồn thông tin chính xác và cập nhật nhất cho các yêu cầu của dự án.
+-   Việc parse PRD vào Taskmaster AI đã tạo ra một danh sách tác vụ cơ bản, cần được rà soát và tinh chỉnh thêm.
+-   Ưu tiên hiện tại là đảm bảo Memory Bank được cập nhật đầy đủ trước khi bắt đầu các công việc triển khai code mới.
 
 ## Decision Log
 
-### Technical Decisions Made
-
-1. **Architecture Choice**: Modular Monolith
-   - **Rationale**: Easier development và deployment initially
-   - **Trade-off**: May need microservices migration later
-   - **Date**: Inferred from codebase structure
-
-2. **Database Strategy**: Multi-database approach
-   - **Rationale**: Optimize each database for specific use cases
-   - **Trade-off**: Increased complexity but better performance
-   - **Date**: Evident from config files
-
-3. **Authentication**: Chuyển từ JWT tự quản lý sang **Clerk**
-    - **Rationale**: Giảm tải việc xây dựng và bảo trì hệ thống xác thực phức tạp (MFA, social login, session management, user lifecycle). Cung cấp trải nghiệm người dùng tốt hơn với các UI components sẵn có của Clerk (cho frontend). Tăng cường bảo mật.
-    - **Trade-off**: Phụ thuộc vào một dịch vụ bên thứ ba. Có thể phát sinh chi phí. Cần tích hợp vào kiến trúc hiện tại.
-    - **Date**: 16/06/2025 (Quyết định tích hợp)
+### Technical Decisions (Từ tài liệu đã đọc)
+-   **Kiến trúc Backend**: Modular Monolith với NestJS.
+-   **Cơ sở dữ liệu chính**: PostgreSQL.
+-   **Xác thực**: Clerk.
+-   **Thanh toán**: Stripe.
+-   **Email**: Resend.
+-   **Tìm kiếm (dự kiến)**: Elasticsearch.
+-   **Caching (dự kiến)**: Redis.
+-   **Tối ưu CSDL**: Áp dụng indexing và prepared statements. Logic nghiệp vụ không đặt nặng trong SP/Functions.
 
 ### Pending Decisions
-
-1. **Frontend Framework**: Not yet determined
-2. **Mobile App Strategy**: Native vs hybrid approach
-3. **Deployment Platform**: Cloud provider selection
-4. **Monitoring Solution**: Logging và metrics platform
-
-## Communication Notes
-
-### For Stakeholders
-- Project structure indicates solid technical foundation
-- Multi-database approach shows thoughtful scalability planning
-- Real-time features positioned for competitive advantage
-- Security implementation appears comprehensive
-
-### For Developers
-- Clear module separation makes feature development straightforward
-- TypeScript provides good type safety
-- NestJS patterns will be familiar to Angular developers
-- Docker setup should provide consistent development environment
-
-### For Operations
-- Health check endpoint exists for monitoring
-- Multi-database setup requires operational expertise
-- Container-based deployment should be straightforward
-- Background job processing needs monitoring setup
+-   Thứ tự ưu tiên triển khai các module/tính năng.
+-   Chiến lược cụ thể cho việc testing.
+-   Nền tảng triển khai (deployment platform).

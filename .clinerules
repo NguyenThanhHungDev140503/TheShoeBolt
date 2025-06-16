@@ -1,272 +1,143 @@
 # TheShoeBolt Project Intelligence (.clinerules)
 
 ## Project Context
-TheShoeBolt là nền tảng e-commerce chuyên về giày dép, sử dụng NestJS với kiến trúc multi-database. Dự án đã có foundation tốt nhưng thiếu core business logic modules như Products, Shopping Cart và Orders.
+TheShoeBolt là nền tảng e-commerce chuyên về giày dép, sử dụng NestJS với kiến trúc multi-database. Dự án đã có tài liệu phân tích thiết kế chi tiết, bao gồm SRS, ERD, API routes, module decomposition, và các đề xuất tối ưu hóa CSDL. Trọng tâm hiện tại là hoàn thiện Memory Bank và chuẩn bị cho việc triển khai các module nghiệp vụ cốt lõi.
 
 ## Core Patterns & Conventions
 
-### Module Structure Pattern
-```typescript
-// Mỗi module tuân theo pattern:
-@Module({
-  imports: [DatabaseModule, SharedModule],
-  controllers: [FeatureController],
-  providers: [FeatureService],
-  exports: [FeatureService]
-})
-export class FeatureModule {}
-```
+### Module Structure Pattern (NestJS)
+- Mỗi module nghiệp vụ và hạ tầng được đóng gói riêng biệt, tuân theo cấu trúc chuẩn của NestJS (`controllers`, `services`, `providers`, `dtos`, `entities`/`schemas`).
+- Tham khảo chi tiết trong `modules-report.pdf` và `api-routes.pdf`.
 
-### Database Strategy
-- **PostgreSQL**: Core business data (users, products, orders, payments)
-- **MongoDB**: Flexible data (chat messages, logs, user-generated content)
-- **Redis**: Caching, sessions, real-time data
-- **Elasticsearch**: Search indexing, analytics
+### Database Strategy & Access
+- **Multi-Database**:
+    - **PostgreSQL**: Dữ liệu quan hệ chính (User, Product, Order, Category, Address, Payment, Shipping, DiscountCode, Promotion, Review, Wishlist, Collection, Role, Permission, và các bảng trung gian). Sử dụng TypeORM.
+    - **MongoDB (Cân nhắc)**: Cho dữ liệu phi cấu trúc (Chat messages, Logs). Sử dụng Mongoose nếu triển khai.
+    - **Redis**: Caching, quản lý session (nếu không hoàn toàn dựa vào Clerk), dữ liệu real-time.
+    - **Elasticsearch**: Indexing cho tìm kiếm sản phẩm nâng cao.
+- **Tối ưu hóa CSDL**:
+    - **Indexing**: Ưu tiên tạo index cho các Khóa Ngoại (FK), các cột trạng thái (status), cột định danh duy nhất nghiệp vụ (email, discount code), cột tìm kiếm/phân loại chính (product name, category_id), và cột ngày tháng dùng cho lọc phạm vi (order created_at). Chi tiết trong "Báo cáo Phân tích Cột Dữ liệu Tiềm năng cho Indexing.pdf".
+    - **Prepared Statements**: Sử dụng cho các truy vấn thường xuyên lặp lại để tối ưu hiệu suất (tham khảo "Báo cáo Đề xuất Prepared Statements cho Hệ thống TheShoe.pdf").
+    - **Logic nghiệp vụ**: KHÔNG đặt trong Stored Procedures/Functions. Logic này thuộc về application layer (NestJS services).
 
-### Authentication & Authorization Pattern
-```typescript
-// Endpoint protection pattern with Clerk
-@UseGuards(ClerkAuthGuard, RolesGuard)
-@Roles('admin', 'user')
-@Controller('resource')
-export class ResourceController {}
-```
+### Authentication & Authorization Pattern (Clerk + RBAC)
+- **Xác thực**: Hoàn toàn dựa vào Clerk. `ClerkAuthGuard` sẽ xác thực JWT token.
+- **Quản lý người dùng**: Clerk là nguồn chính. Dữ liệu người dùng cơ bản có thể đồng bộ về PostgreSQL (qua Clerk Webhooks) và liên kết bằng `clerkUserId`.
+- **Phân quyền (RBAC)**: Vai trò (roles) được quản lý trong `publicMetadata` của Clerk. `RolesGuard` của NestJS sẽ đọc thông tin này để phân quyền truy cập API. Các quyền chi tiết (permissions) có thể được định nghĩa và quản lý trong CSDL cục bộ nếu cần.
 
-### Clerk Integration Patterns
-```typescript
-// ClerkModule configuration
-@Module({
-  imports: [
-    ClerkModule.forRootAsync({
-      useFactory: () => ({
-        secretKey: process.env.CLERK_SECRET_KEY,
-        publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
-      }),
-    }),
-  ],
-})
-export class AppModule {}
+### API Design
+- **RESTful API**: Tuân thủ các nguyên tắc REST.
+- **Versioning**: `/api/v1/...`
+- **Documentation**: Swagger (OpenAPI) được tạo tự động từ code.
+- **DTO Validation**: Sử dụng `class-validator` và `class-transformer` trong DTOs, áp dụng `ValidationPipe` toàn cục.
+- **Response Transformation**: `TransformInterceptor` để chuẩn hóa cấu trúc response.
+- Chi tiết các API routes được định nghĩa trong `api-routes.pdf`.
 
-// ClerkAuthGuard implementation
-@Injectable()
-export class ClerkAuthGuard implements CanActivate {
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
-    const auth = await clerk.authenticateRequest(request, {
-      secretKey: this.configService.get('CLERK_SECRET_KEY'),
-    });
-    
-    if (!auth.isSignedIn) {
-      throw new UnauthorizedException('Invalid authentication');
-    }
-    
-    request.user = auth.userId;
-    request.sessionClaims = auth.sessionClaims;
-    return true;
-  }
-}
-```
+### Error Handling
+- **Global Exception Filter**: `AllExceptionsFilter` để bắt và xử lý lỗi tập trung.
+- **Custom Business Exceptions**: Kế thừa từ `HttpException` cho các lỗi nghiệp vụ cụ thể.
 
-### DTO Validation Pattern
-```typescript
-export class CreateResourceDto {
-  @IsString()
-  @IsNotEmpty()
-  name: string;
-  
-  @IsOptional()
-  @IsEmail()
-  email?: string;
-}
-```
+### Real-time Communication
+- **WebSocket (Socket.IO hoặc NestJS native)**: Cho chat và thông báo.
 
-## Critical Missing Components
+### Background Processing
+- **Message Queues (RabbitMQ/Kafka - Cân nhắc)**: Cho các tác vụ bất đồng bộ (gửi email, xử lý đơn hàng phức tạp).
 
-### 1. Product Catalog System (Priority: Critical)
-- Product entity với variants (size, color, material)
-- Product images management
-- Categories và tags system
-- Inventory tracking per variant
-- Price management với discounts
+## Critical System Components & Integrations (Theo tài liệu PTTK)
 
-### 2. Shopping Cart & Orders (Priority: Critical)
-- Redis-based cart persistence
-- Order creation và status workflow
-- Inventory reservation system
-- Shipping integration
+### Core Business Modules
+- User, Product, Cart, Order, Checkout, Promotion, Notification, Wishlist, Feedback, Analytics, Collection.
+- Chi tiết chức năng và API của từng module được mô tả trong `modules-report.pdf` và `api-routes.pdf`.
 
-### 3. File Upload System (Priority: High)
-- Image upload cho products
-- File validation và processing
-- Storage integration (AWS S3/CloudFlare)
+### Key Integrations
+- **Clerk**: Authentication and User Management.
+- **Stripe**: Payment Processing.
+- **Resend**: Email Service.
+- **Shipping Partner APIs**: Lấy giá cước, tạo vận đơn, theo dõi.
+- **Elasticsearch**: Search.
+- **Cloud Storage (S3/Cloudinary)**: File storage (hình ảnh sản phẩm).
 
 ## Development Workflow Preferences
 
 ### Code Organization
-- Place new modules trong `src/modules/`
-- Follow existing naming conventions: `feature.controller.ts`, `feature.service.ts`, `feature.module.ts`
-- Create DTOs trong `dto/` subfolder
-- Entities trong `entities/` subfolder
-- Schemas (MongoDB) trong `schemas/` subfolder
+- Modules trong `src/modules/`.
+- Naming conventions: `feature.controller.ts`, `feature.service.ts`, `feature.module.ts`, `feature.entity.ts`, `feature.dto.ts`.
+- DTOs trong `dto/` subfolder của module.
+- Entities/Schemas trong `entities/` hoặc `schemas/` subfolder của module.
 
-### Database Patterns
-- Use TypeORM cho PostgreSQL entities
-- Use Mongoose cho MongoDB schemas
-- Always create proper relationships và indexes
-- Follow existing configuration patterns trong `src/config/`
+### Database Interaction
+- Sử dụng TypeORM cho PostgreSQL.
+- Tuân thủ ERD đã phân tích trong `Phân Tích ERD Hệ Thống Web Bán Giày (Report).pdf`.
+- Áp dụng các chiến lược indexing và prepared statements đã đề xuất.
 
-### Error Handling
-- Use custom exceptions extending HttpException
-- Leverage global exception filter
-- Provide meaningful error messages
-- Log errors appropriately
+### Logging
+- Sử dụng `LoggingInterceptor` và thư viện logging có cấu trúc (Pino/Winston).
 
-### Validation Strategy
-- Use class-validator decorators trong DTOs
-- Implement business logic validation trong services
-- Use ValidationPipe globally
-- Transform và sanitize inputs
-
-## Technical Debt Priorities
+## Technical Debt & Priorities (Dựa trên phân tích và PRD mới)
 
 ### High Priority
-1. Complete Clerk authentication integration (In Progress)
-2. Implement missing core modules (Products, Cart, Orders)
-3. Add comprehensive error handling cho business logic
-4. Implement proper logging strategy
-5. Add API rate limiting và security headers
+1.  **Triển khai các Module Nghiệp vụ Cốt lõi**: Product, Cart, Order, Payment theo PRD mới.
+2.  **Hoàn thiện Tích hợp Clerk**: Đảm bảo luồng xác thực và quản lý người dùng hoạt động trơn tru, đồng bộ dữ liệu user nếu cần.
+3.  **Tích hợp Stripe**: Cho chức năng thanh toán.
+4.  **Tích hợp Resend**: Cho gửi email thông báo.
+5.  **Xây dựng hệ thống RBAC**: Dựa trên vai trò từ Clerk và permissions (nếu cần) từ CSDL cục bộ.
+6.  **Triển khai chức năng Tìm kiếm cơ bản**: (Có thể chưa cần Elasticsearch ngay giai đoạn đầu nếu tìm kiếm đơn giản).
 
 ### Medium Priority
-1. Add comprehensive test suite
-2. Optimize database queries và add indexes
-3. Implement caching strategy with Redis
-4. Add API documentation với Swagger
+1.  **Tối ưu hóa CSDL**: Áp dụng các index và prepared statements đã phân tích.
+2.  **Triển khai các Module hỗ trợ**: Notification, Wishlist, Feedback, Collection.
+3.  **Xây dựng hệ thống Test**: Unit test, Integration test cho các module đã triển khai.
+4.  **Hoàn thiện File Storage**: Tích hợp lưu trữ hình ảnh sản phẩm.
+5.  **Triển khai Message Queues**: Cho các tác vụ bất đồng bộ cần thiết.
 
 ### Low Priority
-1. Performance monitoring setup
-2. Advanced analytics implementation
-3. Mobile API optimizations
-4. Third-party integrations
+1.  **Triển khai Elasticsearch**: Cho tìm kiếm nâng cao.
+2.  **Hoàn thiện Analytics Module**: Xây dựng dashboard và báo cáo chi tiết.
+3.  **Tối ưu hóa hiệu suất nâng cao**: Caching với Redis, tối ưu truy vấn sâu.
 
-## External Dependencies
+## Performance Considerations (Từ tài liệu PTTK)
 
-### Payment Gateways
-- Primary: Stripe (recommended for international)
-- Secondary: PayPal, local payment methods
-- Implementation: Strategy pattern for multiple providers
+-   **Database**:
+    -   Sử dụng indexing hiệu quả (đã có báo cáo phân tích).
+    -   Sử dụng prepared statements cho các truy vấn lặp lại (đã có báo cáo đề xuất).
+    -   Connection pooling (TypeORM hỗ trợ).
+-   **API**:
+    -   Caching response với Redis (cho các API đọc dữ liệu ít thay đổi).
+    -   Phân trang (Pagination) cho các API trả về danh sách lớn.
+    -   Nén response (Response compression).
+-   **Real-time**: Quản lý WebSocket connection hiệu quả.
 
-### Email Services
-- Recommendation: SendGrid hoặc AWS SES
-- Features needed: Templates, tracking, bulk sending
-- Integration: Queue-based processing
+## Security Patterns (Từ tài liệu PTTK & SRS)
 
-### File Storage
-- Recommendation: AWS S3 hoặc CloudFlare R2
-- Features: Image optimization, CDN delivery
-- Security: Signed URLs, access control
-
-## Performance Considerations
-
-### Database Optimization
-- Add indexes cho frequently queried fields
-- Use connection pooling (already configured)
-- Implement query result caching
-- Monitor slow queries
-
-### API Performance
-- Implement response caching with Redis
-- Use pagination cho large datasets
-- Optimize N+1 query problems
-- Add API response compression
-
-### Real-time Features
-- WebSocket connection management
-- Message queue để handle high volume
-- Rate limiting cho chat messages
-- Graceful degradation strategies
-
-## Security Patterns
-
-### Authentication Security (Clerk-based)
-- Clerk handles JWT token management and expiration
-- Session management through Clerk SDK
-- MFA support through Clerk configuration
-- Social login providers managed by Clerk
-- Rate limiting cho login attempts (implement at application level)
-- User lifecycle events via Clerk webhooks
-
-### Data Protection
-- Input sanitization và validation
-- SQL injection prevention (TypeORM helps)
-- XSS protection headers
-- CSRF protection for sensitive operations
-
-### API Security
-- Request rate limiting
-- API key management for external integrations
-- CORS configuration
-- Security headers middleware
+-   **Authentication**: Clerk xử lý.
+-   **Authorization**: RBAC với `RolesGuard` đọc vai trò từ Clerk.
+-   **Data Protection**:
+    -   Input validation (DTOs).
+    -   Chống SQL Injection (TypeORM).
+    -   Headers bảo mật (XSS, CSRF).
+-   **API Security**:
+    -   Rate limiting.
+    -   CORS configuration.
+-   **Webhook Security**: Xác minh chữ ký.
 
 ## Deployment Patterns
-
-### Environment Management
-- Use Docker containers (already configured)
-- Environment-specific configurations
-- Secret management (avoid hardcoded secrets)
-- Health check endpoints (already implemented)
-
-### Database Management
-- Migration strategy with TypeORM
-- Database seeding for development
-- Backup và recovery procedures
-- Connection monitoring
+-   **Containerization**: Docker.
+-   **Environment Management**: `.env` files, NestJS `ConfigModule`.
+-   **Database Migrations**: TypeORM migrations.
 
 ## Code Quality Standards
+-   **TypeScript**: Strict type checking, interfaces, generics.
+-   **Testing**: Jest (Unit, Integration), Supertest (E2E). Mục tiêu coverage > 80%.
+-   **Documentation**: Swagger cho API, README, ADRs.
 
-### TypeScript Patterns
-- Use strict type checking
-- Implement proper interfaces
-- Use generics appropriately
-- Avoid any types
+## User Experience Priorities (Từ SRS)
+-   **Khách hàng**: Tìm kiếm nhanh, thanh toán liền mạch, theo dõi đơn hàng.
+-   **Admin**: Dashboard toàn diện, quản lý dễ dàng, báo cáo hiệu quả.
 
-### Testing Strategy
-- Unit tests cho services
-- Integration tests cho controllers
-- E2E tests cho critical user flows
-- Mock external dependencies
+## Business Logic Patterns (Từ SRS và PTTK)
+-   **E-commerce Workflows**: Product discovery → Cart → Checkout → Payment → Fulfillment.
+-   **Inventory Management**: Theo dõi tồn kho, có thể cần cơ chế reservation khi đặt hàng.
+-   **Order Status Tracking**: Cập nhật trạng thái và thông báo cho người dùng.
+-   **Data Consistency**: Sử dụng transactions cho các thao tác CSDL đa bước.
 
-### Documentation Requirements
-- API documentation với Swagger decorators
-- README với setup instructions  
-- Architecture decision records
-- Code comments cho complex business logic
-
-## User Experience Priorities
-
-### Customer Experience
-- Fast product search và filtering
-- Real-time inventory updates
-- Seamless checkout process
-- Order tracking capabilities
-
-### Admin Experience
-- Comprehensive dashboard
-- Bulk operations support
-- Analytics và reporting
-- Easy product management
-
-## Business Logic Patterns
-
-### E-commerce Workflows
-- Product discovery → Cart → Checkout → Payment → Fulfillment
-- Inventory management với reservation system
-- Order status tracking với notifications
-- Returns và refunds handling
-
-### Data Consistency
-- Use database transactions cho multi-step operations
-- Implement eventual consistency where appropriate
-- Handle race conditions trong inventory management
-- Audit trail cho important business events
-
-Các patterns và decisions này được thiết lập để đảm bảo dự án phát triển consistent, maintainable và scalable theo business requirements của e-commerce platform.
+Các patterns và quyết định này được tổng hợp từ các tài liệu phân tích thiết kế của dự án, nhằm đảm bảo việc phát triển nhất quán, dễ bảo trì và có khảability mở rộng, đáp ứng các yêu cầu nghiệp vụ của nền tảng TheShoeBolt.
