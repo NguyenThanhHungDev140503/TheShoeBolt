@@ -1,0 +1,11 @@
+# Task ID: 8
+# Title: Implement Order Management System
+# Status: pending
+# Dependencies: 6
+# Priority: medium
+# Description: Develop a system to manage order statuses and workflows.
+# Details:
+Extend the Order model to include status workflow (pending, confirmed, shipped, delivered, cancelled). Implement APIs for status updates. Use PostgreSQL for storage.
+
+# Test Strategy:
+Test status transitions. Validate workflow logic.

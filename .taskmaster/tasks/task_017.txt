@@ -1,0 +1,11 @@
+# Task ID: 17
+# Title: Conduct Load Testing
+# Status: pending
+# Dependencies: 16
+# Priority: low
+# Description: Perform load testing to ensure system scalability.
+# Details:
+Use tools like JMeter or k6 to simulate high traffic. Identify bottlenecks and optimize accordingly. Ensure database and API scalability.
+
+# Test Strategy:
+Run load tests. Validate system performance under stress.

@@ -1,0 +1,11 @@
+# Task ID: 2
+# Title: Implement Product Variants Management
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Add support for managing product variants (size, color, material) for each product.
+# Details:
+Extend the Product model to include variants. Implement APIs to manage variants (create, update, delete). Ensure inventory tracking per variant. Use PostgreSQL for storage.
+
+# Test Strategy:
+Unit tests for variant operations. Integration tests for variant APIs. Validate inventory updates.

@@ -1,0 +1,11 @@
+# Task ID: 9
+# Title: Integrate Inventory Management
+# Status: pending
+# Dependencies: 2, 6
+# Priority: medium
+# Description: Link the order system with inventory tracking for stock reservation.
+# Details:
+Update the ProductVariant model to track stock. Implement APIs to reserve stock on order creation and release on cancellation. Ensure data consistency.
+
+# Test Strategy:
+Test stock reservation and release. Validate inventory updates.

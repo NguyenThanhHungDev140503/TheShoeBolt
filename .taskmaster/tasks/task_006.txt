@@ -1,0 +1,11 @@
+# Task ID: 6
+# Title: Develop Order Creation System
+# Status: pending
+# Dependencies: 5
+# Priority: high
+# Description: Implement order creation from the shopping cart with basic status tracking.
+# Details:
+Define the Order and OrderItem models. Implement APIs to create orders from cart items. Use PostgreSQL for storage. Include basic status workflow (pending, confirmed).
+
+# Test Strategy:
+Test order creation flow. Validate status updates.

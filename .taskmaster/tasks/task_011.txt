@@ -1,0 +1,11 @@
+# Task ID: 11
+# Title: Develop Admin Dashboard for Products
+# Status: pending
+# Dependencies: 1, 2
+# Priority: low
+# Description: Create an admin interface for managing products and variants.
+# Details:
+Use a frontend framework (e.g., React) to build the admin dashboard. Implement CRUD operations for products and variants. Ensure proper authorization with Clerk.
+
+# Test Strategy:
+Test admin operations. Validate authorization checks.

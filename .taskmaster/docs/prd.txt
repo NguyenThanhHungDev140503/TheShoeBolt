@@ -1,0 +1,297 @@
+# Product Requirements Document: TheShoe - Website Thương mại điện tử Bán Giày
+
+## 1. Giới thiệu (Introduction)
+
+### 1.1. Mục đích (Purpose)
+Tài liệu này xác định các yêu cầu kỹ thuật và nghiệp vụ cho dự án phát triển backend (BE) của website thương mại điện tử TheShoe. Hệ thống BE sẽ cung cấp nền tảng vững chắc cho các chức năng của người dùng, quản trị viên và shipper, đồng thời đảm bảo hiệu suất, bảo mật và khả năng mở rộng.
+
+### 1.2. Phạm vi (Scope)
+Hệ thống BE sẽ bao gồm các module chính sau:
+- Quản lý Người dùng (User Management)
+- Quản lý Sản phẩm (Product Management)
+- Quản lý Giỏ hàng (Cart Management)
+- Quản lý Đơn hàng (Order Management)
+- Quản lý Thanh toán (Checkout Management)
+- Quản lý Khuyến mãi (Promotion Management)
+- Quản lý Thông báo (Notification Management)
+- Quản lý Wishlist (Wishlist Management)
+- Quản lý Phản hồi (Feedback Management)
+- Thống kê (Analytics)
+- Quản lý Bộ sưu tập (Collection Management)
+- Xác thực (Authentication via Clerk)
+- Tích hợp Vận chuyển (Shipper Integration)
+- Tích hợp Cổng thanh toán (Stripe Payment Gateway)
+- Các module hạ tầng: RBAC, Xử lý lỗi, Cơ sở dữ liệu, Email, Logging, Cache, Lưu trữ tệp, Tìm kiếm, Hàng đợi tin nhắn, Cổng API, Xử lý Webhook.
+
+## 2. Đối tượng người dùng (User Characteristics)
+
+- **Khách hàng**: Người dùng cuối, duyệt sản phẩm, đặt hàng, thanh toán, quản lý tài khoản cá nhân.
+- **Quản trị viên**: Quản lý hệ thống, sản phẩm, đơn hàng, người dùng, khuyến mãi, xem thống kê.
+- **Shipper**: Thực hiện giao hàng, cập nhật trạng thái đơn hàng.
+
+## 3. Yêu cầu chức năng (Functional Requirements)
+
+### 3.1. Quản lý Người dùng
+- **FR-001**: Đăng ký tài khoản (email, SĐT, Google - qua Clerk).
+- **FR-002**: Đăng nhập (email/mật khẩu, Google - qua Clerk).
+- **FR-USER-VIEW**: Người dùng xem thông tin cá nhân.
+- **FR-USER-UPDATE**: Người dùng cập nhật thông tin cá nhân.
+- **FR-USER-PASS-RESET-REQ**: Người dùng yêu cầu đặt lại mật khẩu.
+- **FR-USER-PASS-UPDATE**: Người dùng cập nhật mật khẩu.
+- **FR-ADMIN-USERS-LIST**: Admin xem danh sách tất cả người dùng.
+- **FR-ADMIN-USER-VIEW**: Admin xem thông tin người dùng bất kỳ.
+- **FR-ADMIN-USER-UPDATE**: Admin cập nhật thông tin người dùng bất kỳ.
+- **FR-ADMIN-USER-DELETE**: Admin xóa người dùng.
+- **FR-026, FR-027**: Admin quản lý tài khoản người dùng, tạo tài khoản shipper.
+- **FR-027**: Admin phân quyền cho các tài khoản (RBAC).
+
+### 3.2. Quản lý Sản phẩm
+- **FR-003**: Hiển thị danh mục sản phẩm.
+- **FR-004**: Hiển thị chi tiết sản phẩm (hình ảnh, mô tả, giá, kích cỡ, màu sắc).
+- **FR-005**: Tìm kiếm sản phẩm cơ bản (theo tên).
+- **FR-006**: Tìm kiếm sản phẩm nâng cao (danh mục, collection, giá, tag).
+- **FR-007**: Lọc sản phẩm (danh mục, collection, giá, kích thước, màu sắc, chất liệu, tag).
+- **FR-011**: Người dùng đánh giá sản phẩm đã mua.
+- **FR-ADMIN-PRODUCT-REVIEW-VIEW**: Admin xem đánh giá sản phẩm.
+- **FR-ADMIN-PRODUCT-REVIEW-DELETE**: Admin xóa đánh giá không phù hợp.
+- **FR-023**: Admin thêm, sửa, xóa sản phẩm.
+- **FR-024**: Admin thêm, sửa, xóa danh mục sản phẩm.
+- **FR-PRODUCT-CATEGORIES-VIEW**: Người dùng xem danh sách danh mục.
+
+### 3.3. Quản lý Giỏ hàng
+- **FR-008**: Người dùng thêm/xóa/cập nhật số lượng sản phẩm trong giỏ hàng.
+- **FR-CART-VIEW**: Người dùng xem thông tin giỏ hàng.
+- **FR-CART-CHECKOUT**: Người dùng mua hàng từ giỏ hàng.
+- **FR-CART-CLEAR**: Người dùng xóa toàn bộ giỏ hàng.
+- **FR-ADMIN-CART-USER-VIEW**: Admin xem giỏ hàng của người dùng cụ thể.
+- **FR-ADMIN-CART-ANALYTICS**: Admin xem phân tích về sản phẩm trong giỏ hàng (abandoned carts).
+
+### 3.4. Quản lý Đơn hàng
+- **FR-ORDER-CREATE**: Người dùng tạo đơn hàng mới.
+- **FR-015, FR-016**: Người dùng theo dõi trạng thái đơn hàng, lịch sử đơn hàng.
+- **FR-ORDER-DELIVERY-CONFIRM**: Người dùng xác nhận đã nhận hàng.
+- **FR-ORDER-CANCEL**: Người dùng hủy đơn hàng (chưa xử lý).
+- **FR-ORDER-REFUND-REQ**: Người dùng yêu cầu hoàn tiền.
+- **FR-025**: Admin xem, quản lý đơn hàng (lọc theo thời gian, xem chi tiết, đánh dấu xử lý).
+- **FR-ADMIN-ORDER-STATUS-UPDATE**: Admin cập nhật trạng thái đơn hàng.
+- **FR-ADMIN-ORDER-UPDATE**: Admin cập nhật thông tin đơn hàng.
+- **FR-ADMIN-ORDER-REFUND-PROCESS**: Admin xử lý yêu cầu hoàn tiền.
+- **FR-ADMIN-ORDER-ANALYTICS**: Admin xem phân tích, thống kê đơn hàng.
+- **FR-ADMIN-ORDER-EXPORT**: Admin xuất dữ liệu đơn hàng.
+- **FR-019**: Hỗ trợ mua hàng với tư cách khách vãng lai.
+- **FR-020**: Mua hàng trực tiếp từ trang sản phẩm.
+- **FR-021**: Mua hàng từ trang giỏ hàng.
+
+### 3.5. Quản lý Thanh toán
+- **FR-014**: Hỗ trợ thanh toán (Stripe).
+- **FR-CHECKOUT-CREATE**: Người dùng tạo thanh toán.
+- **FR-CHECKOUT-CONFIRM**: Người dùng xác nhận thanh toán.
+- **FR-CHECKOUT-CANCEL**: Người dùng hủy thanh toán.
+- **FR-CHECKOUT-STATUS-VIEW**: Người dùng xem trạng thái thanh toán.
+- **FR-CHECKOUT-HISTORY-VIEW**: Người dùng xem lịch sử thanh toán.
+- **FR-CHECKOUT-INVOICE-VIEW**: Người dùng xem hóa đơn.
+- **FR-CHECKOUT-METHODS-VIEW**: Người dùng xem danh sách phương thức thanh toán.
+- **FR-CHECKOUT-VERIFY**: Người dùng xác minh thông tin thanh toán.
+- **FR-CHECKOUT-DETAIL-VIEW**: Người dùng xem chi tiết giao dịch.
+- **FR-ADMIN-CHECKOUT-TRANSACTIONS-VIEW**: Admin xem danh sách tất cả giao dịch.
+- **FR-ADMIN-CHECKOUT-TRANSACTION-DETAIL-VIEW**: Admin xem chi tiết giao dịch.
+- **FR-ADMIN-CHECKOUT-CALLBACK**: Hệ thống nhận callback từ cổng thanh toán (webhook).
+- **FR-ADMIN-CHECKOUT-METHODS-ADD**: Admin thêm phương thức thanh toán.
+- **FR-ADMIN-CHECKOUT-METHODS-UPDATE**: Admin cập nhật phương thức thanh toán.
+- **FR-ADMIN-CHECKOUT-METHODS-DELETE**: Admin vô hiệu hóa phương thức thanh toán.
+- **FR-ADMIN-CHECKOUT-ANALYTICS**: Admin xem phân tích thanh toán.
+
+### 3.6. Quản lý Khuyến mãi
+- **FR-012, FR-013**: Người dùng áp dụng khuyến mãi, mã giảm giá (hỗ trợ nhiều mã).
+- **FR-PROMO-VIEW**: Người dùng xem danh sách khuyến mãi công khai.
+- **FR-PROMO-DETAIL-VIEW**: Người dùng xem chi tiết khuyến mãi công khai.
+- **FR-PROMO-VALIDATE**: Người dùng kiểm tra tính hợp lệ của mã giảm giá.
+- **FR-PROMO-ACTIVE-VIEW**: Người dùng xem khuyến mãi đang hoạt động.
+- **FR-031, FR-032**: Admin tạo, sửa, xóa chương trình khuyến mãi, mã giảm giá.
+- **FR-ADMIN-PROMO-ALL-VIEW**: Admin xem tất cả khuyến mãi (cả riêng tư).
+- **FR-ADMIN-PROMO-ANALYTICS**: Admin xem phân tích hiệu quả khuyến mãi.
+- **FR-ADMIN-PROMO-BATCH-CREATE**: Admin tạo nhiều khuyến mãi cùng lúc.
+- **FR-ADMIN-PROMO-STATUS-UPDATE**: Admin cập nhật trạng thái khuyến mãi.
+
+### 3.7. Quản lý Thông báo
+- **FR-017**: Người dùng nhận thông báo từ hệ thống.
+- **FR-NOTIFICATION-VIEW**: Người dùng xem danh sách thông báo.
+- **FR-NOTIFICATION-DETAIL-VIEW**: Người dùng xem chi tiết thông báo.
+- **FR-NOTIFICATION-MARK-READ**: Người dùng đánh dấu đã đọc.
+- **FR-NOTIFICATION-MARK-ALL-READ**: Người dùng đánh dấu tất cả đã đọc.
+- **FR-NOTIFICATION-DELETE**: Người dùng xóa thông báo.
+- **FR-NOTIFICATION-SETTINGS-VIEW**: Người dùng xem cài đặt thông báo.
+- **FR-NOTIFICATION-SETTINGS-UPDATE**: Người dùng cập nhật cài đặt thông báo.
+- **FR-ADMIN-NOTIFICATION-SEND**: Admin gửi thông báo tới người dùng.
+- **FR-ADMIN-NOTIFICATION-ALL-VIEW**: Admin xem tất cả thông báo.
+- **FR-ADMIN-NOTIFICATION-BULK-SEND**: Admin gửi thông báo hàng loạt.
+- **FR-ADMIN-NOTIFICATION-STATS**: Admin xem thống kê thông báo.
+- **FR-ADMIN-NOTIFICATION-TEMPLATES-VIEW**: Admin xem danh sách mẫu thông báo.
+- **FR-ADMIN-NOTIFICATION-TEMPLATES-CREATE**: Admin tạo mẫu thông báo.
+- **FR-ADMIN-NOTIFICATION-TEMPLATES-UPDATE**: Admin cập nhật mẫu thông báo.
+
+### 3.8. Quản lý Wishlist và Yêu thích
+- **FR-009**: Người dùng đăng ký wishlist (nhận thông báo sản phẩm mới qua email - Resend).
+- **FR-010**: Người dùng thêm sản phẩm vào danh sách yêu thích.
+- **FR-WISHLIST-ADD**: Người dùng thêm sản phẩm vào wishlist.
+- **FR-WISHLIST-DELETE**: Người dùng xóa sản phẩm khỏi wishlist.
+- **FR-WISHLIST-VIEW**: Người dùng xem danh sách wishlist.
+- **FR-WISHLIST-COUNT**: Người dùng xem số lượng sản phẩm trong wishlist.
+- **FR-WISHLIST-MOVE-TO-CART**: Người dùng chuyển sản phẩm từ wishlist sang giỏ hàng.
+- **FR-ADMIN-WISHLIST-USER-VIEW**: Admin xem wishlist của người dùng cụ thể.
+- **FR-ADMIN-WISHLIST-ANALYTICS**: Admin xem phân tích sản phẩm trong wishlist.
+- **FR-ADMIN-WISHLIST-POPULAR**: Admin xem sản phẩm phổ biến trong wishlist.
+
+### 3.9. Quản lý Phản hồi và Tin nhắn
+- **FR-FEEDBACK-SEND**: Người dùng gửi phản hồi.
+- **FR-FEEDBACK-VIEW**: Người dùng xem danh sách phản hồi của mình.
+- **FR-FEEDBACK-DETAIL-VIEW**: Người dùng xem chi tiết phản hồi.
+- **FR-FEEDBACK-UPDATE**: Người dùng cập nhật phản hồi.
+- **FR-FEEDBACK-DELETE**: Người dùng xóa phản hồi.
+- **FR-018**: Người dùng nhắn tin với quản trị viên.
+- **FR-MESSAGE-CONVERSATION-VIEW**: Người dùng xem tin nhắn của cuộc trò chuyện.
+- **FR-MESSAGE-CONVERSATIONS-VIEW**: Người dùng xem danh sách cuộc trò chuyện.
+- **FR-034**: Admin xem, xử lý phản hồi từ khách hàng.
+- **FR-ADMIN-FEEDBACK-ALL-VIEW**: Admin xem tất cả phản hồi.
+- **FR-ADMIN-FEEDBACK-USER-VIEW**: Admin xem phản hồi của người dùng cụ thể.
+- **FR-ADMIN-FEEDBACK-STATUS-UPDATE**: Admin cập nhật trạng thái xử lý phản hồi.
+- **FR-ADMIN-FEEDBACK-CATEGORIES-VIEW**: Admin xem danh sách phân loại phản hồi.
+- **FR-ADMIN-MESSAGES-ALL-VIEW**: Admin xem tất cả cuộc trò chuyện.
+- **FR-ADMIN-MESSAGES-STATUS-UPDATE**: Admin cập nhật trạng thái cuộc trò chuyện.
+- **FR-ADMIN-FEEDBACK-ANALYTICS**: Admin xem phân tích phản hồi.
+
+### 3.10. Thống kê (Analytics)
+- **FR-ANALYTICS-PERSONAL-VIEW**: Người dùng xem phân tích cá nhân (lịch sử mua hàng, sản phẩm đã xem).
+- **FR-ANALYTICS-RECOMMENDATIONS**: Người dùng nhận gợi ý sản phẩm.
+- **FR-028**: Admin xem thống kê theo loại sản phẩm (biểu đồ lợi nhuận).
+- **FR-029**: Admin xem thống kê tổng thể (biểu đồ lợi nhuận).
+- **FR-030**: Admin xem thống kê sản phẩm bán chạy.
+- **FR-033**: Admin xem dashboard theo dõi hiệu quả khuyến mãi.
+- **FR-ADMIN-ANALYTICS-PRODUCTS**: Admin thống kê theo sản phẩm.
+- **FR-ADMIN-ANALYTICS-CATEGORIES**: Admin thống kê theo danh mục.
+- **FR-ADMIN-ANALYTICS-REVENUE**: Admin thống kê doanh thu.
+- **FR-ADMIN-ANALYTICS-CUSTOMERS**: Admin thống kê khách hàng.
+- **FR-ADMIN-ANALYTICS-DASHBOARD**: Admin xem dữ liệu tổng quan cho dashboard.
+- **FR-ADMIN-ANALYTICS-EXPORT**: Admin xuất báo cáo phân tích.
+- **FR-ADMIN-ANALYTICS-SEGMENTS-CREATE**: Admin tạo phân đoạn khách hàng.
+
+### 3.11. Quản lý Bộ sưu tập (Collection)
+- **FR-COLLECTION-VIEW**: Người dùng xem danh sách bộ sưu tập công khai.
+- **FR-COLLECTION-DETAIL-VIEW**: Người dùng xem chi tiết bộ sưu tập.
+- **FR-COLLECTION-PRODUCTS-VIEW**: Người dùng xem sản phẩm trong bộ sưu tập.
+- **FR-ADMIN-COLLECTION-CREATE**: Admin tạo bộ sưu tập.
+- **FR-ADMIN-COLLECTION-UPDATE**: Admin cập nhật bộ sưu tập.
+- **FR-ADMIN-COLLECTION-DELETE**: Admin xóa bộ sưu tập.
+- **FR-ADMIN-COLLECTION-PRODUCT-ADD**: Admin thêm sản phẩm vào bộ sưu tập.
+- **FR-ADMIN-COLLECTION-PRODUCT-DELETE**: Admin xóa sản phẩm khỏi bộ sưu tập.
+- **FR-ADMIN-COLLECTION-STATUS-UPDATE**: Admin cập nhật trạng thái bộ sưu tập.
+- **FR-ADMIN-COLLECTION-ANALYTICS**: Admin xem phân tích hiệu quả bộ sưu tập.
+
+### 3.12. Xác thực (Authentication - Clerk)
+- **FR-AUTH-CALLBACK**: Callback URL cho OAuth providers (Google, Facebook, etc.).
+- **FR-AUTH-ME**: Lấy thông tin người dùng hiện tại.
+- **FR-AUTH-SIGN-OUT**: Đăng xuất.
+- **FR-AUTH-SESSION-CHECK**: Kiểm tra phiên hiện tại.
+- **FR-AUTH-TOKEN-REFRESH**: Làm mới token.
+- **FR-AUTH-JWT-GET**: Lấy JWT token cho client.
+- **FR-AUTH-EMAIL-VERIFY**: Xác minh email từ liên kết.
+- **FR-ADMIN-AUTH-USERS-VIEW**: Admin xem danh sách người dùng trong Clerk.
+- **FR-ADMIN-AUTH-USER-DETAIL-VIEW**: Admin xem chi tiết người dùng trong Clerk.
+- **FR-ADMIN-AUTH-USER-STATUS-UPDATE**: Admin thay đổi trạng thái tài khoản (kích hoạt/vô hiệu hóa) trong Clerk.
+- **FR-ADMIN-AUTH-SESSIONS-VIEW**: Admin xem danh sách phiên đăng nhập.
+- **FR-ADMIN-AUTH-SESSION-DELETE**: Admin xóa phiên đăng nhập.
+- **FR-ADMIN-AUTH-SECURITY-LOGS-VIEW**: Admin xem nhật ký bảo mật.
+
+### 3.13. Tích hợp Vận chuyển (Shipper Integration)
+- **FR-022**: Shipper xác nhận đã giao hàng thành công.
+- **FR-SHIPPER-TRACKING-VIEW**: Người dùng theo dõi đơn hàng.
+- **FR-SHIPPER-PROVIDERS-VIEW**: Người dùng xem danh sách đơn vị vận chuyển.
+- **FR-SHIPPER-CALCULATE-FEE**: Người dùng tính phí vận chuyển.
+- **FR-ADMIN-SHIPPER-STATUS-UPDATE**: Hệ thống cập nhật trạng thái từ đơn vị vận chuyển (webhook).
+- **FR-ADMIN-SHIPPER-ORDERS-VIEW**: Admin xem danh sách đơn hàng cần giao.
+- **FR-ADMIN-SHIPPER-ORDER-STATUS-UPDATE**: Admin cập nhật trạng thái đơn hàng (thủ công).
+- **FR-ADMIN-SHIPPER-ANALYTICS**: Admin xem phân tích hiệu quả vận chuyển.
+- **FR-ADMIN-SHIPPER-PROVIDERS-ADD**: Admin thêm đơn vị vận chuyển.
+- **FR-ADMIN-SHIPPER-PROVIDERS-UPDATE**: Admin cập nhật thông tin đơn vị vận chuyển.
+- **FR-SHIPPER-ASSIGNED-ORDERS-VIEW**: Shipper xem danh sách đơn hàng được phân công.
+- **FR-SHIPPER-ORDER-STATUS-UPDATE**: Shipper cập nhật trạng thái đơn hàng.
+- **FR-SHIPPER-DELIVERY-PROOF-UPLOAD**: Shipper tải lên bằng chứng giao hàng.
+- **FR-SHIPPER-ISSUE-REPORT**: Shipper báo cáo vấn đề giao hàng.
+
+### 3.14. Tích hợp Cổng thanh toán (Stripe)
+- **FR-STRIPE-PAYMENT-INTENT-CREATE**: Tạo payment intent.
+- **FR-STRIPE-PAYMENT-CONFIRM**: Xác nhận thanh toán.
+- **FR-STRIPE-PAYMENT-STATUS-CHECK**: Kiểm tra trạng thái thanh toán.
+- **FR-STRIPE-PAYMENT-METHOD-ADD**: Thêm phương thức thanh toán.
+- **FR-STRIPE-PAYMENT-METHODS-VIEW**: Xem danh sách phương thức thanh toán đã lưu.
+- **FR-STRIPE-PAYMENT-METHOD-DELETE**: Xóa phương thức thanh toán.
+- **FR-STRIPE-SETUP-INTENT-CREATE**: Tạo setup intent (lưu thẻ an toàn).
+- **FR-ADMIN-STRIPE-TRANSACTIONS-VIEW**: Admin xem danh sách giao dịch.
+- **FR-ADMIN-STRIPE-TRANSACTION-DETAIL-VIEW**: Admin xem chi tiết giao dịch.
+- **FR-ADMIN-STRIPE-REFUND**: Admin hoàn tiền.
+- **FR-ADMIN-STRIPE-DASHBOARD-LINK**: Admin tạo link an toàn đến Stripe Dashboard.
+- **FR-ADMIN-STRIPE-ANALYTICS**: Admin xem phân tích giao dịch.
+- **FR-ADMIN-STRIPE-SETTINGS-UPDATE**: Admin cập nhật cài đặt Stripe.
+- **FR-ADMIN-STRIPE-WEBHOOK-SETUP**: Admin cấu hình webhook.
+
+## 4. Yêu cầu phi chức năng (Non-Functional Requirements)
+
+- **NFR-1**: Giao diện thân thiện, dễ sử dụng (Áp dụng cho cả trang người dùng và trang quản trị).
+- **NFR-2**: Hiệu suất hệ thống:
+    - Đáp ứng tối thiểu 100 người dùng đồng thời.
+    - Thời gian phản hồi của API dưới 200ms cho 95% request.
+    - Tối ưu hóa truy vấn CSDL, sử dụng indexing và prepared statements hiệu quả.
+- **NFR-3**: Bảo mật:
+    - Dữ liệu người dùng, đơn hàng, thanh toán phải được mã hóa.
+    - Tuân thủ OWASP Top 10.
+    - Sử dụng Clerk cho xác thực để tăng cường bảo mật.
+    - Bảo vệ chống lại các tấn công phổ biến (SQL Injection, XSS, CSRF).
+- **NFR-4**: Thời gian phản hồi trang web dưới 2 giây (Liên quan đến BE API performance).
+- **NFR-5**: Hỗ trợ đa ngôn ngữ (Tiếng Anh, Tiếng Việt) cho dữ liệu sản phẩm, danh mục.
+- **Khả năng mở rộng**: Hệ thống có khả năng mở rộng để đáp ứng lượng truy cập tăng cao.
+- **Khả năng bảo trì**: Mã nguồn được tổ chức rõ ràng, dễ hiểu, dễ bảo trì và nâng cấp.
+- **Độ tin cậy**: Hệ thống hoạt động ổn định, giảm thiểu thời gian downtime.
+
+## 5. Thiết kế hệ thống tổng quan
+
+### 5.1. Kiến trúc
+- Mô hình Microservices hoặc Monolithic tùy theo quyết định cuối cùng (hiện tại theo hướng Monolithic với NestJS modules).
+- Backend REST API sử dụng NestJS framework.
+- Cơ sở dữ liệu: PostgreSQL.
+- Xác thực: Clerk.
+- Thanh toán: Stripe.
+- Gửi email: Resend.
+- Tìm kiếm: Elasticsearch (cân nhắc).
+- Cache: Redis (cân nhắc).
+- Hàng đợi tin nhắn: RabbitMQ/Kafka (cân nhắc cho các tác vụ bất đồng bộ).
+
+### 5.2. Cấu trúc dữ liệu (Tham khảo ERD)
+(Chi tiết trong file "Phân Tích ERD Hệ Thống Web Bán Giày (Report).pdf")
+Các bảng chính: User, Product, Category, Order, OrderDetail, Cart, CartItem, Address, Payment, Shipping, DiscountCode, Promotion, Review, Wishlist, ProductImage, Collection, Role, Permission, và các bảng trung gian.
+
+## 6. Ràng buộc kỹ thuật
+
+- Ngôn ngữ lập trình: TypeScript (NestJS).
+- Cơ sở dữ liệu: PostgreSQL.
+- Tuân thủ các tiêu chuẩn bảo mật PCI DSS cho thanh toán.
+- API được thiết kế theo chuẩn RESTful và OpenAPI.
+
+## 7. Phụ lục
+
+- **Tài liệu tham khảo**:
+    - Software Requirement Specification (SRS) for Shoe E-commerce Website (TheShoe.pdf)
+    - Phân tích ERD hệ thống web bán giày (Phân Tích ERD Hệ Thống Web Bán Giày (Report).pdf)
+    - Danh sách Stored Procedures và Functions (StoreProcedure_Function.pdf)
+    - Báo cáo Phân tích Cột Dữ liệu Tiềm năng cho Indexing (Báo cáo Phân tích Cột Dữ liệu Tiềm năng cho Indexing.pdf)
+    - Báo cáo Đề xuất Prepared Statements cho Hệ thống TheShoe (Báo cáo Đề xuất Prepared Statements cho Hệ thống TheShoe.pdf)
+    - Báo Cáo API Route Của Hệ Thống (api-routes.pdf)
+    - Báo Cáo Các Module Cần Thiết Cho Dự Án BE (modules-report.pdf)
+- **Định nghĩa, từ viết tắt**:
+    - BE: Backend
+    - FR: Functional Requirement
+    - NFR: Non-Functional Requirement
+    - ERD: Entity Relationship Diagram
+    - API: Application Programming Interface
+    - JWT: JSON Web Token
+    - RBAC: Role-Based Access Control
+    - PCI DSS: Payment Card Industry Data Security Standard

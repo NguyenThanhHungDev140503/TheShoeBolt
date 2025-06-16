@@ -1,0 +1,11 @@
+# Task ID: 15
+# Title: Implement Notification System
+# Status: pending
+# Dependencies: 6, 8
+# Priority: low
+# Description: Develop a system for sending real-time order status updates.
+# Details:
+Use WebSocket or a notification service (e.g., Firebase). Implement APIs to send notifications. Include email and in-app notifications.
+
+# Test Strategy:
+Test notification delivery. Validate real-time updates.

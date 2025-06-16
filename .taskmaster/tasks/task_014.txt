@@ -1,0 +1,11 @@
+# Task ID: 14
+# Title: Setup Sales Analytics and Reporting
+# Status: pending
+# Dependencies: 6, 8
+# Priority: low
+# Description: Implement tools for analyzing sales data and generating reports.
+# Details:
+Use PostgreSQL or MongoDB for analytics data. Implement APIs to fetch sales metrics. Include visualization tools for the admin dashboard.
+
+# Test Strategy:
+Test analytics APIs. Validate report generation.

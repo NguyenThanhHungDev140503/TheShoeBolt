@@ -1,0 +1,236 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 39,
+        "title": "Setup Project Repository",
+        "description": "Initialize the project repository with NestJS framework and required dependencies.",
+        "details": "1. Create a new NestJS project. 2. Install required dependencies (e.g., TypeORM, Clerk SDK, Stripe SDK). 3. Configure basic project structure.",
+        "testStrategy": "Verify repository setup by running the initial NestJS application and checking for successful startup.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 40,
+        "title": "Database Schema Design",
+        "description": "Design and implement the PostgreSQL database schema based on the provided ERD.",
+        "details": "1. Define tables (User, Product, Order, etc.) and relationships. 2. Implement migrations using TypeORM. 3. Set up indexing for performance optimization.",
+        "testStrategy": "Validate schema by running migrations and checking table structures in PostgreSQL.",
+        "priority": "high",
+        "dependencies": [
+          39
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 41,
+        "title": "Authentication Setup with Clerk",
+        "description": "Integrate Clerk for user authentication and authorization.",
+        "details": "1. Configure Clerk SDK in the NestJS project. 2. Implement OAuth providers (Google, Facebook). 3. Set up JWT token handling.",
+        "testStrategy": "Test authentication flow by registering, logging in, and verifying JWT tokens.",
+        "priority": "high",
+        "dependencies": [
+          39
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 42,
+        "title": "User Management Module",
+        "description": "Implement CRUD operations for user management.",
+        "details": "1. Create endpoints for user registration, login, profile updates. 2. Implement RBAC for admin functionalities. 3. Add password reset functionality.",
+        "testStrategy": "Test endpoints using Postman and verify RBAC permissions.",
+        "priority": "medium",
+        "dependencies": [
+          40,
+          41
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 43,
+        "title": "Product Management Module",
+        "description": "Implement CRUD operations for product management.",
+        "details": "1. Create endpoints for product listing, details, search, and filtering. 2. Implement admin endpoints for product CRUD operations.",
+        "testStrategy": "Test product listing, search, and admin functionalities.",
+        "priority": "medium",
+        "dependencies": [
+          40
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 44,
+        "title": "Cart Management Module",
+        "description": "Implement cart functionality for users.",
+        "details": "1. Create endpoints for adding/removing items from cart. 2. Implement cart checkout functionality.",
+        "testStrategy": "Test cart operations and checkout flow.",
+        "priority": "medium",
+        "dependencies": [
+          40,
+          42
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 45,
+        "title": "Order Management Module",
+        "description": "Implement order creation and management.",
+        "details": "1. Create endpoints for order creation, status updates, and history. 2. Implement admin order management.",
+        "testStrategy": "Test order creation, status updates, and admin functionalities.",
+        "priority": "medium",
+        "dependencies": [
+          40,
+          44
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 46,
+        "title": "Payment Integration with Stripe",
+        "description": "Integrate Stripe for payment processing.",
+        "details": "1. Configure Stripe SDK. 2. Implement payment intent creation and confirmation. 3. Handle webhook events.",
+        "testStrategy": "Test payment flow and webhook handling.",
+        "priority": "high",
+        "dependencies": [
+          39,
+          45
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 47,
+        "title": "Promotion Management Module",
+        "description": "Implement promotion and discount code functionality.",
+        "details": "1. Create endpoints for applying and validating promotions. 2. Implement admin CRUD operations for promotions.",
+        "testStrategy": "Test promotion application and admin functionalities.",
+        "priority": "low",
+        "dependencies": [
+          40
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 48,
+        "title": "Notification Management Module",
+        "description": "Implement system notifications for users.",
+        "details": "1. Create endpoints for notification listing and marking as read. 2. Implement admin notification sending.",
+        "testStrategy": "Test notification flow and admin functionalities.",
+        "priority": "low",
+        "dependencies": [
+          42
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 49,
+        "title": "Wishlist Management Module",
+        "description": "Implement wishlist functionality for users.",
+        "details": "1. Create endpoints for adding/removing items from wishlist. 2. Implement wishlist to cart transfer.",
+        "testStrategy": "Test wishlist operations.",
+        "priority": "low",
+        "dependencies": [
+          40,
+          42
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 50,
+        "title": "Feedback Management Module",
+        "description": "Implement feedback submission and management.",
+        "details": "1. Create endpoints for feedback submission and listing. 2. Implement admin feedback management.",
+        "testStrategy": "Test feedback submission and admin functionalities.",
+        "priority": "low",
+        "dependencies": [
+          42
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 51,
+        "title": "Analytics Module",
+        "description": "Implement analytics for products, orders, and revenue.",
+        "details": "1. Create endpoints for fetching analytics data. 2. Implement dashboard for admin.",
+        "testStrategy": "Test analytics endpoints and dashboard.",
+        "priority": "low",
+        "dependencies": [
+          40,
+          45
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 52,
+        "title": "Collection Management Module",
+        "description": "Implement product collections for users and admin.",
+        "details": "1. Create endpoints for collection listing and details. 2. Implement admin CRUD operations for collections.",
+        "testStrategy": "Test collection functionalities.",
+        "priority": "low",
+        "dependencies": [
+          40
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 53,
+        "title": "Shipper Integration",
+        "description": "Integrate shipping providers for order fulfillment.",
+        "details": "1. Create endpoints for tracking and status updates. 2. Implement webhook handling for shipping updates.",
+        "testStrategy": "Test shipping integration and webhook handling.",
+        "priority": "medium",
+        "dependencies": [
+          45
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 54,
+        "title": "Error Handling and Logging",
+        "description": "Implement global error handling and logging.",
+        "details": "1. Set up global error middleware. 2. Configure logging for API requests and errors.",
+        "testStrategy": "Test error responses and log entries.",
+        "priority": "medium",
+        "dependencies": [
+          39
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 55,
+        "title": "API Documentation",
+        "description": "Generate OpenAPI documentation for the backend API.",
+        "details": "1. Use Swagger to document endpoints. 2. Include request/response examples.",
+        "testStrategy": "Verify documentation accuracy by testing endpoints.",
+        "priority": "low",
+        "dependencies": [
+          39
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-06-16T15:46:49.014Z",
+      "updated": "2025-06-16T16:10:58.212Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

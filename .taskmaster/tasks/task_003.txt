@@ -1,0 +1,11 @@
+# Task ID: 3
+# Title: Setup File Upload Service
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Implement a file upload system for product images with processing and optimization.
+# Details:
+Use AWS S3 for file storage. Implement image processing (thumbnail, medium, large variants). Secure file uploads with validation and virus scanning. Integrate with CDN for faster delivery.
+
+# Test Strategy:
+Test file uploads with different image formats. Validate image processing results. Check security measures.

@@ -1,0 +1,11 @@
+# Task ID: 5
+# Title: Implement Shopping Cart System
+# Status: pending
+# Dependencies: 1, 2
+# Priority: high
+# Description: Develop a session-based shopping cart with Redis persistence.
+# Details:
+Use Redis for cart storage. Implement APIs to add/remove items, update quantities, and calculate totals. Support guest and logged-in users. Ensure cross-device synchronization.
+
+# Test Strategy:
+Test cart operations (add, remove, update). Validate persistence and synchronization.
