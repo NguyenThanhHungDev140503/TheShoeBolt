@@ -2,6 +2,7 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClerkSessionService } from './clerk.session.service';
 import { ClerkController } from './clerk.controller';
+import { ClerkAuthGuard } from './guards/clerk-auth.guard';
 
 export interface ClerkModuleOptions {
   secretKey: string;
@@ -20,8 +21,9 @@ export class ClerkModule {
           useValue: options,
         },
         ClerkSessionService,
+        ClerkAuthGuard,
       ],
-      exports: [ClerkSessionService, 'CLERK_OPTIONS'],
+      exports: [ClerkSessionService, ClerkAuthGuard, 'CLERK_OPTIONS'],
       global: true,
     };
   }
@@ -41,8 +43,9 @@ export class ClerkModule {
           inject: [ConfigService],
         },
         ClerkSessionService,
+        ClerkAuthGuard,
       ],
-      exports: [ClerkSessionService, 'CLERK_OPTIONS'],
+      exports: [ClerkSessionService, ClerkAuthGuard, 'CLERK_OPTIONS'],
       global: true,
     };
   }
