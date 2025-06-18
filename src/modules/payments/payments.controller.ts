@@ -12,7 +12,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
+import { ClerkAuthGuard } from '../clerk/guards/clerk-auth.guard';
 
 @ApiTags('Payments')
 @Controller('payments')

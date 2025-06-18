@@ -11,7 +11,7 @@ import {
   Logger
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { ClerkAuthGuard } from '../auth/guards/clerk-auth.guard';
+import { ClerkAuthGuard } from '../clerk/guards/clerk-auth.guard';
 import { ChatService } from './chat.service';
 import { CreateChatMessageDto } from './dto/create-chat-message.dto';
 import { CreateChatRoomDto } from './dto/create-chat-room.dto';

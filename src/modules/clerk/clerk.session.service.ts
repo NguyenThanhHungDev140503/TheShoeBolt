@@ -44,18 +44,83 @@ export class ClerkSessionService {
   }
 
   /**
-   * Verify a session token
+   * Verify a session token and return session claims
    * @param token - Session token to verify
-   * @returns Session data if valid
+   * @returns Session claims if valid
    */
   async verifySessionToken(token: string) {
     try {
-      const session = await this.clerk.sessions.verifySession(token, {
+      const sessionClaims = await this.clerk.verifyToken(token, {
         secretKey: this.options.secretKey,
+        issuer: `https://clerk.${this.options.publishableKey.split('_')[1]}.lcl.dev`,
       });
-      return session;
+      return sessionClaims;
     } catch (error) {
       throw new UnauthorizedException(`Invalid session token: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get session details by session ID
+   * @param sessionId - Session ID
+   * @returns Session details
+   */
+  async getSession(sessionId: string) {
+    try {
+      const session = await this.clerk.sessions.getSession(sessionId);
+      return session;
+    } catch (error) {
+      throw new UnauthorizedException(`Failed to get session: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get user details by user ID
+   * @param userId - User ID
+   * @returns User details
+   */
+  async getUser(userId: string) {
+    try {
+      const user = await this.clerk.users.getUser(userId);
+      return user;
+    } catch (error) {
+      throw new UnauthorizedException(`Failed to get user: ${error.message}`);
+    }
+  }
+
+  /**
+   * Verify token and get complete authentication data
+   * @param token - Session token to verify
+   * @returns Complete authentication data including user, session, and claims
+   */
+  async verifyTokenAndGetAuthData(token: string) {
+    try {
+      // Verify the session token
+      const sessionClaims = await this.verifySessionToken(token);
+
+      // Get session information
+      const session = await this.getSession(sessionClaims.sid);
+      
+      if (!session || session.status !== 'active') {
+        throw new UnauthorizedException('Invalid or inactive session');
+      }
+
+      // Get user information
+      const user = await this.getUser(session.userId);
+
+      return {
+        user: {
+          id: user.id,
+          email: user.emailAddresses[0]?.emailAddress,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          publicMetadata: user.publicMetadata,
+        },
+        session,
+        sessionClaims,
+      };
+    } catch (error) {
+      throw new UnauthorizedException(`Authentication failed: ${error.message}`);
     }
   }
 
