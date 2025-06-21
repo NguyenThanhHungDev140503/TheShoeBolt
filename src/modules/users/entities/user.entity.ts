@@ -11,6 +11,7 @@ import { Payment } from '../../payments/entities/payment.entity';
 export enum UserRole {
   ADMIN = 'admin',
   USER = 'user',
+  SHIPPER = 'shipper',
 }
 
 @Entity('users')

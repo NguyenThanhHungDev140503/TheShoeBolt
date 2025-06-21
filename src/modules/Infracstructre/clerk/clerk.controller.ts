@@ -12,9 +12,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { ClerkSessionService } from './clerk.session.service';
 import { ClerkAuthGuard } from './guards/clerk-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '../users/entities/user.entity';
+import { AdminOnly } from './decorators/admin-only.decorator';
 
 @ApiTags('Clerk Session Management')
 @Controller('clerk')
@@ -55,14 +53,10 @@ export class ClerkController {
     return;
   }
 
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @AdminOnly()
   @Get('admin/users/:userId/sessions')
   @ApiOperation({ summary: 'Admin: Get sessions for any user' })
   @ApiParam({ name: 'userId', description: 'User ID to get sessions for' })
-  @ApiResponse({ status: 200, description: 'User sessions retrieved successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
   async getAnyUserSessions(@Param('userId') userId: string) {
     const sessions = await this.clerkSessionService.getSessionList(userId);
     return {
@@ -72,15 +66,11 @@ export class ClerkController {
     };
   }
 
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @AdminOnly()
   @Delete('admin/users/:userId/sessions')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Admin: Revoke all sessions for any user' })
   @ApiParam({ name: 'userId', description: 'User ID to revoke sessions for' })
-  @ApiResponse({ status: 204, description: 'All user sessions revoked successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
   async revokeAllUserSessions(@Param('userId') userId: string) {
     await this.clerkSessionService.revokeAllUserSessions(userId);
     return;

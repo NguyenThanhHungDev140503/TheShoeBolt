@@ -3,7 +3,7 @@ import { UsersModule } from '../users/users.module';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { RolesGuard } from './guards/roles.guard';
-import { ClerkModule } from '../clerk/clerk.module';
+import { ClerkModule } from '../Infracstructre/clerk/clerk.module';
 
 @Module({
   imports: [

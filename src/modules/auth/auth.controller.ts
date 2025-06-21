@@ -1,7 +1,7 @@
 import { Controller, Get, Post, UseGuards, Request, Body } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { ClerkAuthGuard } from '../clerk/guards/clerk-auth.guard';
+import { ClerkAuthGuard } from '../Infracstructre/clerk/guards/clerk-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
 import { UserRole } from '../users/entities/user.entity';

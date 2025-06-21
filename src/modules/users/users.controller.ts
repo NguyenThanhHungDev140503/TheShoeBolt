@@ -14,7 +14,7 @@ import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ClerkAuthGuard } from '../clerk/guards/clerk-auth.guard';
+import { ClerkAuthGuard } from '../Infracstructre/clerk/guards/clerk-auth.guard';
 
 @ApiTags('Users')
 @Controller('users')

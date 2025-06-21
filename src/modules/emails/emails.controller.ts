@@ -2,7 +2,7 @@ import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { EmailsService } from './emails.service';
 import { SendEmailDto } from './dto/send-email.dto';
-import { ClerkAuthGuard } from '../clerk/guards/clerk-auth.guard';
+import { ClerkAuthGuard } from '../Infracstructre/clerk/guards/clerk-auth.guard';
 
 @ApiTags('Emails')
 @Controller('emails')
