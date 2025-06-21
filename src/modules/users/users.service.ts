@@ -92,10 +92,7 @@ export class UsersService {
     
     // Delete the user from Elasticsearch
     try {
-      await this.elasticsearchService.client.delete({
-        index: `${this.elasticsearchService.indexPrefix}users`,
-        id,
-      });
+      await this.elasticsearchService.deleteUser(id);
     } catch (error) {
       // Log the error but don't fail the user deletion
       console.error(`Failed to delete user from Elasticsearch: ${error.message}`);

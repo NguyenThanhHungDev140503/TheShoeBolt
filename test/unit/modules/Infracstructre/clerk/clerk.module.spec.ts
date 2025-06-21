@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ClerkModule } from './clerk.module';
-import { ClerkSessionService } from './clerk.session.service';
-import { ClerkAuthGuard } from './guards/clerk-auth.guard';
+import { ClerkModule } from 'src/modules/Infracstructre/clerk/clerk.module';
+import { ClerkSessionService } from 'src/modules/Infracstructre/clerk/clerk.session.service';
+import { ClerkAuthGuard } from 'src/modules/Infracstructre/clerk/guards/clerk-auth.guard';
 
 describe('ClerkModule', () => {
   let module: TestingModule;
@@ -184,4 +184,4 @@ describe('ClerkModule', () => {
       await moduleWithPartialConfig.close();
     });
   });
-});
+}); 

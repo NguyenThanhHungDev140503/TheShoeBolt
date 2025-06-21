@@ -181,7 +181,7 @@ export class ElasticsearchService implements OnModuleInit {
         hits: result.hits.hits.map(hit => ({
           id: hit._id,
           score: hit._score,
-          ...hit._source,
+          ...(hit._source as object),
         })),
         total: result.hits.total,
       };
@@ -267,6 +267,20 @@ export class ElasticsearchService implements OnModuleInit {
     }
   }
 
+  async deleteUser(userId: string) {
+    try {
+      const result = await this.client.delete({
+        index: `${this.indexPrefix}users`,
+        id: userId,
+      });
+      
+      return result;
+    } catch (error) {
+      this.logger.error(`Error deleting user with ID ${userId} from Elasticsearch`, error);
+      throw error;
+    }
+  }
+
   async searchUsers(query: string, options: any = {}) {
     const { from = 0, size = 10 } = options;
 
@@ -291,7 +305,7 @@ export class ElasticsearchService implements OnModuleInit {
         hits: result.hits.hits.map(hit => ({
           id: hit._id,
           score: hit._score,
-          ...hit._source,
+          ...(hit._source as object),
         })),
         total: result.hits.total,
       };

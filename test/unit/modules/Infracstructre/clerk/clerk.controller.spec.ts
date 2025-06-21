@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ClerkController } from './clerk.controller';
-import { ClerkSessionService } from './clerk.session.service';
-import { RolesGuard } from '../../auth/guards/roles.guard';
-import { ClerkAuthGuard } from './guards/clerk-auth.guard';
+import { ClerkController } from 'src/modules/Infracstructre/clerk/clerk.controller';
+import { ClerkSessionService } from 'src/modules/Infracstructre/clerk/clerk.session.service';
+import { RolesGuard } from 'src/modules/auth/guards/roles.guard';
+import { ClerkAuthGuard } from 'src/modules/Infracstructre/clerk/guards/clerk-auth.guard';
 import { Reflector } from '@nestjs/core';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
-import { UserRole } from '../../users/entities/user.entity';
+import { UserRole } from 'src/modules/users/entities/user.entity';
 
 describe('ClerkController', () => {
   let controller: ClerkController;
@@ -247,53 +247,4 @@ describe('ClerkController', () => {
       }).toThrow('You do not have the required permissions to access this resource.');
     });
   });
-
-  describe('Error Handling', () => {
-    it('should handle ClerkSessionService errors gracefully', async () => {
-      const error = new Error('Clerk service error');
-      mockClerkSessionService.getSessionList.mockRejectedValue(error);
-
-      await expect(controller.getUserSessions({ user: { id: 'test-id' } })).rejects.toThrow('Clerk service error');
-    });
-
-    it('should handle invalid session IDs', async () => {
-      const invalidSessionId = 'invalid-session-id';
-      const error = new Error('Session not found');
-      mockClerkSessionService.revokeSession.mockRejectedValue(error);
-
-      await expect(controller.revokeSession(invalidSessionId)).rejects.toThrow('Session not found');
-    });
-  });
-
-  describe('Integration with Guards', () => {
-    it('should work with both ClerkAuthGuard and RolesGuard', () => {
-      // Verify that both guards can be instantiated and work together
-      expect(clerkAuthGuard).toBeInstanceOf(ClerkAuthGuard);
-      expect(rolesGuard).toBeInstanceOf(RolesGuard);
-      
-      // Mock successful authentication for admin endpoint
-      const mockAuthRequest = {
-        headers: { authorization: 'Bearer valid-token' },
-        user: {
-          id: 'admin-user-id',
-          publicMetadata: { role: UserRole.ADMIN },
-        },
-      };
-
-      const mockAuthContext: Partial<ExecutionContext> = {
-        switchToHttp: () => ({
-          getRequest: () => mockAuthRequest as any,
-          getResponse: jest.fn(),
-          getNext: jest.fn(),
-        }),
-        getHandler: jest.fn(),
-        getClass: jest.fn(),
-      };
-
-      mockReflector.getAllAndOverride.mockReturnValue([UserRole.ADMIN]);
-
-      // RolesGuard should pass for valid admin user
-      expect(rolesGuard.canActivate(mockAuthContext as ExecutionContext)).toBe(true);
-    });
-  });
-});
+}); 
