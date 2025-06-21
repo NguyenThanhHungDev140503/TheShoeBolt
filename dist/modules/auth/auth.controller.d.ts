@@ -1,29 +1,16 @@
 import { AuthService } from './auth.service';
-import { CreateUserDto } from '../users/dto/create-user.dto';
-import { LoginDto } from './dto/login.dto';
 import { UserRole } from '../users/entities/user.entity';
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
-    register(createUserDto: CreateUserDto): Promise<{
-        id: string;
-        email: string;
-        firstName: string;
-        lastName: string;
-        role: UserRole;
-        isActive: boolean;
-        payments: import("../payments/entities/payment.entity").Payment[];
-        createdAt: Date;
-        updatedAt: Date;
-    }>;
-    login(loginDto: LoginDto): Promise<{
-        access_token: string;
+    syncUser(req: any): Promise<{
+        message: string;
         user: {
-            id: any;
-            email: any;
-            firstName: any;
-            lastName: any;
-            role: any;
+            id: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            role: UserRole;
         };
     }>;
     getProfile(req: any): Promise<{

@@ -16,27 +16,35 @@ exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const auth_service_1 = require("./auth.service");
-const local_auth_guard_1 = require("./guards/local-auth.guard");
-const clerk_auth_guard_1 = require("./guards/clerk-auth.guard");
+const clerk_auth_guard_1 = require("../Infracstructre/clerk/guards/clerk-auth.guard");
 const roles_guard_1 = require("./guards/roles.guard");
 const roles_decorator_1 = require("./decorators/roles.decorator");
-const create_user_dto_1 = require("../users/dto/create-user.dto");
-const login_dto_1 = require("./dto/login.dto");
 const user_entity_1 = require("../users/entities/user.entity");
 let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
     }
-    async register(createUserDto) {
-        return this.authService.register(createUserDto);
-    }
-    async login(loginDto) {
-        return this.authService.login(loginDto);
+    async syncUser(req) {
+        const localUser = await this.authService.syncUserFromClerk(req.user);
+        return {
+            message: 'User synced successfully',
+            user: {
+                id: localUser.id,
+                email: localUser.email,
+                firstName: localUser.firstName,
+                lastName: localUser.lastName,
+                role: localUser.role,
+            },
+        };
     }
     async getProfile(req) {
+        const localUser = await this.authService.getUserProfile(req.user.id);
         return {
             message: 'Profile retrieved successfully',
-            user: req.user,
+            user: {
+                ...req.user,
+                localData: localUser,
+            },
             session: {
                 id: req.session?.id,
                 status: req.session?.status,
@@ -52,35 +60,24 @@ let AuthController = class AuthController {
 };
 exports.AuthController = AuthController;
 __decorate([
-    (0, common_1.Post)('register'),
-    (0, swagger_1.ApiOperation)({ summary: 'Register a new user' }),
-    (0, swagger_1.ApiBody)({ type: create_user_dto_1.CreateUserDto }),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'User successfully registered' }),
-    (0, swagger_1.ApiResponse)({ status: 409, description: 'User already exists' }),
-    __param(0, (0, common_1.Body)()),
+    (0, common_1.UseGuards)(clerk_auth_guard_1.ClerkAuthGuard),
+    (0, common_1.Post)('sync-user'),
+    (0, swagger_1.ApiOperation)({ summary: 'Sync authenticated Clerk user to local database' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'User synced successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_user_dto_1.CreateUserDto]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
-], AuthController.prototype, "register", null);
-__decorate([
-    (0, common_1.UseGuards)(local_auth_guard_1.LocalAuthGuard),
-    (0, common_1.Post)('login'),
-    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    (0, swagger_1.ApiOperation)({ summary: 'Login user' }),
-    (0, swagger_1.ApiBody)({ type: login_dto_1.LoginDto }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'User successfully logged in' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Invalid credentials' }),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [login_dto_1.LoginDto]),
-    __metadata("design:returntype", Promise)
-], AuthController.prototype, "login", null);
+], AuthController.prototype, "syncUser", null);
 __decorate([
     (0, common_1.UseGuards)(clerk_auth_guard_1.ClerkAuthGuard),
     (0, common_1.Get)('profile'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get user profile (Clerk authenticated)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get user profile' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'User profile retrieved successfully' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiBearerAuth)(),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -90,10 +87,11 @@ __decorate([
     (0, common_1.UseGuards)(clerk_auth_guard_1.ClerkAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN),
     (0, common_1.Get)('admin-only'),
-    (0, swagger_1.ApiOperation)({ summary: 'Admin only endpoint (Clerk authenticated)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Admin only endpoint' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Admin access granted' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
     (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Admin role required' }),
+    (0, swagger_1.ApiBearerAuth)(),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),

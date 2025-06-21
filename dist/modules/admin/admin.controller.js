@@ -16,7 +16,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const clerk_auth_guard_1 = require("../Infracstructre/clerk/guards/clerk-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
 const user_entity_1 = require("../users/entities/user.entity");
@@ -74,7 +74,7 @@ __decorate([
 exports.AdminController = AdminController = AdminController_1 = __decorate([
     (0, swagger_1.ApiTags)('Admin'),
     (0, common_1.Controller)('admin'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, common_1.UseGuards)(clerk_auth_guard_1.ClerkAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN),
     (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [admin_service_1.AdminService])

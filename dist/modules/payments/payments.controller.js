@@ -17,7 +17,7 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const payments_service_1 = require("./payments.service");
 const create_payment_dto_1 = require("./dto/create-payment.dto");
-const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const clerk_auth_guard_1 = require("../Infracstructre/clerk/guards/clerk-auth.guard");
 let PaymentsController = class PaymentsController {
     constructor(paymentsService) {
         this.paymentsService = paymentsService;
@@ -41,7 +41,6 @@ let PaymentsController = class PaymentsController {
 exports.PaymentsController = PaymentsController;
 __decorate([
     (0, common_1.Post)('create-intent'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Create payment intent' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Payment intent created successfully' }),
@@ -53,7 +52,6 @@ __decorate([
 ], PaymentsController.prototype, "createPaymentIntent", null);
 __decorate([
     (0, common_1.Post)('confirm/:paymentIntentId'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Confirm payment' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Payment confirmed successfully' }),
@@ -64,7 +62,6 @@ __decorate([
 ], PaymentsController.prototype, "confirmPayment", null);
 __decorate([
     (0, common_1.Get)('my-payments'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Get user payments' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'List of user payments' }),
@@ -75,7 +72,6 @@ __decorate([
 ], PaymentsController.prototype, "findUserPayments", null);
 __decorate([
     (0, common_1.Get)(':id'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Get payment by ID' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Payment found' }),
@@ -97,6 +93,7 @@ __decorate([
 exports.PaymentsController = PaymentsController = __decorate([
     (0, swagger_1.ApiTags)('Payments'),
     (0, common_1.Controller)('payments'),
+    (0, common_1.UseGuards)(clerk_auth_guard_1.ClerkAuthGuard),
     __metadata("design:paramtypes", [payments_service_1.PaymentsService])
 ], PaymentsController);
 //# sourceMappingURL=payments.controller.js.map

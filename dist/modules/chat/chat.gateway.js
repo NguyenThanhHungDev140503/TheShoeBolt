@@ -17,13 +17,13 @@ exports.ChatGateway = void 0;
 const websockets_1 = require("@nestjs/websockets");
 const socket_io_1 = require("socket.io");
 const common_1 = require("@nestjs/common");
-const jwt_1 = require("@nestjs/jwt");
 const chat_service_1 = require("./chat.service");
 const create_chat_message_dto_1 = require("./dto/create-chat-message.dto");
+const clerk_sdk_node_1 = require("@clerk/clerk-sdk-node");
 let ChatGateway = ChatGateway_1 = class ChatGateway {
-    constructor(chatService, jwtService) {
+    constructor(chatService, options) {
         this.chatService = chatService;
-        this.jwtService = jwtService;
+        this.options = options;
         this.logger = new common_1.Logger(ChatGateway_1.name);
         this.connectedUsers = new Map();
     }
@@ -38,18 +38,34 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
                 client.disconnect();
                 return;
             }
-            const payload = this.jwtService.verify(token);
-            const userId = payload.sub;
-            this.connectedUsers.set(userId, client.id);
-            client.data.userId = userId;
-            const rooms = await this.chatService.getRoomsByUserId(userId);
-            rooms.forEach(room => {
-                client.join(room.id);
-            });
-            this.logger.log(`Client connected: ${client.id}, User: ${userId}`);
-            this.server.emit('userStatus', { userId, status: 'online' });
-            const onlineUsers = Array.from(this.connectedUsers.keys());
-            client.emit('onlineUsers', onlineUsers);
+            try {
+                const sessionToken = await clerk_sdk_node_1.clerkClient.verifyToken(token, {
+                    secretKey: this.options.secretKey,
+                    issuer: `https://clerk.${this.options.publishableKey.split('_')[1]}.lcl.dev`,
+                });
+                const session = await clerk_sdk_node_1.clerkClient.sessions.getSession(sessionToken.sid);
+                if (!session || session.status !== 'active') {
+                    throw new Error('Invalid or inactive session');
+                }
+                const user = await clerk_sdk_node_1.clerkClient.users.getUser(session.userId);
+                const userId = user.id;
+                this.connectedUsers.set(userId, client.id);
+                client.data.userId = userId;
+                client.data.clerkUser = user;
+                client.data.session = session;
+                const rooms = await this.chatService.getRoomsByUserId(userId);
+                rooms.forEach(room => {
+                    client.join(room.id);
+                });
+                this.logger.log(`Client connected: ${client.id}, User: ${userId}`);
+                this.server.emit('userStatus', { userId, status: 'online' });
+                const onlineUsers = Array.from(this.connectedUsers.keys());
+                client.emit('onlineUsers', onlineUsers);
+            }
+            catch (error) {
+                this.logger.error(`Token verification failed: ${error.message}`);
+                client.disconnect();
+            }
         }
         catch (error) {
             this.logger.error(`Connection error: ${error.message}`);
@@ -161,7 +177,7 @@ exports.ChatGateway = ChatGateway = ChatGateway_1 = __decorate([
             credentials: true,
         },
     }),
-    __metadata("design:paramtypes", [chat_service_1.ChatService,
-        jwt_1.JwtService])
+    __param(1, (0, common_1.Inject)('CLERK_OPTIONS')),
+    __metadata("design:paramtypes", [chat_service_1.ChatService, Object])
 ], ChatGateway);
 //# sourceMappingURL=chat.gateway.js.map

@@ -3,7 +3,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClerkSessionService } from './clerk.session.service';
 import { ClerkController } from './clerk.controller';
 import { ClerkAuthGuard } from './guards/clerk-auth.guard';
-import { AdminGuard } from './guards/admin.guard';
 
 export interface ClerkModuleOptions {
   secretKey: string;
@@ -23,9 +22,8 @@ export class ClerkModule {
         },
         ClerkSessionService,
         ClerkAuthGuard,
-        AdminGuard,
       ],
-      exports: [ClerkSessionService, ClerkAuthGuard, AdminGuard, 'CLERK_OPTIONS'],
+      exports: [ClerkSessionService, ClerkAuthGuard, 'CLERK_OPTIONS'],
       global: true,
     };
   }
@@ -46,9 +44,8 @@ export class ClerkModule {
         },
         ClerkSessionService,
         ClerkAuthGuard,
-        AdminGuard,
       ],
-      exports: [ClerkSessionService, ClerkAuthGuard, AdminGuard, 'CLERK_OPTIONS'],
+      exports: [ClerkSessionService, ClerkAuthGuard, 'CLERK_OPTIONS'],
       global: true,
     };
   }

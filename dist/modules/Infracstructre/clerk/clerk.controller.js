@@ -16,10 +16,10 @@ exports.ClerkController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const clerk_session_service_1 = require("./clerk.session.service");
-const clerk_auth_guard_1 = require("../auth/guards/clerk-auth.guard");
-const roles_guard_1 = require("../auth/guards/roles.guard");
-const roles_decorator_1 = require("../auth/decorators/roles.decorator");
-const user_entity_1 = require("../users/entities/user.entity");
+const clerk_auth_guard_1 = require("./guards/clerk-auth.guard");
+const roles_decorator_1 = require("../../auth/decorators/roles.decorator");
+const roles_guard_1 = require("../../auth/guards/roles.guard");
+const user_entity_1 = require("../../users/entities/user.entity");
 let ClerkController = class ClerkController {
     constructor(clerkSessionService) {
         this.clerkSessionService = clerkSessionService;
@@ -87,29 +87,23 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ClerkController.prototype, "revokeAllSessions", null);
 __decorate([
-    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, common_1.UseGuards)(clerk_auth_guard_1.ClerkAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN),
     (0, common_1.Get)('admin/users/:userId/sessions'),
     (0, swagger_1.ApiOperation)({ summary: 'Admin: Get sessions for any user' }),
     (0, swagger_1.ApiParam)({ name: 'userId', description: 'User ID to get sessions for' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'User sessions retrieved successfully' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Admin role required' }),
     __param(0, (0, common_1.Param)('userId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], ClerkController.prototype, "getAnyUserSessions", null);
 __decorate([
-    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, common_1.UseGuards)(clerk_auth_guard_1.ClerkAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN),
     (0, common_1.Delete)('admin/users/:userId/sessions'),
     (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
     (0, swagger_1.ApiOperation)({ summary: 'Admin: Revoke all sessions for any user' }),
     (0, swagger_1.ApiParam)({ name: 'userId', description: 'User ID to revoke sessions for' }),
-    (0, swagger_1.ApiResponse)({ status: 204, description: 'All user sessions revoked successfully' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Admin role required' }),
     __param(0, (0, common_1.Param)('userId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),

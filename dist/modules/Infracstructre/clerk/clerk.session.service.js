@@ -42,13 +42,56 @@ let ClerkSessionService = class ClerkSessionService {
     }
     async verifySessionToken(token) {
         try {
-            const session = await this.clerk.sessions.verifySession(token, {
+            const sessionClaims = await this.clerk.verifyToken(token, {
                 secretKey: this.options.secretKey,
+                issuer: `https://clerk.${this.options.publishableKey.split('_')[1]}.lcl.dev`,
             });
-            return session;
+            return sessionClaims;
         }
         catch (error) {
             throw new common_1.UnauthorizedException(`Invalid session token: ${error.message}`);
+        }
+    }
+    async getSession(sessionId) {
+        try {
+            const session = await this.clerk.sessions.getSession(sessionId);
+            return session;
+        }
+        catch (error) {
+            throw new common_1.UnauthorizedException(`Failed to get session: ${error.message}`);
+        }
+    }
+    async getUser(userId) {
+        try {
+            const user = await this.clerk.users.getUser(userId);
+            return user;
+        }
+        catch (error) {
+            throw new common_1.UnauthorizedException(`Failed to get user: ${error.message}`);
+        }
+    }
+    async verifyTokenAndGetAuthData(token) {
+        try {
+            const sessionClaims = await this.verifySessionToken(token);
+            const session = await this.getSession(sessionClaims.sid);
+            if (!session || session.status !== 'active') {
+                throw new common_1.UnauthorizedException('Invalid or inactive session');
+            }
+            const user = await this.getUser(session.userId);
+            return {
+                user: {
+                    id: user.id,
+                    email: user.emailAddresses[0]?.emailAddress,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    publicMetadata: user.publicMetadata,
+                },
+                session,
+                sessionClaims,
+            };
+        }
+        catch (error) {
+            throw new common_1.UnauthorizedException(`Authentication failed: ${error.message}`);
         }
     }
     async revokeAllUserSessions(userId) {

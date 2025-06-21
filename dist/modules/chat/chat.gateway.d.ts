@@ -1,15 +1,15 @@
 import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, WsResponse } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { JwtService } from '@nestjs/jwt';
 import { ChatService } from './chat.service';
 import { CreateChatMessageDto } from './dto/create-chat-message.dto';
+import { ClerkModuleOptions } from '../Infracstructre/clerk/clerk.module';
 export declare class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     private readonly chatService;
-    private readonly jwtService;
+    private options;
     server: Server;
     private readonly logger;
     private readonly connectedUsers;
-    constructor(chatService: ChatService, jwtService: JwtService);
+    constructor(chatService: ChatService, options: ClerkModuleOptions);
     afterInit(server: Server): void;
     handleConnection(client: Socket): Promise<void>;
     handleDisconnect(client: Socket): void;

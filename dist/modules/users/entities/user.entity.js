@@ -16,6 +16,7 @@ var UserRole;
 (function (UserRole) {
     UserRole["ADMIN"] = "admin";
     UserRole["USER"] = "user";
+    UserRole["SHIPPER"] = "shipper";
 })(UserRole || (exports.UserRole = UserRole = {}));
 let User = class User {
 };
@@ -52,6 +53,10 @@ __decorate([
     (0, typeorm_1.Column)({ default: true }),
     __metadata("design:type", Boolean)
 ], User.prototype, "isActive", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], User.prototype, "clerkId", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => payment_entity_1.Payment, (payment) => payment.user),
     __metadata("design:type", Array)

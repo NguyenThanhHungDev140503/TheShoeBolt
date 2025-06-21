@@ -11,61 +11,39 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
-const jwt_1 = require("@nestjs/jwt");
-const bcrypt = require("bcryptjs");
 const users_service_1 = require("../users/users.service");
 let AuthService = class AuthService {
-    constructor(usersService, jwtService) {
+    constructor(usersService) {
         this.usersService = usersService;
-        this.jwtService = jwtService;
     }
-    async validateUser(email, password) {
-        const user = await this.usersService.findByEmail(email);
-        if (user && await bcrypt.compare(password, user.password)) {
-            const { password, ...result } = user;
-            return result;
+    async syncUserFromClerk(clerkUser) {
+        const existingUser = await this.usersService.findByEmail(clerkUser.email);
+        if (!existingUser) {
+            const userData = {
+                email: clerkUser.email,
+                firstName: clerkUser.firstName || '',
+                lastName: clerkUser.lastName || '',
+                password: 'clerk_managed',
+                role: clerkUser.publicMetadata?.role || 'user',
+            };
+            return await this.usersService.create(userData);
         }
-        return null;
+        if (existingUser.firstName !== clerkUser.firstName ||
+            existingUser.lastName !== clerkUser.lastName) {
+            await this.usersService.update(existingUser.id, {
+                firstName: clerkUser.firstName,
+                lastName: clerkUser.lastName,
+            });
+        }
+        return existingUser;
     }
-    async login(loginDto) {
-        const user = await this.validateUser(loginDto.email, loginDto.password);
-        if (!user) {
-            throw new common_1.UnauthorizedException('Invalid credentials');
-        }
-        const payload = { email: user.email, sub: user.id, role: user.role };
-        return {
-            access_token: this.jwtService.sign(payload),
-            user: {
-                id: user.id,
-                email: user.email,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                role: user.role,
-            },
-        };
-    }
-    async register(createUserDto) {
-        const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-        const user = await this.usersService.create({
-            ...createUserDto,
-            password: hashedPassword,
-        });
-        const { password, ...result } = user;
-        return result;
-    }
-    async verifyJwt(token) {
-        try {
-            return this.jwtService.verify(token);
-        }
-        catch (error) {
-            throw new common_1.UnauthorizedException('Invalid token');
-        }
+    async getUserProfile(userId) {
+        return this.usersService.findOne(userId);
     }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [users_service_1.UsersService,
-        jwt_1.JwtService])
+    __metadata("design:paramtypes", [users_service_1.UsersService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

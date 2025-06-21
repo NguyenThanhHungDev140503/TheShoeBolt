@@ -17,7 +17,7 @@ exports.ElasticsearchController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const elasticsearch_service_1 = require("./elasticsearch.service");
-const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const clerk_auth_guard_1 = require("../Infracstructre/clerk/guards/clerk-auth.guard");
 let ElasticsearchController = ElasticsearchController_1 = class ElasticsearchController {
     constructor(elasticsearchService) {
         this.elasticsearchService = elasticsearchService;
@@ -67,7 +67,7 @@ __decorate([
 exports.ElasticsearchController = ElasticsearchController = ElasticsearchController_1 = __decorate([
     (0, swagger_1.ApiTags)('Elasticsearch'),
     (0, common_1.Controller)('elasticsearch'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(clerk_auth_guard_1.ClerkAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [elasticsearch_service_1.ElasticsearchService])
 ], ElasticsearchController);

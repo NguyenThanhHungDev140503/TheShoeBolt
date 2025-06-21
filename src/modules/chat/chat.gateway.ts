@@ -14,7 +14,7 @@ import { Logger, UseGuards, Inject } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { CreateChatMessageDto } from './dto/create-chat-message.dto';
 import { clerkClient } from '@clerk/clerk-sdk-node';
-import { ClerkModuleOptions } from '../clerk/clerk.module';
+import { ClerkModuleOptions } from '../Infracstructre/clerk/clerk.module';
 
 @WebSocketGateway({
   cors: {

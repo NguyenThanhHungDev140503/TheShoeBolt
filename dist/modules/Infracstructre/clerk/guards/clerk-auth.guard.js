@@ -8,16 +8,13 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ClerkAuthGuard = void 0;
 const common_1 = require("@nestjs/common");
-const clerk_sdk_node_1 = require("@clerk/clerk-sdk-node");
+const clerk_session_service_1 = require("../clerk.session.service");
 let ClerkAuthGuard = class ClerkAuthGuard {
-    constructor(options) {
-        this.options = options;
+    constructor(clerkSessionService) {
+        this.clerkSessionService = clerkSessionService;
     }
     async canActivate(context) {
         const request = context.switchToHttp().getRequest();
@@ -27,24 +24,10 @@ let ClerkAuthGuard = class ClerkAuthGuard {
                 throw new common_1.UnauthorizedException('Missing or invalid authorization header');
             }
             const token = authHeader.substring(7);
-            const sessionToken = await clerk_sdk_node_1.clerkClient.verifyToken(token, {
-                secretKey: this.options.secretKey,
-                issuer: `https://clerk.${this.options.publishableKey.split('_')[1]}.lcl.dev`,
-            });
-            const session = await clerk_sdk_node_1.clerkClient.sessions.getSession(sessionToken.sid);
-            if (!session || session.status !== 'active') {
-                throw new common_1.UnauthorizedException('Invalid or inactive session');
-            }
-            const user = await clerk_sdk_node_1.clerkClient.users.getUser(session.userId);
-            request.user = {
-                id: user.id,
-                email: user.emailAddresses[0]?.emailAddress,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                publicMetadata: user.publicMetadata,
-            };
-            request.session = session;
-            request.sessionClaims = sessionToken;
+            const authData = await this.clerkSessionService.verifyTokenAndGetAuthData(token);
+            request.user = authData.user;
+            request.session = authData.session;
+            request.sessionClaims = authData.sessionClaims;
             return true;
         }
         catch (error) {
@@ -55,7 +38,6 @@ let ClerkAuthGuard = class ClerkAuthGuard {
 exports.ClerkAuthGuard = ClerkAuthGuard;
 exports.ClerkAuthGuard = ClerkAuthGuard = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, common_1.Inject)('CLERK_OPTIONS')),
-    __metadata("design:paramtypes", [Object])
+    __metadata("design:paramtypes", [clerk_session_service_1.ClerkSessionService])
 ], ClerkAuthGuard);
 //# sourceMappingURL=clerk-auth.guard.js.map

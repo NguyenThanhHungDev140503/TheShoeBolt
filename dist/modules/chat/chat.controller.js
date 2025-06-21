@@ -16,7 +16,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ChatController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const clerk_auth_guard_1 = require("../Infracstructre/clerk/guards/clerk-auth.guard");
 const chat_service_1 = require("./chat.service");
 const create_chat_message_dto_1 = require("./dto/create-chat-message.dto");
 const create_chat_room_dto_1 = require("./dto/create-chat-room.dto");
@@ -135,7 +135,7 @@ __decorate([
 exports.ChatController = ChatController = ChatController_1 = __decorate([
     (0, swagger_1.ApiTags)('Chat'),
     (0, common_1.Controller)('chat'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(clerk_auth_guard_1.ClerkAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [chat_service_1.ChatService])
 ], ChatController);

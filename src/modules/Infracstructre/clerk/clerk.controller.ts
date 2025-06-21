@@ -1,18 +1,20 @@
-import { 
-  Controller, 
-  Get, 
-  Delete, 
-  Post, 
-  Param, 
-  UseGuards, 
-  Request, 
-  HttpCode, 
-  HttpStatus 
+import {
+  Controller,
+  Get,
+  Delete,
+  Post,
+  Param,
+  UseGuards,
+  Request,
+  HttpCode,
+  HttpStatus
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { ClerkSessionService } from './clerk.session.service';
 import { ClerkAuthGuard } from './guards/clerk-auth.guard';
-import { AdminOnly } from './decorators/admin-only.decorator';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { UserRole } from '../../users/entities/user.entity';
 
 @ApiTags('Clerk Session Management')
 @Controller('clerk')
@@ -53,7 +55,8 @@ export class ClerkController {
     return;
   }
 
-  @AdminOnly()
+  @UseGuards(ClerkAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Get('admin/users/:userId/sessions')
   @ApiOperation({ summary: 'Admin: Get sessions for any user' })
   @ApiParam({ name: 'userId', description: 'User ID to get sessions for' })
@@ -66,7 +69,8 @@ export class ClerkController {
     };
   }
 
-  @AdminOnly()
+  @UseGuards(ClerkAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Delete('admin/users/:userId/sessions')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Admin: Revoke all sessions for any user' })

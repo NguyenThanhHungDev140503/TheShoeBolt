@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext } from '@nestjs/common';
-import { ClerkModuleOptions } from '../../clerk/clerk.module';
+import { ClerkSessionService } from '../clerk.session.service';
 export declare class ClerkAuthGuard implements CanActivate {
-    private options;
-    constructor(options: ClerkModuleOptions);
+    private readonly clerkSessionService;
+    constructor(clerkSessionService: ClerkSessionService);
     canActivate(context: ExecutionContext): Promise<boolean>;
 }

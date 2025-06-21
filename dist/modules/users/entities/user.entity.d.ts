@@ -1,7 +1,8 @@
 import { Payment } from '../../payments/entities/payment.entity';
 export declare enum UserRole {
     ADMIN = "admin",
-    USER = "user"
+    USER = "user",
+    SHIPPER = "shipper"
 }
 export declare class User {
     id: string;
@@ -11,6 +12,7 @@ export declare class User {
     lastName: string;
     role: UserRole;
     isActive: boolean;
+    clerkId: string;
     payments: Payment[];
     createdAt: Date;
     updatedAt: Date;
