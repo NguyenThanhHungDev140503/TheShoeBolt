@@ -56,7 +56,7 @@ graph TB
     end
     
     subgraph "Domain Layer"
-        UR[UserRole Enum]
+        UR[UserRole Enum (ADMIN, USER, SHIPPER)]
         UE[User Entity]
     end
     
@@ -129,8 +129,19 @@ src/modules/auth/
 
 ```typescript
 @Module({
-  providers: [RolesGuard],
-  exports: [RolesGuard],
+  imports: [
+    UsersModule,
+    ClerkModule,
+  ],
+  controllers: [AuthController],
+  providers: [
+    AuthService,
+    RolesGuard,
+  ],
+  exports: [
+    AuthService,
+    RolesGuard,
+  ],
 })
 export class AuthModule {}
 ```
@@ -414,48 +425,42 @@ export class ClerkAuthGuard implements CanActivate {
 - **Service Integration:** Deep integration với ClerkSessionService
 
 #### 🎛️ **ClerkSessionService**
-
-**Core Responsibilities:**
-```typescript
-@Injectable()
-export class ClerkSessionService {
-  async verifyToken(token: string): Promise<ClerkUser> {
-    // JWT verification logic với Clerk backend
-  }
-
-  async getUserSessions(userId: string): Promise<Session[]> {
-    // Retrieve user session information
-  }
-
-  async revokeSession(sessionId: string): Promise<void> {
-    // Session termination logic
-  }
-}
-```
+ 
+ **Trách nhiệm chính:**
+ `ClerkSessionService` chịu trách nhiệm quản lý các tương tác với Clerk API liên quan đến phiên và người dùng.
+ 
+ **Các phương thức chính:**
+ - **Xác thực Token:** `verifySessionToken(token: string)` và `verifyTokenAndGetAuthData(token: string)` để xác minh JWT token và trích xuất dữ liệu xác thực đầy đủ (user, session, claims).
+ - **Quản lý Phiên:** `getSessionList(userId: string)`, `getSession(sessionId: string)`, `revokeSession(sessionId: string)`, và `revokeAllUserSessions(userId: string)` để lấy, quản lý và thu hồi các phiên của người dùng.
+ - **Quản lý Người dùng:** `getUser(userId: string)` để lấy thông tin chi tiết về người dùng từ Clerk.
+ 
+ **Mô tả:**
+ Service này đóng vai trò trung gian giữa ứng dụng và Clerk API, đảm bảo việc xử lý xác thực và quản lý phiên được tập trung và an toàn.
 
 #### 🎮 **ClerkController Endpoints**
-
-**Admin Endpoints Pattern:**
-```typescript
-@Controller('clerk')
-@UseGuards(ClerkAuthGuard) // Base authentication
-export class ClerkController {
-  
-  @UseGuards(RolesGuard) // Additional authorization
-  @Roles(UserRole.ADMIN)
-  @Get('admin/users/:userId/sessions')
-  async getUserSessions(@Param('userId') userId: string) {
-    return this.clerkSessionService.getUserSessions(userId);
-  }
-
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @Delete('admin/sessions/:sessionId')
-  async revokeSession(@Param('sessionId') sessionId: string) {
-    return this.clerkSessionService.revokeSession(sessionId);
-  }
-}
-```
+ 
+ **Mô tả:**
+ `ClerkController` cung cấp các API endpoints để quản lý phiên (sessions) của người dùng, bao gồm cả các endpoints dành cho người dùng thông thường và các endpoints quản trị (admin).
+ 
+ **Các loại Endpoints chính:**
+ - **Quản lý phiên của người dùng hiện tại:**
+   - `GET /clerk/sessions`: Lấy tất cả phiên của người dùng hiện tại.
+   - `DELETE /clerk/sessions/:sessionId`: Thu hồi một phiên cụ thể của người dùng hiện tại.
+   - `DELETE /clerk/sessions`: Thu hồi tất cả phiên của người dùng hiện tại.
+ - **Quản lý phiên của người dùng bất kỳ (chỉ dành cho ADMIN):**
+   - `GET /clerk/admin/users/:userId/sessions`: Lấy tất cả phiên của một người dùng bất kỳ.
+   - `DELETE /clerk/admin/users/:userId/sessions`: Thu hồi tất cả phiên của một người dùng bất kỳ.
+ 
+ **Mẫu bảo vệ Endpoint Admin:**
+ Các endpoints quản trị được bảo vệ bởi chuỗi guards `ClerkAuthGuard` (xác thực) và `RolesGuard` (phân quyền), cùng với decorator `@Roles(UserRole.ADMIN)`.
+ ```typescript
+ @UseGuards(ClerkAuthGuard, RolesGuard) // Chuỗi guards
+ @Roles(UserRole.ADMIN) // Yêu cầu vai trò ADMIN
+ @Get('admin/users/:userId/sessions')
+ async getAnyUserSessions(@Param('userId') userId: string) {
+   // ... implementation
+ }
+ ```
 
 ---
 

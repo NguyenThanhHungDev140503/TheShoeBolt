@@ -1,0 +1,204 @@
+= Báo Cáo Code Review: Module Auth và Clerk
+:author: AI Expert Developer
+:email: ai.expert.developer@example.com
+:revnumber: 1.0
+:revdate: 2025-06-22
+:doctype: article
+:encoding: utf-8
+:lang: vi
+:toc: left
+:toclevels: 3
+:sectnums:
+:sectanchors:
+:source-highlighter: highlight.js
+:highlightjsdir: https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0
+:highlightjs-theme: atom-one-dark
+
+== 1. Tóm tắt Nhiệm vụ
+
+Báo cáo này cung cấp một cái nhìn tổng quan và phân tích chi tiết về quá trình tái cấu trúc và trạng thái hiện tại của module xác thực (`AuthModule`) và module quản lý người dùng bên ngoài (`ClerkModule`) trong dự án TheShoeBolt. Mục tiêu chính của việc tái cấu trúc là tách biệt rõ ràng trách nhiệm giữa **Authentication** (xác thực người dùng) và **Authorization** (phân quyền truy cập), loại bỏ các vi phạm kiến trúc, giảm trùng lặp mã, và cải thiện tính bảo mật, khả năng bảo trì cũng như khả năng mở rộng của hệ thống.
+
+Quá trình review đã xác nhận rằng các mục tiêu chính của việc tái cấu trúc đã được đáp ứng thành công, với việc loại bỏ `AdminGuard` cũ, cải thiện `RolesGuard` và thiết lập một kiến trúc rõ ràng hơn.
+
+== 2. Chi tiết Triển khai Mã nguồn
+
+Dưới đây là phân tích chi tiết các thành phần chính của `AuthModule` và `ClerkModule` sau tái cấu trúc:
+
+=== 2.1. Module `Auth` (`src/modules/auth/`)
+
+Module `Auth` chịu trách nhiệm về logic nghiệp vụ liên quan đến xác thực và phân quyền.
+
+==== 2.1.1. `auth.module.ts`
+[source,typescript]
+----
+include::src/modules/auth/auth.module.ts[lines=1..23]
+----
+*   **Giải thích**: Module này import `UsersModule` (để quản lý người dùng cục bộ) và `ClerkModule` (để sử dụng các dịch vụ xác thực của Clerk). Nó cung cấp `AuthService` (logic nghiệp vụ) và `RolesGuard` (logic phân quyền), đồng thời export chúng để các module khác có thể sử dụng.
+
+==== 2.1.2. `auth.service.ts`
+[source,typescript]
+----
+include::src/modules/auth/auth.service.ts[lines=1..50]
+----
+*   **Giải thích**: `AuthService` quản lý việc đồng bộ hóa dữ liệu người dùng từ Clerk vào cơ sở dữ liệu cục bộ (`syncUserFromClerk`) và lấy thông tin hồ sơ người dùng từ cơ sở dữ liệu cục bộ (`getUserProfile`). Đây là cầu nối giữa dữ liệu người dùng từ Clerk và hệ thống cục bộ.
+
+==== 2.1.3. `auth.controller.ts`
+[source,typescript]
+----
+include::src/modules/auth/auth.controller.ts[lines=1..69]
+----
+*   **Giải thích**: `AuthController` cung cấp các endpoint API cho việc đồng bộ hóa người dùng (`/auth/sync-user`), lấy hồ sơ người dùng (`/auth/profile`), và một endpoint chỉ dành cho quản trị viên (`/auth/admin-only`). Nó sử dụng `ClerkAuthGuard` để xác thực và `RolesGuard` cùng với `@Roles` decorator để kiểm tra vai trò.
+
+==== 2.1.4. `roles.decorator.ts`
+[source,typescript]
+----
+include::src/modules/auth/decorators/roles.decorator.ts[lines=1..7]
+----
+*   **Giải thích**: Định nghĩa hằng số `ROLES_KEY` và decorator `@Roles`. Decorator này được sử dụng để gán các vai trò yêu cầu cho các endpoint hoặc controller, cho phép `RolesGuard` đọc và thực thi các quy tắc phân quyền.
+
+==== 2.1.5. `roles.guard.ts`
+[source,typescript]
+----
+include::src/modules/auth/guards/roles.guard.ts[lines=1..112]
+----
+*   **Giải thích**: `RolesGuard` là một thành phần quan trọng trong việc thực thi phân quyền. Nó đọc các vai trò yêu cầu từ decorator `@Roles` và so sánh chúng với vai trò của người dùng hiện tại (được lấy từ `publicMetadata` của Clerk). Guard này đã được tái cấu trúc để trở nên mạnh mẽ hơn, hỗ trợ nhiều vai trò, xử lý các trường hợp biên và ném ra các ngoại lệ rõ ràng khi truy cập bị từ chối. Nó tuân thủ nguyên tắc "fail-safe", tức là từ chối truy cập nếu không có vai trò nào được chỉ định rõ ràng.
+
+=== 2.2. Module `Clerk` (`src/modules/Infracstructre/clerk/`)
+
+Module `Clerk` đóng vai trò là tầng hạ tầng, chuyên trách việc tương tác trực tiếp với Clerk SDK và cung cấp các dịch vụ xác thực.
+
+==== 2.2.1. `clerk.module.ts`
+[source,typescript]
+----
+include::src/modules/Infracstructre/clerk/clerk.module.ts[lines=1..52]
+----
+*   **Giải thích**: `ClerkModule` là một `DynamicModule`, cho phép cấu hình linh hoạt (đồng bộ hoặc bất đồng bộ thông qua `ConfigModule`). Nó cung cấp `ClerkSessionService` (tương tác với Clerk API) và `ClerkAuthGuard` (guard xác thực chính). Module này được đánh dấu là `global: true`, cho phép các module khác sử dụng các dịch vụ của nó mà không cần import trực tiếp. Quan trọng là, nó không còn export hoặc cung cấp bất kỳ logic phân quyền nào (như `AdminGuard` cũ), đảm bảo sự tách biệt trách nhiệm.
+
+==== 2.2.2. `clerk.controller.ts`
+[source,typescript]
+----
+include::src/modules/Infracstructre/clerk/clerk.controller.ts[lines=1..82]
+----
+*   **Giải thích**: `ClerkController` cung cấp các endpoint API để quản lý phiên Clerk (ví dụ: lấy danh sách phiên, thu hồi phiên). Các endpoint này được bảo vệ bởi `ClerkAuthGuard`. Đặc biệt, các endpoint quản trị viên (ví dụ: `admin/users/:userId/sessions`) được bảo vệ thêm bởi `RolesGuard` và `@Roles(UserRole.ADMIN)`, đảm bảo chỉ người dùng có vai trò ADMIN mới có thể truy cập.
+
+==== 2.2.3. `clerk.session.service.ts`
+[source,typescript]
+----
+include::src/modules/Infracstructre/clerk/clerk.session.service.ts[lines=1..147]
+----
+*   **Giải thích**: `ClerkSessionService` là service chính tương tác với Clerk API thông qua `clerkClient`. Nó cung cấp các phương thức để quản lý phiên (lấy, thu hồi), xác minh token, và lấy thông tin người dùng từ Clerk. Đây là điểm duy nhất trong ứng dụng giao tiếp trực tiếp với Clerk SDK.
+
+==== 2.2.4. `clerk-auth.guard.ts`
+[source,typescript]
+----
+include::src/modules/Infracstructre/clerk/guards/clerk-auth.guard.ts[lines=1..40]
+----
+*   **Giải thích**: `ClerkAuthGuard` là guard xác thực chính. Nó trích xuất token từ header `Authorization`, sử dụng `ClerkSessionService` để xác minh token với Clerk, và đính kèm dữ liệu người dùng, phiên và yêu cầu phiên vào đối tượng `request`. Guard này đảm bảo rằng mọi yêu cầu đến các endpoint được bảo vệ đều đã được xác thực bởi Clerk.
+
+== 3. Kiểm thử
+
+Hệ thống xác thực và phân quyền đã được kiểm thử một cách toàn diện ở nhiều cấp độ, đảm bảo chất lượng và độ tin cậy của các thay đổi.
+
+=== 3.1. Kiểm thử Đơn vị (Unit Tests)
+
+*   **`test/unit/modules/auth/guards/roles.guard.spec.ts`**:
+    *   Kiểm tra chi tiết logic của `RolesGuard`, bao gồm việc trích xuất vai trò từ các định dạng khác nhau của `publicMetadata` (vai trò đơn lẻ và mảng vai trò), xử lý các trường hợp `user` hoặc `publicMetadata` bị thiếu, và đảm bảo nguyên tắc "fail-safe" được thực thi khi không có vai trò nào được yêu cầu.
+    *   Xác nhận rằng các ngoại lệ `ForbiddenException` và `InternalServerErrorException` được ném ra đúng cách với thông báo rõ ràng.
+*   **`test/unit/modules/Infracstructre/clerk/clerk.controller.spec.ts`**:
+    *   Kiểm tra các endpoint của `ClerkController`, đặc biệt là các endpoint admin.
+    *   Xác nhận rằng các endpoint admin được bảo vệ bởi `RolesGuard` và `ClerkAuthGuard` một cách chính xác.
+    *   Đảm bảo rằng `AdminGuard` và các decorator liên quan đã được loại bỏ hoàn toàn khỏi controller.
+*   **`test/unit/modules/Infracstructre/clerk/clerk.module.spec.ts`**:
+    *   Xác minh cấu hình của `ClerkModule`, đảm bảo nó cung cấp đúng các service và guard (`ClerkSessionService`, `ClerkAuthGuard`).
+    *   Quan trọng hơn, nó kiểm tra rằng `AdminGuard` không còn được export hoặc cung cấp bởi module, củng cố sự tách biệt trách nhiệm giữa xác thực và phân quyền.
+
+=== 3.2. Kiểm thử Tích hợp (Integration Tests)
+
+*   **`test/integration/clerk-admin-endpoints.integration.spec.ts`**:
+    *   Kiểm thử luồng xác thực và ủy quyền đầy đủ cho các endpoint admin của Clerk.
+    *   Mô phỏng các yêu cầu HTTP và xác nhận rằng các yêu cầu từ người dùng không được xác thực hoặc không có quyền admin bị từ chối một cách chính xác (HTTP 401/403).
+    *   Kiểm tra thứ tự thực thi của các guard: `ClerkAuthGuard` luôn chạy trước `RolesGuard`.
+    *   Xác nhận rằng các service method của `ClerkSessionService` được gọi đúng cách khi truy cập được cấp phép.
+
+=== 3.3. Kiểm thử Đầu cuối (End-to-End Tests)
+
+*   **`test/e2e/clerk-admin-e2e.spec.ts`**:
+    *   Mô phỏng các kịch bản người dùng thực tế, bao gồm các luồng quản lý phiên admin (xem, thu hồi phiên cụ thể, thu hồi tất cả các phiên).
+    *   Xác nhận rằng người dùng thông thường không thể truy cập các chức năng admin, trong khi người dùng admin có thể thực hiện các tác vụ của họ.
+    *   Bao gồm các kịch bản xử lý lỗi (ví dụ: dịch vụ Clerk không khả dụng, lỗi mạng) và kiểm tra hiệu suất dưới tải đồng thời.
+    *   Xác minh rằng việc loại bỏ `AdminGuard` và thay thế bằng `RolesGuard` mới hoạt động liền mạch trong môi trường end-to-end.
+
+== 4. Thách thức và Giải pháp
+
+=== 4.1. Thách thức: Vi phạm Tách biệt Trách nhiệm và Trùng lặp Mã
+
+*   **Vấn đề**: Trước tái cấu trúc, `ClerkModule` vừa xử lý xác thực vừa chứa logic phân quyền (thông qua `AdminGuard` và `@AdminOnly` decorator). Điều này dẫn đến vi phạm nguyên tắc Đơn trách nhiệm (SRP), liên kết chặt chẽ (tight coupling) giữa tầng hạ tầng và logic nghiệp vụ, và trùng lặp mã với `RolesGuard` trong `AuthModule`.
+*   **Giải pháp**:
+    *   Loại bỏ hoàn toàn `AdminGuard` và `@AdminOnly` decorator khỏi `ClerkModule`.
+    *   Tái cấu trúc `ClerkModule` để chỉ tập trung vào xác thực và tương tác với Clerk SDK.
+    *   Sử dụng `RolesGuard` từ `AuthModule` một cách nhất quán cho tất cả các nhu cầu phân quyền dựa trên vai trò.
+
+=== 4.2. Thách thức: `RolesGuard` Yếu và Lỗ hổng Bảo mật "Fail-Open"
+
+*   **Vấn đề**: Phiên bản `RolesGuard` ban đầu có lỗ hổng logic nghiêm trọng: nếu một endpoint không được gán decorator `@Roles`, nó sẽ tự động cho phép truy cập (`return true`). Điều này tạo ra một lỗ hổng bảo mật "fail-open" tiềm ẩn. Ngoài ra, nó chỉ hỗ trợ một vai trò duy nhất cho mỗi người dùng và thiếu kiểm tra phòng vệ, dễ gây ra lỗi 500.
+*   **Giải pháp**:
+    *   Tái cấu trúc `RolesGuard` để tuân thủ nguyên tắc "fail-safe": nếu không có vai trò nào được yêu cầu rõ ràng, nó sẽ ném `ForbiddenException`, từ chối truy cập theo mặc định.
+    *   Cải thiện logic trích xuất vai trò để hỗ trợ nhiều vai trò cho một người dùng (từ `publicMetadata.roles` hoặc `publicMetadata.role`).
+    *   Thêm các kiểm tra phòng vệ mạnh mẽ cho đối tượng `user` và `publicMetadata` để tránh lỗi 500 và cung cấp thông báo lỗi rõ ràng hơn.
+    *   Tích hợp `Logger` để ghi lại các sự kiện liên quan đến phân quyền, hỗ trợ gỡ lỗi và giám sát bảo mật.
+
+=== 4.3. Thách thức: Phụ thuộc của `ClerkController` vào `RolesGuard`
+
+*   **Vấn đề**: `ClerkController` (thuộc `ClerkModule` - tầng hạ tầng) vẫn sử dụng `RolesGuard` và `@Roles` decorator (thuộc `AuthModule` - tầng nghiệp vụ) cho các endpoint admin. Điều này tạo ra sự phụ thuộc ngược từ tầng hạ tầng lên tầng nghiệp vụ, có thể gây nhầm lẫn về kiến trúc.
+*   **Giải pháp (Đã chấp nhận)**: Mặc dù đây là một sự phụ thuộc ngược, nó được chấp nhận trong bối cảnh hiện tại để tận dụng `RolesGuard` đã được tái cấu trúc mạnh mẽ. Các endpoint admin trong `ClerkController` được coi là có logic nghiệp vụ (quản lý người dùng khác, phiên của người dùng khác) cần được ủy quyền, và việc sử dụng `RolesGuard` là cách hiệu quả nhất để thực hiện điều đó. Nếu mục tiêu là `ClerkModule` hoàn toàn không có logic nghiệp vụ, thì cần một giải pháp khác (ví dụ: di chuyển các endpoint admin ra khỏi `ClerkController` hoặc tạo một guard phân quyền riêng biệt trong `ClerkModule` chỉ dựa trên các khái niệm hạ tầng). Tuy nhiên, với phạm vi hiện tại, giải pháp này là hợp lý và đã được kiểm thử kỹ lưỡng.
+
+== 5. Cải tiến và Tối ưu hóa
+
+=== 5.1. Cải tiến Kiến trúc
+
+*   **Tách biệt Trách nhiệm Rõ ràng**: `ClerkModule` hiện chỉ tập trung vào xác thực và tương tác với Clerk, trong khi `AuthModule` xử lý ủy quyền và đồng bộ hóa dữ liệu người dùng cục bộ. Điều này giúp code dễ hiểu, dễ bảo trì và mở rộng.
+*   **Tuân thủ Nguyên tắc Thiết kế**: Việc loại bỏ `AdminGuard` và tái cấu trúc `RolesGuard` đã cải thiện đáng kể sự tuân thủ các nguyên tắc SOLID, đặc biệt là SRP và DIP.
+*   **Giảm Trùng lặp Mã**: `RolesGuard` là nguồn duy nhất cho logic kiểm tra vai trò, loại bỏ sự trùng lặp với `AdminGuard` cũ.
+
+=== 5.2. Cải tiến Bảo mật
+
+*   **Nguyên tắc "Fail-Safe"**: `RolesGuard` giờ đây từ chối truy cập theo mặc định nếu không có vai trò nào được chỉ định rõ ràng, loại bỏ lỗ hổng "fail-open".
+*   **Kiểm tra Phòng vệ Mạnh mẽ**: Các kiểm tra sự tồn tại của đối tượng `user` và `publicMetadata` giúp ngăn chặn lỗi 500 và cung cấp thông báo lỗi bảo mật rõ ràng hơn.
+*   **Logging Bảo mật**: Tích hợp `Logger` trong `RolesGuard` giúp theo dõi các nỗ lực truy cập trái phép và các vấn đề liên quan đến vai trò.
+
+=== 5.3. Cải tiến Khả năng Mở rộng và Bảo trì
+
+*   **Hỗ trợ Đa vai trò**: `RolesGuard` được thiết kế để hỗ trợ nhiều vai trò cho một người dùng, cho phép mở rộng hệ thống phân quyền trong tương lai mà không cần thay đổi lớn.
+*   **Code Sạch và Dễ đọc**: Mã nguồn được tổ chức tốt hơn, với các phương thức riêng tư để đóng gói logic, giúp dễ đọc và hiểu.
+*   **Kiểm thử Dễ dàng**: Sự tách biệt trách nhiệm và các kiểm thử toàn diện giúp dễ dàng kiểm thử từng thành phần một cách độc lập và tích hợp.
+
+=== 5.4. Tối ưu hóa Hiệu suất (Đã được phân tích trong tài liệu)
+
+*   Các tài liệu tái cấu trúc đã đề cập đến việc phân tích hiệu suất và tối ưu hóa chuỗi guard, bao gồm chiến lược caching và tối ưu hóa truy vấn cơ sở dữ liệu. Mặc dù không có thay đổi mã nguồn trực tiếp trong các file được review, việc phân tích này cho thấy sự quan tâm đến hiệu suất.
+
+== 6. Công cụ và Công nghệ Sử dụng
+
+*   **Ngôn ngữ Lập trình**: TypeScript
+*   **Framework**: NestJS
+*   **Thư viện Xác thực**: Clerk SDK (`@clerk/clerk-sdk-node`)
+*   **Thư viện Kiểm thử**: Jest, Supertest
+*   **Công cụ**:
+    *   `@nestjs/core`: `Reflector` (để đọc metadata từ decorator)
+    *   `@nestjs/common`: `Logger`, `Injectable`, `CanActivate`, `ExecutionContext`, `ForbiddenException`, `InternalServerErrorException`
+    *   `@nestjs/swagger`: Để tạo tài liệu API
+    *   `mermaid`: Để tạo sơ đồ kiến trúc và luồng dữ liệu trong tài liệu
+
+== 7. Kết luận
+
+Việc tái cấu trúc module Auth và Clerk trong dự án TheShoeBolt đã đạt được thành công đáng kể. Hệ thống hiện tại có một kiến trúc xác thực và phân quyền rõ ràng, mạnh mẽ và có khả năng mở rộng. Các vấn đề về vi phạm kiến trúc, trùng lặp mã và lỗ hổng bảo mật đã được giải quyết một cách hiệu quả.
+
+Mặc dù có một sự phụ thuộc nhỏ từ `ClerkController` (tầng hạ tầng) vào `RolesGuard` (tầng nghiệp vụ), điều này được coi là chấp nhận được trong bối cảnh hiện tại để tận dụng `RolesGuard` đã được cải tiến.
+
+Bộ kiểm thử toàn diện đảm bảo rằng các thay đổi đã được thực hiện một cách đáng tin cậy và hệ thống hoạt động đúng như mong đợi. Đây là một nền tảng vững chắc cho việc phát triển các tính năng liên quan đến xác thực và phân quyền trong tương lai.
+
+=== 7.1. Khuyến nghị Tiếp theo
+
+*   **Sửa lỗi chính tả**: Đổi tên thư mục `src/modules/Infracstructre` thành `src/modules/Infrastructure`.
+*   **Xem xét lại phụ thuộc `ClerkController`**: Trong dài hạn, nếu mục tiêu là `ClerkModule` hoàn toàn không có logic nghiệp vụ, cần xem xét di chuyển các endpoint admin ra khỏi `ClerkController` hoặc tạo một cơ chế ủy quyền khác không phụ thuộc vào `AuthModule`.
+*   **Tối ưu hóa hiệu suất**: Tiếp tục theo dõi và tối ưu hóa hiệu suất của chuỗi guard và các tương tác với Clerk API, đặc biệt là việc triển khai caching token như đã đề cập trong các tài liệu phân tích.
+*   **Mở rộng vai trò**: Khi có yêu cầu nghiệp vụ, tận dụng khả năng hỗ trợ đa vai trò của `RolesGuard` để triển khai các vai trò phức tạp hơn.
