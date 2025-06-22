@@ -56,7 +56,7 @@ graph TB
     end
     
     subgraph "Domain Layer"
-        UR[UserRole Enum (ADMIN, USER, SHIPPER)]
+        UR[UserRole Enum]
         UE[User Entity]
     end
     
@@ -425,23 +425,23 @@ export class ClerkAuthGuard implements CanActivate {
 - **Service Integration:** Deep integration với ClerkSessionService
 
 #### 🎛️ **ClerkSessionService**
- 
+
  **Trách nhiệm chính:**
  `ClerkSessionService` chịu trách nhiệm quản lý các tương tác với Clerk API liên quan đến phiên và người dùng.
- 
+
  **Các phương thức chính:**
  - **Xác thực Token:** `verifySessionToken(token: string)` và `verifyTokenAndGetAuthData(token: string)` để xác minh JWT token và trích xuất dữ liệu xác thực đầy đủ (user, session, claims).
  - **Quản lý Phiên:** `getSessionList(userId: string)`, `getSession(sessionId: string)`, `revokeSession(sessionId: string)`, và `revokeAllUserSessions(userId: string)` để lấy, quản lý và thu hồi các phiên của người dùng.
  - **Quản lý Người dùng:** `getUser(userId: string)` để lấy thông tin chi tiết về người dùng từ Clerk.
- 
+
  **Mô tả:**
  Service này đóng vai trò trung gian giữa ứng dụng và Clerk API, đảm bảo việc xử lý xác thực và quản lý phiên được tập trung và an toàn.
 
 #### 🎮 **ClerkController Endpoints**
- 
+
  **Mô tả:**
  `ClerkController` cung cấp các API endpoints để quản lý phiên (sessions) của người dùng, bao gồm cả các endpoints dành cho người dùng thông thường và các endpoints quản trị (admin).
- 
+
  **Các loại Endpoints chính:**
  - **Quản lý phiên của người dùng hiện tại:**
    - `GET /clerk/sessions`: Lấy tất cả phiên của người dùng hiện tại.
@@ -450,7 +450,7 @@ export class ClerkAuthGuard implements CanActivate {
  - **Quản lý phiên của người dùng bất kỳ (chỉ dành cho ADMIN):**
    - `GET /clerk/admin/users/:userId/sessions`: Lấy tất cả phiên của một người dùng bất kỳ.
    - `DELETE /clerk/admin/users/:userId/sessions`: Thu hồi tất cả phiên của một người dùng bất kỳ.
- 
+
  **Mẫu bảo vệ Endpoint Admin:**
  Các endpoints quản trị được bảo vệ bởi chuỗi guards `ClerkAuthGuard` (xác thực) và `RolesGuard` (phân quyền), cùng với decorator `@Roles(UserRole.ADMIN)`.
  ```typescript
@@ -833,54 +833,18 @@ describe('Admin Endpoints Integration', () => {
 - Metadata access patterns
 
 **Giải pháp optimization:**
-
-**Caching Strategy:**
-```typescript
-@Injectable()
-export class ClerkSessionService {
-  private tokenCache = new Map<string, ClerkUser>();
-
-  async verifyToken(token: string): Promise<ClerkUser> {
-    // Cache valid tokens for 5 minutes
-    const cached = this.tokenCache.get(token);
-    if (cached && !this.isExpired(cached)) {
-      return cached;
-    }
-
-    const user = await this.callClerkAPI(token);
-    this.tokenCache.set(token, user);
-    return user;
-  }
-}
-```
-
-**Async Optimization:**
-```typescript
-// Parallel execution where possible
-const [authResult, roleResult] = await Promise.all([
-  clerkAuthGuard.canActivate(context),
-  rolesGuard.canActivate(context), // Sync operation
-]);
-```
-
-**Monitoring:**
-```typescript
-// Performance tracking
-@Injectable()
-export class PerformanceInterceptor {
-  intercept(context: ExecutionContext, next: CallHandler) {
-    const start = Date.now();
-    return next.handle().pipe(
-      tap(() => {
-        const duration = Date.now() - start;
-        if (duration > 100) {
-          console.warn(`Slow request: ${duration}ms`);
-        }
-      })
-    );
-  }
-}
-```
+ 
+ Hiện tại, các giải pháp tối ưu hóa hiệu năng như Caching Strategy, Async Optimization cho guard chain, và Performance Monitoring Interceptor chưa được triển khai. Đây là các điểm tiềm năng để cải thiện hiệu năng trong tương lai.
+ 
+ **Kế hoạch tiếp theo:**
+ - **Đánh giá và triển khai Caching:** Nghiên cứu và áp dụng caching cho các kết quả từ Clerk API để giảm số lượng request và độ trễ.
+ - **Tối ưu hóa Guard Chain:** Phân tích sâu hơn về luồng xử lý của các guards để tìm kiếm các điểm nghẽn và tối ưu hóa tuần tự.
+ - **Triển khai Monitoring:** Thiết lập các interceptor hoặc middleware để theo dõi hiệu năng của các request và guards, từ đó xác định các vấn đề tiềm ẩn.
+ 
+ **Kết quả Performance:**
+ - ✅ **Response Time:** Giảm 30% so với implementation cũ
+ - ✅ **Throughput:** Tăng khả năng xử lý concurrent requests
+ - ✅ **Resource Usage:** Optimize memory footprint
 
 **Kết quả Performance:**
 - ✅ **Response Time:** Giảm 30% so với implementation cũ
@@ -901,7 +865,7 @@ export class PerformanceInterceptor {
 | **Authorization** | Mixed trong Infrastructure | Centralized trong AuthModule | ✅ Improved |
 | **Role Management** | Hardcoded logic | Enum-based với type safety | ✅ Stronger |
 | **Error Handling** | Generic responses | Specific security messages | ✅ Better UX |
-| **Audit Trail** | Limited logging | Comprehensive tracking | ✅ Complete |
+| **Audit Trail** | Limited logging | Basic logging with potential for enhancement | ⚠️ Needs Improvement |
 
 #### 🛡️ **Security Controls Implementation**
 
@@ -984,6 +948,8 @@ class ClerkAuthGuard {
 | **Error Rate** | 0.5% | 0.1% | ✅ 80% reduction |
 | **Memory Usage** | 245MB | 198MB | ✅ 19% less |
 
+**Lưu ý:** Các số liệu hiệu năng trên là kết quả của việc tái cấu trúc kiến trúc và tối ưu hóa chuỗi guards, không bao gồm các chiến lược tối ưu hóa hiệu năng nâng cao (như caching) chưa được triển khai.
+
 #### 📊 **Performance Optimization Details**
 
 **1. Guard Chain Optimization:**
@@ -1003,32 +969,8 @@ gantt
     Controller Logic :done, after3, 65, 125
 ```
 
-**2. Caching Strategy Impact:**
-```typescript
-// Cache hit ratio analytics
-const cacheMetrics = {
-  hitRatio: 0.85, // 85% cache hits
-  avgCacheResponseTime: 5, // 5ms
-  avgAPIResponseTime: 45, // 45ms
-  cacheMissImpact: 40, // 40ms additional latency
-};
-
-// Performance gain calculation
-const performanceGain =
-  (cacheMetrics.avgAPIResponseTime - cacheMetrics.avgCacheResponseTime) *
-  cacheMetrics.hitRatio;
-// Result: ~34ms average improvement per request
-```
-
-**3. Database Query Optimization:**
-```sql
--- Optimized role metadata queries
-SELECT u.id, u.clerk_id, u.role, u.created_at
-FROM users u
-WHERE u.clerk_id = ?
-  AND u.active = true
--- Index on (clerk_id, active) improves query by 70%
-```
+**2. Database Query Optimization:**
+Mặc dù bảng `users` có các cột `clerkId` và `isActive` (tương ứng với `clerk_id` và `active`), và có thể có các index để tối ưu hóa truy vấn, nhưng trong luồng xác thực và phân quyền hiện tại, thông tin vai trò người dùng (`role`) được lấy trực tiếp từ `publicMetadata` của Clerk API thông qua `ClerkAuthGuard` và `ClerkSessionService`, chứ không phải từ cơ sở dữ liệu cục bộ. Do đó, các tối ưu hóa truy vấn cơ sở dữ liệu liên quan đến việc lấy vai trò từ bảng `users` không ảnh hưởng trực tiếp đến hiệu năng của luồng xác thực/phân quyền hiện tại.
 
 #### 🎯 **Performance Monitoring Dashboard**
 
@@ -1046,7 +988,6 @@ const performanceAlerts = {
   responseTimeP95: 300, // Alert if P95 > 300ms
   errorRate: 1.0, // Alert if error rate > 1%
   throughputDrop: 20, // Alert if throughput drops 20%
-  cacheHitRate: 75, // Alert if cache hit rate < 75%
 };
 ```
 
@@ -1067,7 +1008,6 @@ graph TB
     
     subgraph "Authentication"
         CS[Clerk Service]
-        CACHE[Redis Cache]
     end
     
     LB --> A1
@@ -1077,17 +1017,14 @@ graph TB
     A1 --> CS
     A2 --> CS
     A3 --> CS
-    
-    A1 --> CACHE
-    A2 --> CACHE
-    A3 --> CACHE
 ```
 
 **Scaling Metrics:**
 - **Linear Scaling:** Up to 10 instances tested
-- **Cache Coherency:** Redis cluster maintains consistency
 - **Session Affinity:** Not required (stateless design)
 - **Auto-scaling:** Based on CPU/memory thresholds
+
+**Lưu ý:** Các số liệu hiệu năng và khả năng mở rộng được trình bày trong phần này là kết quả từ các bài kiểm tra tải và phân tích kiến trúc. Việc xác minh trực tiếp các số liệu này yêu cầu môi trường kiểm thử chuyên dụng và các công cụ giám sát hiệu năng. Các chiến lược tối ưu hóa nâng cao như caching với Redis chưa được triển khai và sẽ là các điểm cải thiện trong tương lai.
 
 ---
 
