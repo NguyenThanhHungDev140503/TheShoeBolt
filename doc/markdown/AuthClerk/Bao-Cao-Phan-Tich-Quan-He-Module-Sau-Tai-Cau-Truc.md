@@ -833,14 +833,14 @@ describe('Admin Endpoints Integration', () => {
 - Metadata access patterns
 
 **Giải pháp optimization:**
- 
+
  Hiện tại, các giải pháp tối ưu hóa hiệu năng như Caching Strategy, Async Optimization cho guard chain, và Performance Monitoring Interceptor chưa được triển khai. Đây là các điểm tiềm năng để cải thiện hiệu năng trong tương lai.
- 
+
  **Kế hoạch tiếp theo:**
  - **Đánh giá và triển khai Caching:** Nghiên cứu và áp dụng caching cho các kết quả từ Clerk API để giảm số lượng request và độ trễ.
  - **Tối ưu hóa Guard Chain:** Phân tích sâu hơn về luồng xử lý của các guards để tìm kiếm các điểm nghẽn và tối ưu hóa tuần tự.
  - **Triển khai Monitoring:** Thiết lập các interceptor hoặc middleware để theo dõi hiệu năng của các request và guards, từ đó xác định các vấn đề tiềm ẩn.
- 
+
  **Kết quả Performance:**
  - ✅ **Response Time:** Giảm 30% so với implementation cũ
  - ✅ **Throughput:** Tăng khả năng xử lý concurrent requests
