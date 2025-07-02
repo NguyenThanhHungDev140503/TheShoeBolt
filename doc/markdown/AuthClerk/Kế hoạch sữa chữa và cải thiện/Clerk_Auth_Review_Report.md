@@ -231,93 +231,7 @@ export class ClerkAuthGuard implements CanActivate {
 
 ---
 
-### **Vấn đề #5:** Thiếu ClerkClient Provider Pattern
-**Hạng mục:** Không tuân thủ đặc tả
-**Mức độ ưu tiên:** Cao
-**Vị trí:** src/modules/Infrastructure/clerk/clerk.module.ts:1-52
-
-**Mô tả vấn đề:**
-Module không implement ClerkClient provider pattern theo tài liệu chính thức. Thay vào đó, sử dụng direct import của `clerkClient`.
-
-**Phân tích tác động:**
-- **Dependency Injection**: Không tận dụng được DI container của NestJS
-- **Testing**: Khó mock ClerkClient cho unit tests
-- **Configuration**: Không quản lý được lifecycle của ClerkClient
-
-**Đề xuất giải pháp:**
-Implement ClerkClient provider theo tài liệu chính thức:
-
-```typescript
-// src/providers/clerk-client.provider.ts
-export const ClerkClientProvider: Provider = {
-  provide: 'ClerkClient',
-  useFactory: (configService: ConfigService): ClerkClient => {
-    const secretKey = configService.get<string>('CLERK_SECRET_KEY');
-    const jwtKey = configService.get<string>('CLERK_JWT_KEY'); // For networkless auth
-
-    if (!secretKey) {
-      throw new Error('CLERK_SECRET_KEY is not set in environment variables.');
-    }
-
-    return createClerkClient({
-      secretKey: secretKey,
-      jwtKey: jwtKey, // Enables networkless token verification
-    });
-  },
-  inject: [ConfigService],
-};
-```
-
----
-
-### **Vấn đề #6:** Thiếu JWT Key cho Networkless Authentication
-**Hạng mục:** Hiệu năng / Không tuân thủ đặc tả
-**Mức độ ưu tiên:** Cao
-**Vị trí:** src/modules/Infrastructure/clerk/clerk.session.service.ts:53-61
-
-**Mô tả vấn đề:**
-Không sử dụng `jwtKey` trong token verification, dẫn đến phải gọi API Clerk cho mỗi lần verify token.
-
-<augment_code_snippet path="src/modules/Infrastructure/clerk/clerk.session.service.ts" mode="EXCERPT">
-```typescript
-async verifySessionToken(token: string) {
-  const sessionClaims = await this.clerk.verifyToken(token, {
-    secretKey: this.options.secretKey,
-    issuer: `https://clerk.${this.options.publishableKey.split('_')[1]}.lcl.dev`,
-    // ❌ Thiếu jwtKey cho networkless verification
-  });
-}
-```
-</augment_code_snippet>
-
-**Phân tích tác động:**
-- **Hiệu năng**: Mỗi request phải gọi API Clerk, tăng latency
-- **Reliability**: Phụ thuộc vào network connectivity với Clerk
-- **Scalability**: Không thể scale tốt với high traffic
-
-**Đề xuất giải pháp:**
-Thêm `jwtKey` configuration theo tài liệu chính thức:
-
-```typescript
-// .env
-CLERK_JWT_KEY=your_jwt_key_from_clerk_dashboard
-
-// ClerkClient configuration
-return createClerkClient({
-  secretKey: secretKey,
-  jwtKey: jwtKey, // Enables networkless token verification
-});
-
-// Token verification
-const sessionClaims = await verifyToken(token, {
-  jwtKey: this.configService.get('CLERK_JWT_KEY'),
-  secretKey: this.configService.get('CLERK_SECRET_KEY'),
-});
-```
-
----
-
-### **Vấn đề #7:** Thiếu Webhook Implementation
+### **Vấn đề #5:** Thiếu Webhook Implementation
 **Hạng mục:** Không tuân thủ đặc tả
 **Mức độ ưu tiên:** Trung bình
 **Vị trí:** Toàn bộ dự án
@@ -374,7 +288,7 @@ export class WebhookController {
 
 ---
 
-### **Vấn đề #8:** Insufficient Error Handling
+### **Vấn đề #6:** Insufficient Error Handling
 **Hạng mục:** Xử lý lỗi / Bảo mật
 **Mức độ ưu tiên:** Trung bình
 **Vị trí:** src/modules/Infrastructure/clerk/clerk.session.service.ts:21-89
@@ -434,7 +348,7 @@ export class ClerkSessionService {
 
 ---
 
-### **Vấn đề #9:** Insecure Role Checking Logic
+### **Vấn đề #7:** Insecure Role Checking Logic
 **Hạng mục:** Bảo mật
 **Mức độ ưu tiên:** Cao
 **Vị trí:** src/modules/auth/guards/roles.guard.ts:24-70
@@ -511,7 +425,7 @@ async canActivate(context: ExecutionContext): Promise<boolean> {
 
 ---
 
-### **Vấn đề #10:** Missing Input Validation
+### **Vấn đề #8:** Missing Input Validation
 **Hạng mục:** Bảo mật / Chất lượng mã nguồn
 **Mức độ ưu tiên:** Trung bình
 **Vị trí:** src/modules/Infrastructure/clerk/clerk.controller.ts:29-81
@@ -576,7 +490,7 @@ async getAnyUserSessions(@Param() params: UserParamsDto) {
 
 ---
 
-### **Vấn đề #11:** Inconsistent Response Format
+### **Vấn đề #9:** Inconsistent Response Format
 **Hạng mục:** Chất lượng mã nguồn
 **Mức độ ưu tiên:** Thấp
 **Vị trí:** src/modules/Infrastructure/clerk/clerk.controller.ts:29-81
@@ -615,7 +529,7 @@ async getUserSessions(@Request() req): Promise<ApiResponseDto<any[]>> {
 
 ---
 
-### **Vấn đề #12:** Missing Rate Limiting
+### **Vấn đề #10:** Missing Rate Limiting
 **Hạng mục:** Bảo mật / Hiệu năng
 **Mức độ ưu tiên:** Trung bình
 **Vị trí:** src/modules/Infrastructure/clerk/clerk.controller.ts:1-82
@@ -647,7 +561,7 @@ export class ClerkController {
 
 ---
 
-### **Vấn đề #13:** Inadequate Testing Coverage
+### **Vấn đề #11:** Inadequate Testing Coverage
 **Hạng mục:** Kiểm thử hiệu quả
 **Mức độ ưu tiên:** Trung bình
 **Vị trí:** test/ directory
@@ -699,7 +613,7 @@ describe('Clerk Authentication Integration', () => {
 
 ---
 
-### **Vấn đề #14:** Missing Environment Configuration Validation
+### **Vấn đề #12:** Missing Environment Configuration Validation
 **Hạng mục:** Xử lý lỗi / Chất lượng mã nguồn
 **Mức độ ưu tiên:** Trung bình
 **Vị trí:** src/modules/Infrastructure/clerk/clerk.module.ts:38-44
@@ -780,7 +694,7 @@ static forRootAsync(): DynamicModule {
 
 ---
 
-### **Vấn đề #15:** Lack of Monitoring and Observability
+### **Vấn đề #13:** Lack of Monitoring and Observability
 **Hạng mục:** Chất lượng mã nguồn / Xử lý lỗi
 **Mức độ ưu tiên:** Thấp
 **Vị trí:** Toàn bộ module
@@ -831,7 +745,7 @@ export class ClerkMetricsService {
 
 ---
 
-### **Vấn đề #16:** Missing Documentation
+### **Vấn đề #14:** Missing Documentation
 **Hạng mục:** Chất lượng mã nguồn
 **Mức độ ưu tiên:** Thấp
 **Vị trí:** Toàn bộ module
@@ -883,7 +797,7 @@ export class ClerkSessionService {
 
 ---
 
-### **Vấn đề #17:** Inconsistent Module Architecture
+### **Vấn đề #15:** Inconsistent Module Architecture
 **Hạng mục:** Chất lượng mã nguồn
 **Mức độ ưu tiên:** Thấp
 **Vị trí:** src/modules/Infrastructure/clerk/ và src/modules/auth/
@@ -932,7 +846,7 @@ export class AuthModule {}
 
 ---
 
-### **Vấn đề #18:** Logic Phân quyền Multiple Roles Không Chính xác
+### **Vấn đề #16:** Logic Phân quyền Multiple Roles Không Chính xác
 **Hạng mục:** Bảo mật
 **Mức độ ưu tiên:** Cao
 **Vị trí:** src/modules/auth/guards/roles.guard.ts:110
