@@ -2,38 +2,38 @@
 
 **Người soạn thảo:** Senior Tech Lead
 **Ngày:** {{CURRENT_DATE}}
-**Báo cáo tham chiếu:** [Clerk_Auth_Review_Report.md](doc/markdown/AuthClerk/Clerk_Auth_Review_Report.md)
+**Báo cáo tham chiếu:** [Clerk_Auth_Review_Report.md](./Clerk_Auth_Review_Report.md)
 
 ## 1. Mục tiêu
 
-Tài liệu này trình bày kế hoạch hành động kỹ thuật chi tiết nhằm khắc phục triệt để 18 vấn đề đã được xác định trong báo cáo đánh giá module `clerk` và `auth`. Kế hoạch được cấu trúc để đội ngũ phát triển có thể triển khai ngay lập tức, đảm bảo nâng cao tính bảo mật, hiệu năng, và khả năng bảo trì của hệ thống xác thực.
+Tài liệu này trình bày kế hoạch hành động kỹ thuật chi tiết nhằm khắc phục triệt để các vấn đề đã được xác định trong báo cáo đánh giá module `clerk` và `auth`. Kế hoạch được cấu trúc để đội ngũ phát triển có thể triển khai ngay lập tức, đảm bảo nâng cao tính bảo mật, hiệu năng, và khả năng bảo trì của hệ thống xác thực.
 
 ## 2. Danh sách Vấn đề và Thứ tự Ưu tiên
 
 Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp xếp theo mức độ ưu tiên như sau:
 
 **Giai đoạn 1: Khắc phục Lỗ hổng Bảo mật & Tuân thủ (Ưu tiên: CRITICAL)**
-1.  **Vấn đề #1, #2, #5:** Sử dụng SDK Deprecated và Thiếu Provider Pattern.
-2.  **Vấn đề #3, #6:** Thiếu JWT Key cho Networkless Authentication.
+1.  **Vấn đề #1, #2:** Sử dụng SDK Deprecated và Thiếu Provider Pattern.
+2.  **Vấn đề #3:** Thiếu JWT Key cho Networkless Authentication.
 3.  **Vấn đề #4:** Sử dụng Sai Phương thức Xác thực trong Guard.
-4.  **Vấn đề #9:** Logic Role Checking Không An toàn (Lỗi Fail-Safe).
-5.  **Vấn đề #18:** Logic Phân quyền Multiple Roles Không Chính xác (Lỗi AND/OR).
+4.  **Vấn đề #7:** Logic Role Checking Không An toàn (Lỗi Fail-Safe).
+5.  **Vấn đề #16:** Logic Phân quyền Multiple Roles Không Chính xác (Lỗi AND/OR).
 
 **Giai đoạn 2: Cải thiện Chức năng và Bảo mật Lõi (Ưu tiên: HIGH)**
-6.  **Vấn đề #8:** Xử lý Lỗi Không Đầy đủ (Insufficient Error Handling).
-7.  **Vấn đề #10:** Thiếu Xác thực Dữ liệu Đầu vào (Input Validation).
-8.  **Vấn đề #12:** Thiếu Giới hạn Tần suất Truy cập (Rate Limiting).
-9.  **Vähän đề #7:** Thiếu Triển khai Webhook.
+6.  **Vấn đề #6:** Xử lý Lỗi Không Đầy đủ (Insufficient Error Handling).
+7.  **Vấn đề #8:** Thiếu Xác thực Dữ liệu Đầu vào (Input Validation).
+8.  **Vấn đề #10:** Thiếu Giới hạn Tần suất Truy cập (Rate Limiting).
+9.  **Vấn đề #5:** Thiếu Triển khai Webhook.
 
 **Giai đoạn 3: Nâng cao Chất lượng và Kiểm thử (Ưu tiên: MEDIUM)**
-10. **Vấn đề #13:** Độ bao phủ Kiểm thử Thấp.
-11. **Vấn đề #14:** Thiếu Xác thực Cấu hình Môi trường.
-12. **Vấn đề #11:** Định dạng Phản hồi Không nhất quán.
+10. **Vấn đề #11:** Độ bao phủ Kiểm thử Thấp.
+11. **Vấn đề #12:** Thiếu Xác thực Cấu hình Môi trường.
+12. **Vấn đề #9:** Định dạng Phản hồi Không nhất quán.
 
 **Giai đoạn 4: Tối ưu Kiến trúc và Tài liệu (Ưu tiên: LOW)**
-13. **Vấn đề #17:** Kiến trúc Module Không nhất quán.
-14. **Vấn đề #15:** Thiếu Giám sát và Quan sát (Monitoring & Observability).
-15. **Vấn đề #16:** Thiếu Tài liệu Hóa (Documentation).
+13. **Vấn đề #15:** Kiến trúc Module Không nhất quán.
+14. **Vấn đề #13:** Thiếu Giám sát và Quan sát (Monitoring & Observability).
+15. **Vấn đề #14:** Thiếu Tài liệu Hóa (Documentation).
 
 ---
 
@@ -41,7 +41,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
 
 ### **Giai đoạn 1: Khắc phục Lỗ hổng Bảo mật & Tuân thủ (CRITICAL)**
 
-#### **Vấn đề 1.1: (Tổng hợp #1, #2, #5) Nâng cấp SDK và Áp dụng Provider Pattern**
+#### **Vấn đề 1.1: (Tổng hợp #1, #2) Nâng cấp SDK và Áp dụng Provider Pattern**
 
 *   **Tóm tắt:** Hệ thống đang sử dụng SDK `@clerk/clerk-sdk-node` đã lỗi thời và không áp dụng ClerkClient Provider Pattern, vi phạm các khuyến nghị chính thức và tiềm ẩn rủi ro bảo mật.
 *   **Phân tích Nguyên nhân Gốc rễ:**
@@ -115,7 +115,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         *   Xác minh rằng Guard có thể truy cập `clerkClient` và thực hiện xác thực thành công.
 
 ---
-#### **Vấn đề 1.2: (Tổng hợp #3, #6) Kích hoạt Networkless Authentication**
+#### **Vấn đề 1.2: (Vấn đề #3) Kích hoạt Networkless Authentication**
 
 *   **Tóm tắt:** Hệ thống không sử dụng `jwtKey`, khiến mọi yêu cầu xác thực token đều phải thực hiện một cuộc gọi mạng đến API của Clerk, gây ảnh hưởng đến hiệu năng và độ tin cậy.
 *   **Phân tích Nguyên nhân Gốc rễ:** Thiếu sót trong cấu hình ban đầu, bỏ qua một tùy chọn quan trọng giúp tối ưu hiệu năng được Clerk cung cấp.
@@ -165,7 +165,6 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
     ```typescript
     // src/modules/Infrastructure/clerk/guards/clerk-auth.guard.ts
     import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedException, Logger } from '@nestjs/common';
-    import { Reflector } from '@nestjs/core';
     import { Request } from 'express';
     import { ClerkClient, authenticateRequest } from '@clerk/backend';
     import { CLERK_CLIENT } from '../providers/clerk-client.provider';
@@ -215,13 +214,14 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         *   Gửi request không có header `Authorization`, mong đợi `401 Unauthorized`.
 
 ---
-#### **Vấn đề 1.4: (Vấn đề #9) Sửa Lỗi Logic Role Checking (Fail-Safe)**
+#### **Vấn đề 1.4: (Vấn đề #7) Sửa Lỗi Logic Role Checking (Fail-Safe)**
 
 *   **Tóm tắt:** `RolesGuard` trả về `true` (cho phép truy cập) khi một endpoint không có decorator `@Roles`, vi phạm nguyên tắc fail-safe (mặc định từ chối).
 *   **Phân tích Nguyên nhân Gốc rễ:** Lỗi logic cơ bản trong thiết kế của Guard, không xử lý trường hợp không có yêu cầu về vai trò một cách an toàn.
 *   **Giải pháp Kỹ thuật:** Thay đổi logic để mặc định từ chối truy cập nếu không có vai trò nào được yêu cầu.
     ```typescript
     // src/modules/auth/guards/roles.guard.ts
+    import { ROLES_KEY } from '../decorators/roles.decorator';
     // ...
     async canActivate(context: ExecutionContext): Promise<boolean> {
       const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
@@ -231,9 +231,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
 
       // ✅ Sửa lỗi: Mặc định từ chối nếu không có vai trò nào được định nghĩa
       if (!requiredRoles || requiredRoles.length === 0) {
-        // Hoặc có thể trả về true nếu muốn các endpoint không được trang trí là public
-        // Nhưng theo nguyên tắc fail-safe, trả về false an toàn hơn.
-        // Quyết định này cần được team thảo luận. Ưu tiên trả về false.
+        // Trả về false để từ chối truy cập theo nguyên tắc fail-safe.
         return false; 
       }
 
@@ -242,9 +240,8 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         throw new UnauthorizedException('User not authenticated.');
       }
 
-      // Logic kiểm tra vai trò người dùng (sẽ được sửa ở vấn đề 1.5)
       const userRoles = auth.sessionClaims?.public_metadata?.roles || [];
-      const hasPermission = requiredRoles.some((role) => userRoles.includes(role));
+      const hasPermission = requiredRoles.every((role) => userRoles.includes(role));
 
       if (!hasPermission) {
           throw new ForbiddenException('Insufficient permissions.');
@@ -263,58 +260,32 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         *   Gọi API đến endpoint đó và xác minh nhận được `403 Forbidden`.
 
 ---
-#### **Vấn đề 1.5: (Vấn đề #18) Sửa Lỗi Logic Phân quyền Multiple Roles**
+#### **Vấn đề 1.5: (Vấn đề #16) Sửa Lỗi Logic Phân quyền Multiple Roles**
 
-*   **Tóm tắt:** Logic `matchRoles` đang sử dụng điều kiện `OR` (`some`), cho phép truy cập nếu người dùng có chỉ một trong nhiều vai trò yêu cầu, thay vì yêu cầu TẤT CẢ.
+*   **Tóm tắt:** Logic kiểm tra vai trò đang sử dụng điều kiện `OR` (`some`), cho phép truy cập nếu người dùng có chỉ một trong nhiều vai trò yêu cầu, thay vì yêu cầu TẤT CẢ.
 *   **Phân tích Nguyên nhân Gốc rễ:** Sử dụng sai phương thức lặp mảng (`some` thay vì `every`) cho logic ủy quyền.
-*   **Giải pháp Kỹ thuật:** Thay đổi logic thành `every` để yêu cầu tất cả các vai trò. Cung cấp thêm decorator `RolesAny` cho trường hợp cần logic `OR`.
+*   **Giải pháp Kỹ thuật:** Thay đổi logic thành `every` để yêu cầu tất cả các vai trò.
     ```typescript
-    // src/modules/auth/decorators/roles.decorator.ts
-    import { SetMetadata } from '@nestjs/common';
-
-    export const ROLES_ALL_KEY = 'roles_all';
-    export const ROLES_ANY_KEY = 'roles_any';
-
-    // Yêu cầu TẤT CẢ các vai trò (AND)
-    export const Roles = (...roles: string[]) => SetMetadata(ROLES_ALL_KEY, roles); 
-
-    // Yêu cầu BẤT KỲ vai trò nào (OR)
-    export const RolesAny = (...roles: string[]) => SetMetadata(ROLES_ANY_KEY, roles);
-
     // src/modules/auth/guards/roles.guard.ts
     // ...
     async canActivate(context: ExecutionContext): Promise<boolean> {
-      const requiredRolesAll = this.reflector.get<string[]>(ROLES_ALL_KEY, context.getHandler());
-      const requiredRolesAny = this.reflector.get<string[]>(ROLES_ANY_KEY, context.getHandler());
-
-      if (!requiredRolesAll && !requiredRolesAny) {
-        return false; // Fail-safe
-      }
-
-      const { auth } = context.switchToHttp().getRequest();
-      if (!auth) throw new UnauthorizedException();
+      // ... (logic lấy requiredRoles và auth object như trên)
 
       const userRoles = auth.sessionClaims?.public_metadata?.roles || [];
-
-      let hasPermission = false;
-      if (requiredRolesAll) {
-        hasPermission = requiredRolesAll.every(role => userRoles.includes(role));
-      }
-      if (!hasPermission && requiredRolesAny) {
-        hasPermission = requiredRolesAny.some(role => userRoles.includes(role));
-      }
+      
+      // ✅ Sửa lỗi: Sử dụng 'every' để yêu cầu TẤT CẢ các vai trò
+      const hasPermission = requiredRoles.every((role) => userRoles.includes(role));
 
       if (!hasPermission) {
           throw new ForbiddenException('Insufficient permissions.');
       }
-
+      
       return true;
     }
     ```
 *   **Kế hoạch Kiểm thử:**
     *   **Unit Test:**
-        *   Test `RolesGuard` với decorator `@Roles(ADMIN, MANAGER)`: user có `[ADMIN, MANAGER]` -> pass; user có `[ADMIN]` -> fail.
-        *   Test `RolesGuard` với decorator `@RolesAny(ADMIN, MANAGER)`: user có `[ADMIN]` -> pass.
+        *   Test `RolesGuard` với decorator `@Roles('ADMIN', 'MANAGER')`: user có `[ADMIN, MANAGER]` -> pass; user có `[ADMIN]` -> fail.
     *   **Integration Test:**
         *   Tạo endpoint với `@Roles('admin', 'super-user')`.
         *   Test với user chỉ có role `admin` -> mong đợi `403 Forbidden`.
