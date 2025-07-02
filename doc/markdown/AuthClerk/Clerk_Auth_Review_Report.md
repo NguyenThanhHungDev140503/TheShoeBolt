@@ -1,231 +1,1033 @@
 # BÁO CÁO ĐÁNH GIÁ MODULE CLERK & AUTH
 
-**Ngày đánh giá:** 24/07/2024
-
-**Người đánh giá:** Kỹ sư Phần mềm AI Cao cấp
-
----
-
 ## 1. Tóm tắt tổng quan (Executive Summary)
 
-Cuộc đánh giá toàn diện module `clerk` và `auth` đã được thực hiện, đối chiếu với các tài liệu hướng dẫn chính thức của Clerk. Nhìn chung, các module đã triển khai được chức năng xác thực và phân quyền cơ bản. Tuy nhiên, một số vấn đề quan trọng đã được phát hiện, đòi hỏi sự chú ý để cải thiện tính bảo mật, hiệu năng và khả năng bảo trì của hệ thống.
+Sau khi thực hiện đánh giá toàn diện mã nguồn của module `clerk` và `auth` trong dự án TheShoeBolt, đối chiếu với tài liệu chính thức của Clerk, tôi đã xác định được **18 vấn đề quan trọng** cần được giải quyết. Các vấn đề này bao gồm từ vi phạm bảo mật nghiêm trọng đến không tuân thủ best practices của Clerk.
 
-**Những phát hiện quan trọng nhất bao gồm:**
+**Những phát hiện quan trọng nhất:**
 
-1.  **Lỗ hổng bảo mật trong `RolesGuard`:** Logic hiện tại của `RolesGuard` cho phép truy cập nếu người dùng có *bất kỳ* vai trò nào được yêu cầu, thay vì yêu cầu *tất cả* các vai trò cần thiết, dẫn đến khả năng leo thang đặc quyền không mong muốn.
-2.  **Xác thực token không tối ưu:** `ClerkAuthGuard` và `ClerkSessionService` đang sử dụng phương thức `verifyToken` thay vì `authenticateRequest` được khuyến nghị cho các yêu cầu HTTP, đồng thời thiếu việc xác thực `authorizedParties` (azp claim), tạo ra rủi ro bảo mật CSRF.
-3.  **Khởi tạo ClerkClient không nhất quán:** Việc khởi tạo `clerkClient` trực tiếp từ SDK node (`@clerk/clerk-sdk-node`) trong `ClerkSessionService` thay vì sử dụng provider được định nghĩa trong `ClerkModule` gây ra sự không nhất quán và khó quản lý cấu hình.
-4.  **Thiếu sót trong kiểm thử:** Các bài kiểm thử hiện tại chưa bao phủ đầy đủ các trường hợp biên, đặc biệt là các kịch bản lỗi và logic phân quyền phức tạp trong `RolesGuard`.
+1. **Bảo mật nghiêm trọng**: Sử dụng SDK deprecated `@clerk/clerk-sdk-node` thay vì `@clerk/backend` được khuyến nghị
+2. **Không tuân thủ đặc tả**: Thiếu ClerkClient provider pattern theo tài liệu chính thức
+3. **Xử lý lỗi kém**: Thiếu comprehensive error handling và logging
+4. **Kiến trúc không tối ưu**: Logic authorization bị phân tán giữa các module
+5. **Testing không đầy đủ**: Thiếu integration tests và E2E tests cho critical flows
 
 **Đề xuất ưu tiên hàng đầu:**
-
-1.  **Khắc phục `RolesGuard`:** Sửa đổi logic để đảm bảo người dùng phải có **tất cả** các vai trò được yêu cầu.
-2.  **Tái cấu trúc `ClerkAuthGuard`:** Chuyển sang sử dụng `authenticateRequest` và bổ sung xác thực `authorizedParties` để tuân thủ các phương pháp bảo mật tốt nhất của Clerk.
-3.  **Chuẩn hóa việc khởi tạo ClerkClient:** Đảm bảo `ClerkSessionService` nhận `ClerkClient` thông qua dependency injection từ module.
-4.  **Mở rộng phạm vi kiểm thử:** Bổ sung các test case để bao phủ các kịch bản lỗi, logic phân quyền và các trường hợp cạnh.
-
-Việc giải quyết các vấn đề này sẽ giúp tăng cường đáng kể tính bảo mật, hiệu suất và độ tin cậy của hệ thống xác thực.
-
----
+- **Cao**: Migrate từ deprecated SDK sang `@clerk/backend` (Vấn đề #1, #2, #3)
+- **Cao**: Sử dụng đúng phương thức xác thực cho từng trường hợp (Vấn đề #4)
+- **Cao**: Implement proper ClerkClient provider pattern (Vấn đề #5, #6)
+- **Cao**: Fix critical authorization logic vulnerabilities (Vấn đề #9, #18)
+- **Trung bình**: Cải thiện error handling và security validation (Vấn đề #7, #8, #10)
+- **Thấp**: Cải thiện architecture và documentation (Vấn đề #16, #17)
 
 ## 2. Phân tích chi tiết theo từng vấn đề
 
-### Vấn đề #1: Logic phân quyền trong `RolesGuard` không chính xác
+### **Vấn đề #1:** Sử dụng SDK Deprecated
+**Hạng mục:** Không tuân thủ đặc tả / Bảo mật
+**Mức độ ưu tiên:** Cao
+**Vị trí:** src/modules/Infrastructure/clerk/clerk.session.service.ts:2
 
-*   **Hạng mục:** Bảo mật
-*   **Mức độ ưu tiên:** Cao
-*   **Vị trí:** `src/modules/auth/guards/roles.guard.ts:109`
-*   **Mô tả vấn đề:**
-    Phương thức `matchRoles` trong `RolesGuard` hiện đang sử dụng `requiredRoles.some((role) => userRoles.includes(role))`. Logic này trả về `true` nếu người dùng có *ít nhất một* trong các vai trò được yêu cầu. Điều này không chính xác trong trường hợp một endpoint yêu cầu nhiều vai trò đồng thời (ví dụ: `@Roles(UserRole.ADMIN, UserRole.FINANCE_MANAGER)`). Kẻ tấn công chỉ cần có vai trò `ADMIN` là có thể truy cập, ngay cả khi không có vai trò `FINANCE_MANAGER`.
-*   **Phân tích tác động:**
-    Lỗ hổng này có thể dẫn đến việc leo thang đặc quyền (Privilege Escalation). Người dùng có một phần quyền hạn có thể truy cập vào các tài nguyên hoặc chức năng yêu cầu nhiều quyền hơn, gây ra rủi ro về an toàn dữ liệu và toàn vẹn hệ thống.
-*   **Đề xuất giải pháp:**
-    Thay đổi logic của `matchRoles` để yêu cầu người dùng phải có *tất cả* các vai trò được yêu cầu.
+**Mô tả vấn đề:**
+Mã nguồn hiện tại sử dụng `@clerk/clerk-sdk-node` (deprecated) thay vì `@clerk/backend` được khuyến nghị trong tài liệu chính thức.
 
-    ```typescript
-    // Đề xuất sửa đổi trong src/modules/auth/guards/roles.guard.ts
+<augment_code_snippet path="src/modules/Infrastructure/clerk/clerk.session.service.ts" mode="EXCERPT">
+```typescript
+import { clerkClient } from '@clerk/clerk-sdk-node';
+// ...
+constructor() {
+  this.clerk = clerkClient; // ❌ Deprecated approach
+}
+```
+</augment_code_snippet>
 
-    private matchRoles(requiredRoles: UserRole[], userRoles: UserRole[]): boolean {
-      // Người dùng phải có TẤT CẢ các vai trò được yêu cầu
-      return requiredRoles.every((role) => userRoles.includes(role));
-    }
-    ```
+**Phân tích tác động:**
+- **Bảo mật**: SDK deprecated có thể chứa các lỗ hổng bảo mật chưa được vá
+- **Tương thích**: Có thể gặp vấn đề với các phiên bản Clerk mới
+- **Hiệu năng**: Thiếu các tối ưu hóa mới nhất
 
-### Vấn đề #2: Sử dụng phương thức xác thực token không tối ưu và thiếu an toàn
+**Đề xuất giải pháp:**
+Migrate sang `@clerk/backend` theo pattern trong tài liệu chính thức:
 
-*   **Hạng mục:** Bảo mật / Hiệu năng / Không tuân thủ đặc tả
-*   **Mức độ ưu tiên:** Cao
-*   **Vị trí:**
-    *   `src/modules/Infrastructure/clerk/guards/clerk-auth.guard.ts`
-    *   `src/modules/Infrastructure/clerk/clerk.session.service.ts`
-*   **Mô tả vấn đề:**
-    1.  **Sử dụng `verifyToken` thay vì `authenticateRequest`**: `ClerkAuthGuard` đang sử dụng một luồng xác thực thủ công thông qua `clerkSessionService.verifyTokenAndGetAuthData`, vốn dựa trên `verifyToken`. Theo tài liệu của Clerk, `authenticateRequest` là phương thức cấp cao, được tối ưu hóa và khuyến nghị cho việc xác thực các yêu cầu HTTP đến, vì nó tự động xử lý việc trích xuất token từ header/cookie và các kiểm tra bảo mật khác.
-    2.  **Thiếu xác thực `authorizedParties` (azp claim)**: Cả `ClerkAuthGuard` và `ClerkSessionService` khi xác thực token đều không kiểm tra `authorizedParties`. Đây là một bước bảo mật quan trọng được Clerk khuyến nghị để chống lại các cuộc tấn công CSRF, đảm bảo token chỉ được sử dụng bởi các frontend đã được ủy quyền.
-    3.  **Hardcode Issuer (`iss`) không linh hoạt**: Trong `clerk.session.service.ts`, issuer được hardcode là `https://clerk.${this.options.publishableKey.split('_')[1]}.lcl.dev`, điều này làm cho guard dễ bị lỗi khi chuyển sang môi trường production hoặc nếu cấu trúc domain của Clerk thay đổi. `authenticateRequest` xử lý việc này một cách tự động và an toàn hơn.
-*   **Phân tích tác động:**
-    *   **Rủi ro bảo mật:** Việc bỏ qua kiểm tra `authorizedParties` có thể khiến ứng dụng dễ bị tấn công CSRF nếu token bị đánh cắp và sử dụng từ một domain không được phép.
-    *   **Giảm hiệu năng:** Mặc dù `verifyToken` có thể hoạt động ở chế độ networkless, `authenticateRequest` được thiết kế đặc biệt cho luồng request HTTP và được tối ưu cho mục đích này.
-    *   **Khả năng bảo trì kém:** Việc hardcode issuer và logic xác thực thủ công làm cho code khó bảo trì và dễ phát sinh lỗi khi có sự thay đổi từ phía Clerk hoặc môi trường triển khai.
-*   **Đề xuất giải pháp:**
-    1.  Tái cấu trúc `ClerkAuthGuard` để sử dụng `authenticateRequest`.
-    2.  Thêm `authorizedParties` vào cấu hình, đọc từ biến môi trường (ví dụ: `CLERK_AUTHORIZED_PARTIES` là một danh sách các URL frontend được phép, phân tách bằng dấu phẩy).
-    3.  Loại bỏ logic xác thực thủ công khỏi `ClerkSessionService` và để `ClerkAuthGuard` chịu trách nhiệm chính.
+```typescript
+// 1. Cài đặt SDK mới
+npm uninstall @clerk/clerk-sdk-node
+npm install @clerk/backend
 
-    ```typescript
-    // Đề xuất sửa đổi cho src/modules/Infrastructure/clerk/guards/clerk-auth.guard.ts
+// 2. Tạo ClerkClient provider
+import { createClerkClient } from '@clerk/backend';
+import { ConfigService } from '@nestjs/config';
 
-    import {
-      Injectable,
-      CanActivate,
-      ExecutionContext,
-      UnauthorizedException,
-      Inject,
-    } from '@nestjs/common';
-    import { authenticateRequest } from '@clerk/clerk-sdk-node';
-    import { ConfigService } from '@nestjs/config';
+export const ClerkClientProvider = {
+  provide: 'ClerkClient',
+  useFactory: (configService: ConfigService) => {
+    return createClerkClient({
+      secretKey: configService.get('CLERK_SECRET_KEY'),
+      publishableKey: configService.get('CLERK_PUBLISHABLE_KEY'),
+    });
+  },
+  inject: [ConfigService],
+};
 
-    @Injectable()
-    export class ClerkAuthGuard implements CanActivate {
-      constructor(private readonly configService: ConfigService) {}
-
-      async canActivate(context: ExecutionContext): Promise<boolean> {
-        const request = context.switchToHttp().getRequest();
-        try {
-          const authorizedParties = this.configService.get<string>('CLERK_AUTHORIZED_PARTIES')?.split(',');
-
-          const authState = await authenticateRequest({
-            request,
-            secretKey: this.configService.get<string>('CLERK_SECRET_KEY'),
-            publishableKey: this.configService.get<string>('CLERK_PUBLISHABLE_KEY'),
-            authorizedParties,
-          });
-
-          if (!authState.userId) {
-            throw new UnauthorizedException('User not authenticated.');
-          }
-          
-          // Gắn authState vào request để các phần khác có thể sử dụng
-          request.auth = authState;
-          // Để tương thích với RolesGuard hiện tại, ta có thể tạo một đối tượng user
-          request.user = { 
-            id: authState.userId,
-            publicMetadata: authState.claims.public_metadata || {},
-            // ... các trường khác từ authState.claims nếu cần
-          };
-
-          return true;
-        } catch (error) {
-          throw new UnauthorizedException(`Authentication failed: ${error.message}`);
-        }
-      }
-    }
-    ```
-
-### Vấn đề #3: Khởi tạo ClerkClient không nhất quán
-
-*   **Hạng mục:** Chất lượng mã nguồn
-*   **Mức độ ưu tiên:** Trung bình
-*   **Vị trí:** `src/modules/Infrastructure/clerk/clerk.session.service.ts:12`
-*   **Mô tả vấn đề:**
-    `ClerkSessionService` đang khởi tạo `this.clerk` bằng cách gán trực tiếp từ `clerkClient` được import từ `@clerk/clerk-sdk-node`. Điều này bỏ qua cơ chế Dependency Injection của NestJS. `ClerkModule` đã định nghĩa một provider (`'CLERK_OPTIONS'`) để cung cấp cấu hình, nhưng service này không sử dụng nó một cách nhất quán. Thay vào đó, nó import một `clerkClient` mặc định đã được khởi tạo với biến môi trường, làm cho việc kiểm thử và quản lý cấu hình trở nên khó khăn.
-*   **Phân tích tác động:**
-    *   **Khó kiểm thử:** Rất khó để mock `clerkClient` trong các bài unit test cho `ClerkSessionService`.
-    *   **Thiếu linh hoạt:** Việc khởi tạo client bị ràng buộc chặt chẽ với biến môi trường toàn cục, làm giảm khả năng cấu hình linh hoạt cho các môi trường khác nhau hoặc trong các kịch bản phức tạp.
-    *   **Vi phạm nguyên tắc DI:** Mã nguồn không tuân thủ nguyên tắc Dependency Injection của NestJS, làm giảm tính module hóa và khả năng bảo trì.
-*   **Đề xuất giải pháp:**
-    Sửa đổi `ClerkSessionService` để nhận `clerkClient` đã được khởi tạo thông qua constructor, tuân thủ nguyên tắc Dependency Injection.
-
-    1.  **Tạo một provider cho `clerkClient` trong `ClerkModule`:**
-
-        ```typescript
-        // Trong src/modules/Infrastructure/clerk/clerk.module.ts
-        // ...
-        providers: [
-          // ...
-          {
-            provide: 'CLERK_CLIENT',
-            useFactory: (configService: ConfigService) => clerkClient, // Sử dụng clerkClient đã được khởi tạo
-            inject: [ConfigService],
-          },
-          ClerkSessionService,
-          ClerkAuthGuard,
-        ],
-        exports: [ClerkSessionService, ClerkAuthGuard, 'CLERK_CLIENT'],
-        // ...
-        ```
-        *Lưu ý: Đoạn mã trên chỉ là minh hoạ, cần có một provider thực sự khởi tạo `clerkClient` với options từ `ConfigService` và cung cấp nó.* Một cách tốt hơn là `ClerkModule` nên cung cấp một instance `ClerkClient` đã được cấu hình.
-
-    2.  **Inject `clerkClient` vào `ClerkSessionService`:**
-
-        ```typescript
-        // Đề xuất sửa đổi cho src/modules/Infrastructure/clerk/clerk.session.service.ts
-
-        import { Injectable, Inject, UnauthorizedException } from '@nestjs/common';
-        import { ClerkClient } from '@clerk/clerk-sdk-node'; // Chỉ import kiểu dữ liệu
-
-        @Injectable()
-        export class ClerkSessionService {
-          constructor(
-            @Inject('CLERK_CLIENT') private clerk: ClerkClient,
-          ) {}
-          // ... phần còn lại của service sử dụng this.clerk
-        }
-        ```
-
-### Vấn đề #4: Chất lượng và phạm vi kiểm thử cần cải thiện
-
-*   **Hạng mục:** Chất lượng mã nguồn / Kiểm thử
-*   **Mức độ ưu tiên:** Trung bình
-*   **Vị trí:** Toàn bộ thư mục `test/`
-*   **Mô tả vấn đề:**
-    Các bài kiểm thử hiện tại, mặc dù có tồn tại, nhưng chưa đầy đủ và hiệu quả:
-    1.  **`roles.guard.spec.ts`:** Thiếu các test case quan trọng như:
-        *   Trường hợp yêu cầu nhiều vai trò (`@Roles('ADMIN', 'USER')`).
-        *   Trường hợp người dùng có nhiều vai trò.
-        *   Trường hợp `publicMetadata` tồn tại nhưng không có thuộc tính `role` hoặc `roles`.
-    2.  **`clerk.controller.spec.ts` và `clerk-admin-endpoints.integration.spec.ts`:** Các bài test đang mock `ClerkSessionService` ở mức độ cao, làm cho việc kiểm tra luồng tích hợp thực sự giữa controller và service không được đầy đủ.
-    3.  **Thiếu kiểm thử cho `AuthService`:** Không có bài unit test nào cho `auth.service.ts` để kiểm tra logic đồng bộ hóa người dùng (`syncUserFromClerk`).
-    4.  **Kiểm thử E2E:** Các bài test E2E (`clerk-admin-e2e.spec.ts`) đang mock guard, làm giảm giá trị của kiểm thử end-to-end. Mục tiêu của E2E là kiểm tra luồng hoàn chỉnh gần với môi trường thực nhất có thể.
-*   **Phân tích tác động:**
-    Phạm vi kiểm thử không đầy đủ làm tăng nguy cơ lỗi hồi quy (regression bugs) khi có sự thay đổi trong mã nguồn. Các trường hợp cạnh và kịch bản lỗi không được kiểm tra có thể dẫn đến hành vi không mong muốn trên môi trường production.
-*   **Đề xuất giải pháp:**
-    1.  **Mở rộng `roles.guard.spec.ts`:** Thêm các test case đã nêu ở trên để kiểm tra logic `matchRoles` và `extractUserRoles` một cách toàn diện.
-    2.  **Viết Unit Test cho `AuthService`:** Tạo tệp `test/unit/modules/auth/auth.service.spec.ts` và viết các bài test cho phương thức `syncUserFromClerk`, bao gồm các trường hợp: người dùng mới, người dùng đã tồn tại, người dùng có thông tin cần cập nhật.
-    3.  **Cải thiện Integration Tests:** Thay vì mock toàn bộ service, hãy xem xét việc sử dụng một `ClerkClient` mock để kiểm tra sự tương tác giữa controller và service một cách thực tế hơn.
-    4.  **Cải thiện E2E Tests:** Hạn chế việc mock guard trong các bài test E2E. Thay vào đó, hãy tạo các token JWT giả lập (với các payload khác nhau cho admin và user) và truyền chúng vào header `Authorization` để kiểm tra toàn bộ luồng xác thực và phân quyền.
+// 3. Inject trong service
+constructor(@Inject('ClerkClient') private readonly clerkClient: ClerkClient) {}
+```
 
 ---
 
-### Vấn đề #5: Xử lý lỗi và phản hồi không nhất quán
+### **Vấn đề #2:** Thiếu ClerkClient Provider Pattern
+**Hạng mục:** Không tuân thủ đặc tả
+**Mức độ ưu tiên:** Cao
+**Vị trí:** src/modules/Infrastructure/clerk/clerk.module.ts:1-52
 
-*   **Hạng mục:** Chất lượng mã nguồn / Xử lý lỗi
-*   **Mức độ ưu tiên:** Thấp
-*   **Vị trí:** `src/modules/Infrastructure/clerk/clerk.session.service.ts`
-*   **Mô tả vấn đề:**
-    Trong `ClerkSessionService`, hầu hết các phương thức đều bắt lỗi và ném ra `UnauthorizedException`. Mặc dù điều này có thể chấp nhận được trong một số trường hợp, nhưng nó không phản ánh chính xác bản chất của lỗi. Ví dụ, nếu `clerk.users.getUser(userId)` thất bại vì không tìm thấy người dùng (lỗi 404 từ API của Clerk), việc ném ra `UnauthorizedException` (401) là không chính xác về mặt ngữ nghĩa. Một `NotFoundException` (404) sẽ phù hợp hơn.
-*   **Phân tích tác động:**
-    Việc trả về các mã lỗi HTTP không chính xác có thể gây khó khăn cho phía client trong việc xử lý lỗi và hiển thị thông báo phù hợp cho người dùng. Nó cũng làm cho việc gỡ lỗi và giám sát API trở nên phức tạp hơn.
-*   **Đề xuất giải pháp:**
-    Kiểm tra loại lỗi được trả về từ `clerkClient` và ném ra các exception của NestJS tương ứng.
+**Mô tả vấn đề:**
+Module không implement ClerkClient provider pattern theo tài liệu chính thức. Thay vào đó, sử dụng direct import của `clerkClient`.
 
-    ```typescript
-    // Đề xuất sửa đổi trong src/modules/Infrastructure/clerk/clerk.session.service.ts
+**Phân tích tác động:**
+- **Dependency Injection**: Không tận dụng được DI container của NestJS
+- **Testing**: Khó mock ClerkClient cho unit tests
+- **Configuration**: Không quản lý được lifecycle của ClerkClient
 
-    import { Injectable, Inject, UnauthorizedException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
-    // ...
+**Đề xuất giải pháp:**
+Implement ClerkClient provider theo tài liệu chính thức:
 
-    async getUser(userId: string) {
-      try {
-        const user = await this.clerk.users.getUser(userId);
-        return user;
-      } catch (error) {
-        if (error.status === 404) {
-          throw new NotFoundException(`User with ID ${userId} not found.`);
-        }
-        // Xử lý các loại lỗi khác nếu cần
-        throw new InternalServerErrorException(`Failed to get user: ${error.message}`);
+```typescript
+// src/providers/clerk-client.provider.ts
+export const ClerkClientProvider: Provider = {
+  provide: 'ClerkClient',
+  useFactory: (configService: ConfigService): ClerkClient => {
+    const secretKey = configService.get<string>('CLERK_SECRET_KEY');
+    const jwtKey = configService.get<string>('CLERK_JWT_KEY'); // For networkless auth
+
+    if (!secretKey) {
+      throw new Error('CLERK_SECRET_KEY is not set in environment variables.');
+    }
+
+    return createClerkClient({
+      secretKey: secretKey,
+      jwtKey: jwtKey, // Enables networkless token verification
+    });
+  },
+  inject: [ConfigService],
+};
+```
+
+---
+
+### **Vấn đề #3:** Thiếu JWT Key cho Networkless Authentication
+**Hạng mục:** Hiệu năng / Không tuân thủ đặc tả
+**Mức độ ưu tiên:** Cao
+**Vị trí:** src/modules/Infrastructure/clerk/clerk.session.service.ts:53-61
+
+**Mô tả vấn đề:**
+Không sử dụng `jwtKey` trong token verification, dẫn đến phải gọi API Clerk cho mỗi lần verify token.
+
+<augment_code_snippet path="src/modules/Infrastructure/clerk/clerk.session.service.ts" mode="EXCERPT">
+```typescript
+async verifySessionToken(token: string) {
+  const sessionClaims = await this.clerk.verifyToken(token, {
+    secretKey: this.options.secretKey,
+    issuer: `https://clerk.${this.options.publishableKey.split('_')[1]}.lcl.dev`,
+    // ❌ Thiếu jwtKey cho networkless verification
+  });
+}
+```
+</augment_code_snippet>
+
+**Phân tích tác động:**
+- **Hiệu năng**: Mỗi request phải gọi API Clerk, tăng latency
+- **Reliability**: Phụ thuộc vào network connectivity với Clerk
+- **Scalability**: Không thể scale tốt với high traffic
+
+**Đề xuất giải pháp:**
+Thêm `jwtKey` configuration theo tài liệu chính thức:
+
+```typescript
+// .env
+CLERK_JWT_KEY=your_jwt_key_from_clerk_dashboard
+
+// ClerkClient configuration
+return createClerkClient({
+  secretKey: secretKey,
+  jwtKey: jwtKey, // Enables networkless token verification
+});
+
+// Token verification
+const sessionClaims = await verifyToken(token, {
+  jwtKey: this.configService.get('CLERK_JWT_KEY'),
+  secretKey: this.configService.get('CLERK_SECRET_KEY'),
+});
+```
+
+---
+
+### **Vấn đề #4:** Sử dụng Sai Phương thức Xác thực
+**Hạng mục:** Không tuân thủ đặc tả / Hiệu năng
+**Mức độ ưu tiên:** Cao
+**Vị trí:** src/modules/Infrastructure/clerk/guards/clerk-auth.guard.ts:24-45
+
+**Mô tả vấn đề:**
+ClerkAuthGuard đang sử dụng `verifyToken()` thông qua ClerkSessionService thay vì sử dụng `authenticateRequest()` trực tiếp như được khuyến nghị trong tài liệu chính thức cho Guards/Middleware.
+
+<augment_code_snippet path="src/modules/Infrastructure/clerk/guards/clerk-auth.guard.ts" mode="EXCERPT">
+```typescript
+async canActivate(context: ExecutionContext): Promise<boolean> {
+  const request = context.switchToHttp().getRequest();
+  const authHeader = request.headers.authorization;
+
+  // ❌ Sử dụng verifyToken() thay vì authenticateRequest()
+  const authData = await this.clerkSessionService.verifyTokenAndGetAuthData(token);
+  // ...
+}
+```
+</augment_code_snippet>
+
+**Phân tích tác động:**
+- **Architecture**: Không tuân theo best practices của Clerk cho Guards/Middleware
+- **Performance**: Mất đi khả năng tự động trích xuất token từ headers/cookies
+- **Maintainability**: Code phức tạp hơn cần thiết với manual token extraction
+- **Functionality**: Không hỗ trợ đầy đủ các trường hợp như cookie-based authentication
+
+**Đề xuất giải pháp:**
+Sử dụng `authenticateRequest()` trực tiếp trong Guard theo tài liệu chính thức:
+
+```typescript
+// src/modules/Infrastructure/clerk/guards/clerk-auth.guard.ts
+import { authenticateRequest } from '@clerk/backend';
+
+@Injectable()
+export class ClerkAuthGuard implements CanActivate {
+  constructor(
+    @Inject('ClerkClient') private readonly clerkClient: ClerkClient,
+    private readonly configService: ConfigService,
+  ) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest<Request>();
+
+    try {
+      // ✅ Sử dụng authenticateRequest() cho Guards/Middleware
+      const { sessionId, userId, orgId, claims } = await authenticateRequest({
+        headers: request.headers,
+        cookies: request.cookies,
+      }, {
+        jwtKey: this.configService.get('CLERK_JWT_KEY'),
+        secretKey: this.configService.get('CLERK_SECRET_KEY'),
+        authorizedParties: [this.configService.get('CLERK_FRONTEND_API_URL')],
+      });
+
+      if (!userId) {
+        throw new UnauthorizedException('User not authenticated');
+      }
+
+      // Gắn thông tin người dùng vào request
+      request['clerkUser'] = { sessionId, userId, orgId, claims };
+      return true;
+    } catch (error) {
+      throw new UnauthorizedException('Authentication failed');
+    }
+  }
+}
+```
+
+---
+
+### **Vấn đề #5:** Thiếu ClerkClient Provider Pattern
+**Hạng mục:** Không tuân thủ đặc tả
+**Mức độ ưu tiên:** Cao
+**Vị trí:** src/modules/Infrastructure/clerk/clerk.module.ts:1-52
+
+**Mô tả vấn đề:**
+Module không implement ClerkClient provider pattern theo tài liệu chính thức. Thay vào đó, sử dụng direct import của `clerkClient`.
+
+**Phân tích tác động:**
+- **Dependency Injection**: Không tận dụng được DI container của NestJS
+- **Testing**: Khó mock ClerkClient cho unit tests
+- **Configuration**: Không quản lý được lifecycle của ClerkClient
+
+**Đề xuất giải pháp:**
+Implement ClerkClient provider theo tài liệu chính thức:
+
+```typescript
+// src/providers/clerk-client.provider.ts
+export const ClerkClientProvider: Provider = {
+  provide: 'ClerkClient',
+  useFactory: (configService: ConfigService): ClerkClient => {
+    const secretKey = configService.get<string>('CLERK_SECRET_KEY');
+    const jwtKey = configService.get<string>('CLERK_JWT_KEY'); // For networkless auth
+
+    if (!secretKey) {
+      throw new Error('CLERK_SECRET_KEY is not set in environment variables.');
+    }
+
+    return createClerkClient({
+      secretKey: secretKey,
+      jwtKey: jwtKey, // Enables networkless token verification
+    });
+  },
+  inject: [ConfigService],
+};
+```
+
+---
+
+### **Vấn đề #6:** Thiếu JWT Key cho Networkless Authentication
+**Hạng mục:** Hiệu năng / Không tuân thủ đặc tả
+**Mức độ ưu tiên:** Cao
+**Vị trí:** src/modules/Infrastructure/clerk/clerk.session.service.ts:53-61
+
+**Mô tả vấn đề:**
+Không sử dụng `jwtKey` trong token verification, dẫn đến phải gọi API Clerk cho mỗi lần verify token.
+
+<augment_code_snippet path="src/modules/Infrastructure/clerk/clerk.session.service.ts" mode="EXCERPT">
+```typescript
+async verifySessionToken(token: string) {
+  const sessionClaims = await this.clerk.verifyToken(token, {
+    secretKey: this.options.secretKey,
+    issuer: `https://clerk.${this.options.publishableKey.split('_')[1]}.lcl.dev`,
+    // ❌ Thiếu jwtKey cho networkless verification
+  });
+}
+```
+</augment_code_snippet>
+
+**Phân tích tác động:**
+- **Hiệu năng**: Mỗi request phải gọi API Clerk, tăng latency
+- **Reliability**: Phụ thuộc vào network connectivity với Clerk
+- **Scalability**: Không thể scale tốt với high traffic
+
+**Đề xuất giải pháp:**
+Thêm `jwtKey` configuration theo tài liệu chính thức:
+
+```typescript
+// .env
+CLERK_JWT_KEY=your_jwt_key_from_clerk_dashboard
+
+// ClerkClient configuration
+return createClerkClient({
+  secretKey: secretKey,
+  jwtKey: jwtKey, // Enables networkless token verification
+});
+
+// Token verification
+const sessionClaims = await verifyToken(token, {
+  jwtKey: this.configService.get('CLERK_JWT_KEY'),
+  secretKey: this.configService.get('CLERK_SECRET_KEY'),
+});
+```
+
+---
+
+### **Vấn đề #7:** Thiếu Webhook Implementation
+**Hạng mục:** Không tuân thủ đặc tả
+**Mức độ ưu tiên:** Trung bình
+**Vị trí:** Toàn bộ dự án
+
+**Mô tả vấn đề:**
+Không có implementation webhook để đồng bộ dữ liệu user từ Clerk, mặc dù tài liệu chính thức khuyến nghị sử dụng webhook cho real-time sync.
+
+**Phân tích tác động:**
+- **Data Consistency**: Dữ liệu local có thể không sync với Clerk
+- **Real-time Updates**: Không nhận được thông báo khi user data thay đổi
+- **Best Practices**: Không tuân theo recommended architecture của Clerk
+
+**Đề xuất giải pháp:**
+Implement webhook listener theo tài liệu chính thức:
+
+```typescript
+// src/webhook/webhook.controller.ts
+@Controller("api/webhooks")
+export class WebhookController {
+  @Post()
+  async handleWebhook(@Req() req: Request, @Res() res: Response) {
+    const CLERK_WEBHOOK_SECRET = this.configService.get('CLERK_WEBHOOK_SIGNING_SECRET');
+
+    // Get raw body and headers
+    const body = await rawbody(req);
+    const payload = body.toString('utf8');
+    const headers = {
+      'svix-id': req.headers['svix-id'] as string,
+      'svix-timestamp': req.headers['svix-timestamp'] as string,
+      'svix-signature': req.headers['svix-signature'] as string,
+    };
+
+    // Verify webhook signature
+    const wh = new Webhook(CLERK_WEBHOOK_SECRET);
+    const evt = wh.verify(payload, headers) as WebhookEvent;
+
+    // Handle events
+    switch (evt.type) {
+      case 'user.created':
+        await this.authService.syncUserFromClerk(evt.data);
+        break;
+      case 'user.updated':
+        await this.authService.updateUserFromClerk(evt.data);
+        break;
+      case 'user.deleted':
+        await this.authService.deleteUser(evt.data.id);
+        break;
+    }
+
+    return res.status(200).send('Webhook processed');
+  }
+}
+```
+
+---
+
+### **Vấn đề #8:** Insufficient Error Handling
+**Hạng mục:** Xử lý lỗi / Bảo mật
+**Mức độ ưu tiên:** Trung bình
+**Vị trí:** src/modules/Infrastructure/clerk/clerk.session.service.ts:21-89
+
+**Mô tả vấn đề:**
+Error handling không đầy đủ, chỉ throw generic `UnauthorizedException` mà không log chi tiết hoặc handle specific error cases.
+
+<augment_code_snippet path="src/modules/Infrastructure/clerk/clerk.session.service.ts" mode="EXCERPT">
+```typescript
+async getSessionList(userId: string) {
+  try {
+    const sessions = await this.clerk.sessions.getSessionList({ userId });
+    return sessions;
+  } catch (error) {
+    // ❌ Generic error handling, no logging, no specific error types
+    throw new UnauthorizedException(`Failed to get sessions: ${error.message}`);
+  }
+}
+```
+</augment_code_snippet>
+
+**Phân tích tác động:**
+- **Debugging**: Khó debug khi có lỗi xảy ra
+- **Security**: Có thể leak sensitive information trong error messages
+- **User Experience**: User không nhận được error messages rõ ràng
+
+**Đề xuất giải pháp:**
+Implement comprehensive error handling:
+
+```typescript
+import { Logger } from '@nestjs/common';
+
+export class ClerkSessionService {
+  private readonly logger = new Logger(ClerkSessionService.name);
+
+  async getSessionList(userId: string) {
+    try {
+      this.logger.debug(`Getting sessions for user: ${userId}`);
+      const sessions = await this.clerkClient.sessions.getSessionList({ userId });
+      this.logger.debug(`Found ${sessions.length} sessions for user: ${userId}`);
+      return sessions;
+    } catch (error) {
+      this.logger.error(`Failed to get sessions for user ${userId}:`, error);
+
+      // Handle specific error types
+      if (error.status === 404) {
+        throw new NotFoundException(`User ${userId} not found`);
+      } else if (error.status === 403) {
+        throw new ForbiddenException(`Access denied for user ${userId}`);
+      } else {
+        throw new InternalServerErrorException('Failed to retrieve sessions');
       }
     }
-    ```
+  }
+}
+```
 
-</rewritten_file> 
+---
+
+### **Vấn đề #9:** Insecure Role Checking Logic
+**Hạng mục:** Bảo mật
+**Mức độ ưu tiên:** Cao
+**Vị trí:** src/modules/auth/guards/roles.guard.ts:24-70
+
+**Mô tả vấn đề:**
+RolesGuard có logic không an toàn, không follow fail-safe principle khi không có role specification.
+
+<augment_code_snippet path="src/modules/auth/guards/roles.guard.ts" mode="EXCERPT">
+```typescript
+async canActivate(context: ExecutionContext): Promise<boolean> {
+  const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
+    context.getHandler(),
+    context.getClass(),
+  ]);
+
+  // ❌ Không có fail-safe check khi requiredRoles undefined
+  if (!requiredRoles) {
+    return true; // ❌ Cho phép access khi không có role specification
+  }
+  // ...
+}
+```
+</augment_code_snippet>
+
+**Phân tích tác động:**
+- **Security Vulnerability**: Endpoints có thể được access mà không cần role check
+- **Authorization Bypass**: Có thể bypass authorization nếu decorator bị thiếu
+- **Fail-Open Security**: Không tuân theo fail-safe security principles
+
+**Đề xuất giải pháp:**
+Implement fail-safe role checking:
+
+```typescript
+async canActivate(context: ExecutionContext): Promise<boolean> {
+  const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
+    context.getHandler(),
+    context.getClass(),
+  ]);
+
+  // ✅ Fail-safe: Deny access when no roles specified
+  if (!requiredRoles || requiredRoles.length === 0) {
+    this.logger.warn('Access denied: No roles specified for protected endpoint');
+    throw new ForbiddenException('Access denied: Insufficient permissions');
+  }
+
+  const request = context.switchToHttp().getRequest();
+  const user = request.user as ClerkUserPayload;
+
+  // ✅ Comprehensive user validation
+  if (!user) {
+    this.logger.error('Access denied: No user found in request');
+    throw new UnauthorizedException('Authentication required');
+  }
+
+  // ✅ Validate user object structure
+  if (!user.publicMetadata) {
+    this.logger.warn(`Access denied: User ${user.id} has no publicMetadata`);
+    throw new ForbiddenException('Access denied: User metadata not found');
+  }
+
+  // ✅ Role validation with logging
+  const userRole = user.publicMetadata.role;
+  const hasRequiredRole = requiredRoles.includes(userRole);
+
+  if (!hasRequiredRole) {
+    this.logger.warn(`Access denied: User ${user.id} with role ${userRole} attempted to access endpoint requiring roles: ${requiredRoles.join(', ')}`);
+    throw new ForbiddenException('Access denied: Insufficient role permissions');
+  }
+
+  this.logger.debug(`Access granted: User ${user.id} with role ${userRole} accessing endpoint`);
+  return true;
+}
+```
+
+---
+
+### **Vấn đề #10:** Missing Input Validation
+**Hạng mục:** Bảo mật / Chất lượng mã nguồn
+**Mức độ ưu tiên:** Trung bình
+**Vị trí:** src/modules/Infrastructure/clerk/clerk.controller.ts:29-81
+
+**Mô tả vấn đề:**
+Controller endpoints thiếu input validation cho parameters như `userId`, `sessionId`.
+
+<augment_code_snippet path="src/modules/Infrastructure/clerk/clerk.controller.ts" mode="EXCERPT">
+```typescript
+@Delete('sessions/:sessionId')
+async revokeSession(@Param('sessionId') sessionId: string) {
+  // ❌ Không validate sessionId format
+  await this.clerkSessionService.revokeSession(sessionId);
+}
+
+@Get('admin/users/:userId/sessions')
+async getAnyUserSessions(@Param('userId') userId: string) {
+  // ❌ Không validate userId format
+  const sessions = await this.clerkSessionService.getSessionList(userId);
+}
+```
+</augment_code_snippet>
+
+**Phân tích tác động:**
+- **Security**: Có thể bị injection attacks
+- **Data Integrity**: Invalid IDs có thể gây lỗi downstream
+- **User Experience**: Không có clear error messages cho invalid input
+
+**Đề xuất giải pháp:**
+Implement input validation với DTOs và pipes:
+
+```typescript
+// src/modules/Infrastructure/clerk/dto/session-params.dto.ts
+import { IsString, Matches, IsNotEmpty } from 'class-validator';
+
+export class SessionParamsDto {
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^sess_[a-zA-Z0-9]+$/, { message: 'Invalid session ID format' })
+  sessionId: string;
+}
+
+export class UserParamsDto {
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^user_[a-zA-Z0-9]+$/, { message: 'Invalid user ID format' })
+  userId: string;
+}
+
+// Controller với validation
+@Delete('sessions/:sessionId')
+async revokeSession(@Param() params: SessionParamsDto) {
+  await this.clerkSessionService.revokeSession(params.sessionId);
+}
+
+@Get('admin/users/:userId/sessions')
+async getAnyUserSessions(@Param() params: UserParamsDto) {
+  const sessions = await this.clerkSessionService.getSessionList(params.userId);
+  return { sessions, userId: params.userId };
+}
+```
+
+---
+
+### **Vấn đề #11:** Inconsistent Response Format
+**Hạng mục:** Chất lượng mã nguồn
+**Mức độ ưu tiên:** Thấp
+**Vị trí:** src/modules/Infrastructure/clerk/clerk.controller.ts:29-81
+
+**Mô tả vấn đề:**
+Response format không nhất quán giữa các endpoints, một số trả về object với message, một số chỉ trả về data.
+
+**Phân tích tác động:**
+- **API Consistency**: Frontend khó handle responses
+- **Documentation**: API documentation không clear
+- **Maintainability**: Khó maintain khi có nhiều format khác nhau
+
+**Đề xuất giải pháp:**
+Standardize response format:
+
+```typescript
+// src/common/dto/api-response.dto.ts
+export class ApiResponseDto<T> {
+  success: boolean;
+  message: string;
+  data?: T;
+  error?: string;
+}
+
+// Controller với consistent response
+@Get('sessions')
+async getUserSessions(@Request() req): Promise<ApiResponseDto<any[]>> {
+  const sessions = await this.clerkSessionService.getSessionList(req.user.id);
+  return {
+    success: true,
+    message: 'Sessions retrieved successfully',
+    data: sessions,
+  };
+}
+```
+
+---
+
+### **Vấn đề #12:** Missing Rate Limiting
+**Hạng mục:** Bảo mật / Hiệu năng
+**Mức độ ưu tiên:** Trung bình
+**Vị trí:** src/modules/Infrastructure/clerk/clerk.controller.ts:1-82
+
+**Mô tả vấn đề:**
+Không có rate limiting cho các sensitive endpoints như session revocation.
+
+**Phân tích tác động:**
+- **Security**: Có thể bị abuse để DOS attack
+- **Resource Usage**: Có thể overwhelm Clerk API
+- **Cost**: Có thể tăng cost từ Clerk API calls
+
+**Đề xuất giải pháp:**
+Implement rate limiting:
+
+```typescript
+import { ThrottlerGuard } from '@nestjs/throttler';
+
+@Controller('clerk')
+@UseGuards(ClerkAuthGuard, ThrottlerGuard)
+export class ClerkController {
+  @Delete('sessions/:sessionId')
+  @Throttle(5, 60) // 5 requests per minute
+  async revokeSession(@Param() params: SessionParamsDto) {
+    await this.clerkSessionService.revokeSession(params.sessionId);
+  }
+}
+```
+
+---
+
+### **Vấn đề #13:** Inadequate Testing Coverage
+**Hạng mục:** Kiểm thử hiệu quả
+**Mức độ ưu tiên:** Trung bình
+**Vị trí:** test/ directory
+
+**Mô tả vấn đề:**
+Testing coverage không đầy đủ, thiếu integration tests cho Clerk authentication flow và error scenarios.
+
+**Phân tích tác động:**
+- **Quality Assurance**: Khó đảm bảo code quality
+- **Regression**: Có thể introduce bugs khi refactor
+- **Confidence**: Thiếu confidence khi deploy
+
+**Đề xuất giải pháp:**
+Implement comprehensive testing:
+
+```typescript
+// test/integration/clerk-auth.integration.spec.ts
+describe('Clerk Authentication Integration', () => {
+  it('should authenticate valid JWT token', async () => {
+    const validToken = 'valid_jwt_token';
+    const response = await request(app.getHttpServer())
+      .get('/clerk/sessions')
+      .set('Authorization', `Bearer ${validToken}`)
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+  });
+
+  it('should reject invalid JWT token', async () => {
+    const invalidToken = 'invalid_token';
+    await request(app.getHttpServer())
+      .get('/clerk/sessions')
+      .set('Authorization', `Bearer ${invalidToken}`)
+      .expect(401);
+  });
+
+  it('should handle Clerk API errors gracefully', async () => {
+    // Mock Clerk API error
+    jest.spyOn(clerkClient.sessions, 'getSessionList')
+      .mockRejectedValue(new Error('Clerk API Error'));
+
+    await request(app.getHttpServer())
+      .get('/clerk/sessions')
+      .set('Authorization', `Bearer ${validToken}`)
+      .expect(500);
+  });
+});
+```
+
+---
+
+### **Vấn đề #14:** Missing Environment Configuration Validation
+**Hạng mục:** Xử lý lỗi / Chất lượng mã nguồn
+**Mức độ ưu tiên:** Trung bình
+**Vị trí:** src/modules/Infrastructure/clerk/clerk.module.ts:38-44
+
+**Mô tả vấn đề:**
+Không validate environment variables khi khởi tạo module, có thể dẫn đến runtime errors.
+
+**Phân tích tác động:**
+- **Runtime Errors**: Application có thể crash khi start
+- **Debugging**: Khó debug configuration issues
+- **Development Experience**: Poor developer experience
+
+**Đề xuất giải pháp:**
+Implement configuration validation:
+
+```typescript
+// src/config/clerk.config.ts
+import { IsString, IsNotEmpty, validateSync } from 'class-validator';
+import { plainToClass } from 'class-transformer';
+
+export class ClerkConfig {
+  @IsString()
+  @IsNotEmpty()
+  CLERK_SECRET_KEY: string;
+
+  @IsString()
+  @IsNotEmpty()
+  CLERK_PUBLISHABLE_KEY: string;
+
+  @IsString()
+  @IsNotEmpty()
+  CLERK_JWT_KEY: string;
+}
+
+export function validateClerkConfig(config: Record<string, unknown>) {
+  const validatedConfig = plainToClass(ClerkConfig, config, {
+    enableImplicitConversion: true,
+  });
+
+  const errors = validateSync(validatedConfig, {
+    skipMissingProperties: false,
+  });
+
+  if (errors.length > 0) {
+    throw new Error(`Clerk configuration validation failed: ${errors.toString()}`);
+  }
+
+  return validatedConfig;
+}
+
+// Module configuration
+static forRootAsync(): DynamicModule {
+  return {
+    module: ClerkModule,
+    imports: [ConfigModule],
+    providers: [
+      {
+        provide: 'CLERK_OPTIONS',
+        useFactory: (configService: ConfigService): ClerkModuleOptions => {
+          const config = validateClerkConfig({
+            CLERK_SECRET_KEY: configService.get('CLERK_SECRET_KEY'),
+            CLERK_PUBLISHABLE_KEY: configService.get('CLERK_PUBLISHABLE_KEY'),
+            CLERK_JWT_KEY: configService.get('CLERK_JWT_KEY'),
+          });
+
+          return {
+            secretKey: config.CLERK_SECRET_KEY,
+            publishableKey: config.CLERK_PUBLISHABLE_KEY,
+            jwtKey: config.CLERK_JWT_KEY,
+          };
+        },
+        inject: [ConfigService],
+      },
+    ],
+  };
+}
+```
+
+---
+
+### **Vấn đề #15:** Lack of Monitoring and Observability
+**Hạng mục:** Chất lượng mã nguồn / Xử lý lỗi
+**Mức độ ưu tiên:** Thấp
+**Vị trí:** Toàn bộ module
+
+**Mô tả vấn đề:**
+Thiếu monitoring và observability cho authentication flows, khó track performance và issues.
+
+**Phân tích tác động:**
+- **Operations**: Khó monitor production issues
+- **Performance**: Không track authentication latency
+- **Security**: Không detect suspicious authentication patterns
+
+**Đề xuất giải pháp:**
+Implement monitoring và metrics:
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { Counter, Histogram, register } from 'prom-client';
+
+@Injectable()
+export class ClerkMetricsService {
+  private readonly authAttempts = new Counter({
+    name: 'clerk_auth_attempts_total',
+    help: 'Total number of authentication attempts',
+    labelNames: ['status', 'endpoint'],
+  });
+
+  private readonly authDuration = new Histogram({
+    name: 'clerk_auth_duration_seconds',
+    help: 'Authentication duration in seconds',
+    labelNames: ['endpoint'],
+  });
+
+  constructor() {
+    register.registerMetric(this.authAttempts);
+    register.registerMetric(this.authDuration);
+  }
+
+  recordAuthAttempt(status: 'success' | 'failure', endpoint: string) {
+    this.authAttempts.inc({ status, endpoint });
+  }
+
+  recordAuthDuration(duration: number, endpoint: string) {
+    this.authDuration.observe({ endpoint }, duration);
+  }
+}
+```
+
+---
+
+### **Vấn đề #16:** Missing Documentation
+**Hạng mục:** Chất lượng mã nguồn
+**Mức độ ưu tiên:** Thấp
+**Vị trí:** Toàn bộ module
+
+**Mô tả vấn đề:**
+Thiếu JSDoc comments và API documentation cho các methods và endpoints.
+
+**Phân tích tác động:**
+- **Maintainability**: Khó maintain code
+- **Developer Experience**: Khó hiểu API usage
+- **Onboarding**: Khó onboard new developers
+
+**Đề xuất giải pháp:**
+Thêm comprehensive documentation:
+
+```typescript
+/**
+ * Service for managing Clerk sessions and user authentication
+ *
+ * This service provides methods to interact with Clerk's session management API,
+ * including session verification, revocation, and user data retrieval.
+ *
+ * @example
+ * ```typescript
+ * const sessions = await clerkSessionService.getSessionList('user_123');
+ * await clerkSessionService.revokeSession('sess_456');
+ * ```
+ */
+@Injectable()
+export class ClerkSessionService {
+  /**
+   * Retrieves all active sessions for a specific user
+   *
+   * @param userId - The Clerk user ID (format: user_xxxxx)
+   * @returns Promise<Session[]> Array of user sessions
+   * @throws UnauthorizedException When user is not found or access is denied
+   *
+   * @example
+   * ```typescript
+   * const sessions = await getSessionList('user_2ABC123DEF456');
+   * console.log(`User has ${sessions.length} active sessions`);
+   * ```
+   */
+  async getSessionList(userId: string): Promise<Session[]> {
+    // Implementation
+  }
+}
+```
+
+---
+
+### **Vấn đề #17:** Inconsistent Module Architecture
+**Hạng mục:** Chất lượng mã nguồn
+**Mức độ ưu tiên:** Thấp
+**Vị trí:** src/modules/Infrastructure/clerk/ và src/modules/auth/
+
+**Mô tả vấn đề:**
+Architecture không nhất quán giữa ClerkModule (Infrastructure) và AuthModule (Application), có sự overlap về responsibilities.
+
+**Phân tích tác động:**
+- **Separation of Concerns**: Không clear về responsibility boundaries
+- **Code Duplication**: Có thể có duplicate logic giữa modules
+- **Maintainability**: Khó maintain khi responsibilities không rõ ràng
+
+**Đề xuất giải pháp:**
+Refactor architecture để clear separation:
+
+```typescript
+// ClerkModule (Infrastructure) - Chỉ xử lý authentication
+@Module({
+  providers: [
+    ClerkClientProvider,
+    ClerkSessionService,
+    ClerkAuthGuard, // Only JWT verification
+  ],
+  exports: [
+    ClerkSessionService,
+    ClerkAuthGuard,
+    'ClerkClient',
+  ],
+})
+export class ClerkModule {}
+
+// AuthModule (Application) - Chỉ xử lý authorization
+@Module({
+  imports: [ClerkModule, UsersModule],
+  providers: [
+    AuthService,
+    RolesGuard, // Only role-based authorization
+  ],
+  exports: [
+    AuthService,
+    RolesGuard,
+  ],
+})
+export class AuthModule {}
+```
+
+---
+
+### **Vấn đề #18:** Logic Phân quyền Multiple Roles Không Chính xác
+**Hạng mục:** Bảo mật
+**Mức độ ưu tiên:** Cao
+**Vị trí:** src/modules/auth/guards/roles.guard.ts:110
+
+**Mô tả vấn đề:**
+Phương thức `matchRoles` trong `RolesGuard` sử dụng `requiredRoles.some((role) => userRoles.includes(role))`, trả về `true` nếu người dùng có **ít nhất một** trong các vai trò được yêu cầu. Logic này không chính xác khi endpoint yêu cầu nhiều vai trò đồng thời.
+
+<augment_code_snippet path="src/modules/auth/guards/roles.guard.ts" mode="EXCERPT">
+```typescript
+private matchRoles(requiredRoles: UserRole[], userRoles: UserRole[]): boolean {
+  // ❌ Logic OR - chỉ cần một trong các roles
+  return requiredRoles.some((role) => userRoles.includes(role));
+}
+
+// Ví dụ sử dụng có vấn đề:
+@Roles(UserRole.ADMIN, UserRole.FINANCE_MANAGER)
+// User chỉ cần có ADMIN HOẶC FINANCE_MANAGER thay vì CẢ HAI
+```
+</augment_code_snippet>
+
+**Phân tích tác động:**
+- **Privilege Escalation**: User với quyền thấp hơn có thể truy cập tài nguyên yêu cầu multiple roles
+- **Business Logic Bypass**: Vi phạm quy tắc nghiệp vụ yêu cầu kết hợp nhiều quyền
+- **Security Vulnerability**: Kẻ tấn công chỉ cần có một role để bypass authorization
+
+**Đề xuất giải pháp:**
+Thay đổi logic thành AND để yêu cầu tất cả roles:
+
+```typescript
+/**
+ * So khớp vai trò yêu cầu với vai trò của người dùng.
+ * @param requiredRoles Các vai trò được yêu cầu bởi endpoint.
+ * @param userRoles Các vai trò mà người dùng hiện tại có.
+ * @returns `true` nếu người dùng có TẤT CẢ các vai trò yêu cầu.
+ */
+private matchRoles(requiredRoles: UserRole[], userRoles: UserRole[]): boolean {
+  // ✅ Logic AND - yêu cầu tất cả roles
+  return requiredRoles.every((role) => userRoles.includes(role));
+}
+
+// Hoặc tạo hai decorators khác nhau cho flexibility:
+export const RolesAny = (...roles: UserRole[]) => SetMetadata(ROLES_ANY_KEY, roles);
+export const RolesAll = (...roles: UserRole[]) => SetMetadata(ROLES_ALL_KEY, roles);
+
+// Sử dụng:
+@RolesAny(UserRole.ADMIN, UserRole.MODERATOR) // OR logic
+@RolesAll(UserRole.ADMIN, UserRole.FINANCE_MANAGER) // AND logic
+```
+
+## 3. Kết luận và Roadmap
+
+### 3.1 Tổng kết đánh giá
+
+Dự án TheShoeBolt có foundation tốt với Clerk integration, nhưng cần cải thiện đáng kể để đạt production-ready standard. Các vấn đề chính tập trung vào:
+
+1. **Security vulnerabilities** (7 vấn đề mức độ cao)
+2. **Non-compliance với Clerk best practices** (4 vấn đề)
+3. **Poor error handling và monitoring** (3 vấn đề)
+4. **Inadequate testing coverage** (2 vấn đề)
+5. **Code quality issues** (2 vấn đề)
+
+### 3.2 Implementation Roadmap
+
+**Phase 1 (Tuần 1-2): Critical Security Fixes**
+- Migrate từ `@clerk/clerk-sdk-node` sang `@clerk/backend`
+- Sử dụng đúng phương thức xác thực (`authenticateRequest` vs `verifyToken`)
+- Implement proper ClerkClient provider pattern
+- Fix insecure role checking logic (fail-safe principle)
+- Fix multiple roles authorization logic (AND vs OR)
+- Add JWT key cho networkless authentication
+
+**Phase 2 (Tuần 3-4): Core Functionality**
+- Implement webhook system
+- Add comprehensive error handling
+- Implement input validation
+- Add rate limiting
+
+**Phase 3 (Tuần 5-6): Quality & Testing**
+- Add comprehensive test coverage
+- Implement monitoring và observability
+- Add proper documentation
+- Refactor module architecture
+
+**Phase 4 (Tuần 7-8): Production Readiness**
+- Environment configuration validation
+- Performance optimization
+- Security audit
+- Load testing
+
+### 3.3 Success Metrics
+
+- **Security**: 0 high-severity vulnerabilities
+- **Performance**: <100ms authentication latency
+- **Reliability**: 99.9% uptime cho auth services
+- **Testing**: >90% code coverage
+- **Documentation**: 100% API endpoints documented
+
+Việc thực hiện roadmap này sẽ đưa module Clerk & Auth lên standard production-ready với security, performance và maintainability tốt.
