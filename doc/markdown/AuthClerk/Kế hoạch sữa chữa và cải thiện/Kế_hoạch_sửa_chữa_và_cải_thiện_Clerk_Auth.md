@@ -294,6 +294,640 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
 ---
 *Ghi chú: Các giai đoạn 2, 3, 4 sẽ được lên kế hoạch chi tiết sau khi hoàn tất Giai đoạn 1.*
 
+### **Giai đoạn 2: Cải thiện Chức năng và Bảo mật Lõi (HIGH)**
+
+#### **Vấn đề 2.1: (Vấn đề #6) Xử lý Lỗi Không Đầy đủ**
+
+*   **Tóm tắt:** Việc xử lý lỗi hiện tại quá chung chung, thường chỉ trả về `UnauthorizedException` mà không ghi lại chi tiết lỗi hoặc phân biệt các loại lỗi khác nhau từ Clerk, gây khó khăn cho việc gỡ lỗi và có thể làm lộ thông tin nhạy cảm.
+*   **Phân tích Nguyên nhân Gốc rễ:** Thiếu một chiến lược xử lý lỗi toàn diện. Mã nguồn hiện tại tập trung vào "happy path" mà bỏ qua các trường hợp lỗi khác nhau có thể xảy ra khi tương tác với API bên ngoài.
+*   **Giải pháp Kỹ thuật:**
+    1.  **Sử dụng Logger của NestJS:** Đảm bảo mỗi service tương tác với Clerk đều có một instance của `Logger` để ghi lại thông tin chi tiết.
+    2.  **Triển khai Bắt lỗi Cụ thể:** Trong các khối `try...catch`, kiểm tra đối tượng `error` trả về từ Clerk. Phân biệt các mã trạng thái phổ biến (401, 403, 404) và trả về các exception tương ứng của NestJS (`UnauthorizedException`, `ForbiddenException`, `NotFoundException`).
+    3.  **Ghi Log Chi tiết:** Trước khi ném ra một exception mới, ghi lại lỗi gốc ở mức `error` kèm theo `stack trace` để phục vụ việc gỡ lỗi.
+    4.  **Tái cấu trúc `ClerkSessionService`:** Áp dụng mẫu xử lý lỗi này cho tất cả các phương thức có tương tác với Clerk API.
+    ```typescript
+    // src/modules/Infrastructure/clerk/clerk.session.service.ts
+    import { Inject, Injectable, Logger, NotFoundException, ForbiddenException, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+    //...
+
+    @Injectable()
+    export class ClerkSessionService {
+      private readonly logger = new Logger(ClerkSessionService.name);
+
+      constructor(@Inject(CLERK_CLIENT) private readonly clerkClient: ClerkClient) {}
+
+      async getSessionList(userId: string): Promise<Session[]> {
+        try {
+          this.logger.debug(`Attempting to get sessions for user: ${userId}`);
+          const sessions = await this.clerkClient.sessions.getSessionList({ userId });
+          this.logger.debug(`Successfully found ${sessions.length} sessions for user: ${userId}`);
+          return sessions;
+        } catch (error) {
+          this.logger.error(`Failed to get sessions for user ${userId}:`, error.stack);
+          if (error.status === 404) {
+            throw new NotFoundException(`User with ID ${userId} not found.`);
+          }
+          if (error.status === 403) {
+            throw new ForbiddenException(`Access denied to retrieve sessions for user ${userId}.`);
+          }
+          throw new InternalServerErrorException('An unexpected error occurred while retrieving user sessions.');
+        }
+      }
+      
+      // Áp dụng mô hình try-catch tương tự cho các phương thức khác như revokeSession.
+    }
+    ```
+*   **Kế hoạch Kiểm thử:**
+    *   **Unit Test:**
+        *   Mock `clerkClient.sessions.getSessionList` để ném ra một lỗi mô phỏng từ Clerk với `status: 404`. Xác minh rằng service ném ra `NotFoundException`.
+        *   Mock phương thức để ném ra lỗi với `status: 403`. Xác minh rằng `ForbiddenException` được ném ra.
+        *   Mock phương thức để ném ra một `Error` chung. Xác minh rằng `InternalServerErrorException` được ném ra.
+        *   Trong mọi trường hợp lỗi, xác minh rằng `logger.error` đã được gọi.
+
+---
+
+#### **Vấn đề 2.2: (Vấn đề #8) Thiếu Xác thực Dữ liệu Đầu vào**
+
+*   **Tóm tắt:** Các controller endpoint chấp nhận tham số như `userId` và `sessionId` trực tiếp mà không qua xác thực, tạo ra các rủi ro bảo mật (ví dụ: injection) và ảnh hưởng đến tính toàn vẹn dữ liệu.
+*   **Phân tích Nguyên nhân Gốc rễ:** Chưa tận dụng các tính năng xác thực sẵn có của NestJS như `class-validator` và `ValidationPipe`.
+*   **Giải pháp Kỹ thuật:**
+    1.  **Kích hoạt `ValidationPipe` Toàn cục:** Trong file `main.ts`, cấu hình `ValidationPipe` để tự động xác thực tất cả DTOs đầu vào.
+        ```typescript
+        // src/main.ts
+        import { ValidationPipe } from '@nestjs/common';
+        async function bootstrap() {
+          const app = await NestFactory.create(AppModule);
+          app.useGlobalPipes(new ValidationPipe({
+            whitelist: true,
+            forbidNonWhitelisted: true,
+            transform: true,
+          }));
+          //...
+          await app.listen(process.env.PORT || 3000);
+        }
+        bootstrap();
+        ```
+    2.  **Tạo DTO cho Tham số Đường dẫn:** Xây dựng các class DTO riêng cho các tham số để áp dụng các quy tắc xác thực.
+        ```typescript
+        // src/modules/Infrastructure/clerk/dto/clerk-params.dto.ts
+        import { IsString, Matches, IsNotEmpty } from 'class-validator';
+
+        export class SessionIdParamDto {
+          @IsString()
+          @IsNotEmpty()
+          @Matches(/^sess_[a-zA-Z0-9]+$/, { message: 'Invalid session ID format.' })
+          sessionId: string;
+        }
+
+        export class UserIdParamDto {
+          @IsString()
+          @IsNotEmpty()
+          @Matches(/^user_[a-zA-Z0-9]+$/, { message: 'Invalid user ID format.' })
+          userId: string;
+        }
+        ```
+    3.  **Áp dụng DTO trong Controller:** Sử dụng các DTO đã tạo trong các phương thức của controller.
+        ```typescript
+        // src/modules/Infrastructure/clerk/clerk.controller.ts
+        import { Controller, Delete, Get, Param } from '@nestjs/common';
+        import { SessionIdParamDto, UserIdParamDto } from './dto/clerk-params.dto';
+        // ...
+        
+        @Controller('clerk')
+        export class ClerkController {
+          // ...
+          @Delete('sessions/:sessionId')
+          async revokeSession(@Param() params: SessionIdParamDto) {
+            // ...
+          }
+
+          @Get('admin/users/:userId/sessions')
+          async getAnyUserSessions(@Param() params: UserIdParamDto) {
+            // ...
+          }
+        }
+        ```
+*   **Kế hoạch Kiểm thử:**
+    *   **E2E Test:**
+        *   Gửi một yêu cầu đến `DELETE /clerk/sessions/invalid-id`. Xác minh rằng máy chủ trả về lỗi `400 Bad Request` cùng với thông báo lỗi rõ ràng.
+        *   Gửi một yêu cầu đến `DELETE /clerk/sessions/sess_validid123`. Xác minh rằng yêu cầu được xử lý (trả về lỗi khác 400, ví dụ 404 nếu session không tồn tại).
+        *   Lặp lại các kịch bản tương tự cho endpoint của `userId`.
+
+---
+
+#### **Vấn đề 2.3: (Vấn đề #10) Thiếu Giới hạn Tần suất Truy cập (Rate Limiting)**
+
+*   **Tóm tắt:** Các endpoint nhạy cảm thiếu cơ chế rate limiting, khiến chúng có nguy cơ bị tấn công DoS hoặc brute-force.
+*   **Phân tích Nguyên nhân Gốc rễ:** Việc tăng cường bảo mật như rate limiting đã bị bỏ qua trong quá trình phát triển ban đầu.
+*   **Giải pháp Kỹ thuật:**
+    1.  **Cài đặt và Cấu hình `nestjs-throttler`:**
+        ```bash
+        npm install @nestjs/throttler
+        ```
+    2.  **Import và Cấu hình `ThrottlerModule`:** Trong `app.module.ts`, thiết lập giới hạn mặc định và đăng ký `ThrottlerGuard` trên toàn cục.
+        ```typescript
+        // src/app.module.ts
+        import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+        import { APP_GUARD } from '@nestjs/core';
+        
+        @Module({
+          imports: [
+            ThrottlerModule.forRoot([{
+              ttl: 60000, // 1 phút
+              limit: 20,  // 20 yêu cầu mỗi phút
+            }]),
+            // ...
+          ],
+          providers: [
+            {
+              provide: APP_GUARD,
+              useClass: ThrottlerGuard,
+            },
+            // ...
+          ],
+        })
+        export class AppModule {}
+        ```
+    3.  **Tùy chỉnh Giới hạn cho Endpoint Cụ thể (Tùy chọn):** Áp dụng giới hạn chặt chẽ hơn cho các endpoint đặc biệt nhạy cảm.
+        ```typescript
+        // src/modules/Infrastructure/clerk/clerk.controller.ts
+        import { Throttle } from '@nestjs/throttler';
+        
+        @Delete('sessions/:sessionId')
+        @Throttle({ default: { limit: 5, ttl: 60000 } }) // Ghi đè: 5 yêu cầu/phút
+        async revokeSession(@Param() params: SessionIdParamDto) {
+          // ...
+        }
+        ```
+*   **Kế hoạch Kiểm thử:**
+    *   **E2E Test:**
+        *   Thiết lập giới hạn thấp cho một endpoint test (ví dụ: 2 yêu cầu/10 giây).
+        *   Gửi 3 yêu cầu liên tiếp đến endpoint đó.
+        *   Xác minh rằng 2 yêu cầu đầu tiên nhận được phản hồi khác `429`.
+        *   Xác minh rằng yêu cầu thứ 3 nhận được lỗi `429 Too Many Requests`.
+        *   Đợi hết thời gian `ttl` và gửi lại yêu cầu, xác minh rằng nó thành công.
+
+---
+
+#### **Vấn đề 2.4: (Vấn đề #5) Thiếu Triển khai Webhook**
+
+*   **Tóm tắt:** Hệ thống thiếu webhook handler để đồng bộ dữ liệu người dùng từ Clerk theo thời gian thực, có thể dẫn đến sự không nhất quán giữa cơ sở dữ liệu cục bộ và Clerk.
+*   **Phân tích Nguyên nhân Gốc rễ:** Tính năng đồng bộ thời gian thực chưa được triển khai, có thể do không nằm trong phạm vi của MVP ban đầu.
+*   **Giải pháp Kỹ thuật:**
+    1.  **Cài đặt các thư viện cần thiết:**
+        ```bash
+        npm install svix raw-body
+        ```
+    2.  **Kích hoạt Raw Body Parser:** Cần có `rawBody` để xác thực chữ ký webhook. Cấu hình trong `main.ts`.
+        ```typescript
+        // src/main.ts
+        async function bootstrap() {
+            const app = await NestFactory.create(AppModule, {
+                bodyParser: false, // Tắt body parser mặc định
+            });
+            
+            const rawBodyBuffer = (req, res, buf, encoding) => {
+                if (buf && buf.length) {
+                    req.rawBody = buf.toString(encoding || 'utf8');
+                    req.rawBodyBuffer = buf;
+                }
+            };
+
+            app.use(json({ verify: rawBodyBuffer }));
+            app.use(urlencoded({ verify: rawBodyBuffer, extended: true }));
+
+            // ... các cấu hình khác như global pipes
+            await app.listen(3000);
+        }
+        ```
+    3.  **Tạo Webhook Controller:**
+        ```typescript
+        // src/modules/webhooks/clerk-webhook.controller.ts
+        import { Controller, Post, Req, Res, Headers, BadRequestException, Logger } from '@nestjs/common';
+        import { Request, Response } from 'express';
+        import { Webhook } from 'svix';
+        import { ConfigService } from '@nestjs/config';
+        import { UsersService } from 'src/modules/users/users.service';
+
+        @Controller('webhooks')
+        export class ClerkWebhookController {
+          private readonly logger = new Logger(ClerkWebhookController.name);
+
+          constructor(
+            private readonly configService: ConfigService,
+            private readonly usersService: UsersService,
+          ) {}
+
+          @Post('clerk')
+          async handleClerkWebhook(@Headers() headers, @Req() req: Request, @Res() res: Response) {
+            const webhookSecret = this.configService.get<string>('CLERK_WEBHOOK_SIGNING_SECRET');
+            if (!webhookSecret) {
+              this.logger.error('Clerk webhook secret is not configured.');
+              throw new Error('Webhook secret is not configured.');
+            }
+            
+            try {
+              const payload = (req as any).rawBody;
+              const svixHeaders = {
+                'svix-id': headers['svix-id'] as string,
+                'svix-timestamp': headers['svix-timestamp'] as string,
+                'svix-signature': headers['svix-signature'] as string,
+              };
+
+              const wh = new Webhook(webhookSecret);
+              const evt = wh.verify(payload, svixHeaders) as any;
+
+              this.logger.log(`Webhook with type ${evt.type} received`);
+
+              // Logic xử lý các loại event (user.created, user.updated, user.deleted)
+              // Ví dụ: await this.usersService.syncFromClerk(evt.data);
+              
+              res.status(200).json({ message: 'Webhook processed' });
+            } catch (err) {
+              this.logger.error('Error verifying Clerk webhook:', err.message);
+              throw new BadRequestException('Webhook signature verification failed.');
+            }
+          }
+        }
+        ```
+    4.  **Cập nhật `UsersService`:** Thêm các phương thức để xử lý logic đồng bộ dữ liệu từ Clerk vào CSDL cục bộ.
+*   **Kế hoạch Kiểm thử:**
+    *   **Unit Test:**
+        *   Mock `Webhook.verify` để trả về một payload sự kiện mẫu. Kiểm tra controller gọi đúng phương thức của `usersService`.
+        *   Mock `Webhook.verify` để ném ra lỗi. Xác minh controller ném ra `BadRequestException`.
+        *   Unit test các phương thức đồng bộ mới trong `UsersService`.
+    *   **Integration Test (Manual):**
+        *   Trong môi trường Staging, thực hiện các hành động (tạo, cập nhật, xóa user) trên Clerk Dashboard và xác minh rằng webhook được kích hoạt và dữ liệu trong CSDL của ứng dụng được cập nhật chính xác thông qua việc kiểm tra log và database.
+
+---
+*Ghi chú: Các giai đoạn 3, 4 sẽ được lên kế hoạch chi tiết sau khi hoàn tất Giai đoạn 2.*
+
+### **Giai đoạn 3: Nâng cao Chất lượng và Kiểm thử (MEDIUM)**
+
+#### **Vấn đề 3.1: (Vấn đề #11) Độ bao phủ Kiểm thử Thấp**
+
+*   **Tóm tắt:** Dự án thiếu một bộ kiểm thử toàn diện, đặc biệt là các unit test cho logic nghiệp vụ phức tạp và integration test cho các luồng xác thực và phân quyền quan trọng. Điều này làm tăng nguy cơ lỗi hồi quy và giảm sự tự tin khi triển khai.
+*   **Phân tích Nguyên nhân Gốc rễ:**
+    *   Tập trung vào việc phát triển tính năng nhanh đã dẫn đến việc bỏ qua việc viết kiểm thử.
+    *   Thiếu thiết lập và quy ước rõ ràng cho việc kiểm thử trong dự án.
+*   **Giải pháp Kỹ thuật:**
+    1.  **Thiết lập và Cấu hình Jest:** Đảm bảo Jest được cấu hình để thu thập thông tin về độ bao phủ mã nguồn và tạo báo cáo.
+        ```json
+        // package.json
+        "scripts": {
+          // ...
+          "test": "jest",
+          "test:watch": "jest --watch",
+          "test:cov": "jest --coverage",
+          "test:e2e": "jest --config ./test/jest-e2e.json"
+        },
+        "jest": {
+          // ...
+          "collectCoverageFrom": [
+            "**/*.(t|j)s"
+          ],
+          "coverageDirectory": "../coverage",
+          // ...
+        }
+        ```
+    2.  **Viết Unit Test cho Services và Guards:**
+        *   Tập trung vào việc kiểm thử các logic quan trọng trong `ClerkSessionService` và `RolesGuard`.
+        *   Sử dụng mock để cô lập các phụ thuộc bên ngoài (như `clerkClient`, `ConfigService`, `Reflector`).
+        *   Viết các ca kiểm thử cho cả trường hợp thành công và thất bại.
+    3.  **Viết Integration Test cho Controllers:**
+        *   Sử dụng `@nestjs/testing` và `supertest` để tạo các bài kiểm thử cho `ClerkController` và các controller khác có sử dụng guard.
+        *   Kiểm tra toàn bộ luồng request-response, bao gồm cả hoạt động của guards và pipes.
+    4.  **Thiết lập ngưỡng Code Coverage:** Đặt mục tiêu độ bao phủ mã nguồn tối thiểu (ví dụ: 80%) và tích hợp vào quy trình CI/CD để đảm bảo chất lượng.
+*   **Kế hoạch Kiểm thử:**
+    *   Bản thân nhiệm vụ này là về việc viết kiểm thử.
+    *   **Definition of Done:**
+        *   Hoàn thành unit tests cho `ClerkSessionService` và `RolesGuard`, bao phủ tất cả các nhánh logic chính.
+        *   Hoàn thành integration tests cho các endpoint chính trong `ClerkController`.
+        *   Chạy `npm run test:cov` và đạt được độ bao phủ mã nguồn trên 80% cho các module đã được sửa đổi.
+
+---
+
+#### **Vấn đề 3.2: (Vấn đề #12) Thiếu Xác thực Cấu hình Môi trường**
+
+*   **Tóm tắt:** Ứng dụng không xác thực các biến môi trường cần thiết khi khởi động, có thể dẫn đến lỗi runtime khó lường nếu một biến quan trọng bị thiếu hoặc sai định dạng.
+*   **Phân tích Nguyên nhân Gốc rễ:** Bỏ qua việc thiết lập một lớp cấu hình mạnh mẽ, thay vào đó dựa vào việc truy cập trực tiếp `ConfigService` mà không có kiểm tra.
+*   **Giải pháp Kỹ thuật:**
+    1.  **Sử dụng `@nestjs/config` kết hợp `class-validator`:** Tạo một class để định nghĩa schema cho các biến môi trường và xác thực chúng khi ứng dụng khởi động.
+    2.  **Tạo `EnvironmentVariables` DTO:**
+        ```typescript
+        // src/config/env.validation.ts
+        import { plainToInstance } from 'class-transformer';
+        import { IsNotEmpty, IsString, validateSync } from 'class-validator';
+
+        class EnvironmentVariables {
+          @IsString()
+          @IsNotEmpty()
+          CLERK_SECRET_KEY: string;
+
+          @IsString()
+          @IsNotEmpty()
+          CLERK_JWT_KEY: string;
+          
+          // Thêm các biến môi trường quan trọng khác ở đây
+        }
+
+        export function validate(config: Record<string, unknown>) {
+          const validatedConfig = plainToInstance(
+            EnvironmentVariables,
+            config,
+            { enableImplicitConversion: true },
+          );
+          const errors = validateSync(validatedConfig, { skipMissingProperties: false });
+
+          if (errors.length > 0) {
+            throw new Error(errors.toString());
+          }
+          return validatedConfig;
+        }
+        ```
+    3.  **Áp dụng hàm `validate` trong `AppModule`:**
+        ```typescript
+        // src/app.module.ts
+        import { ConfigModule } from '@nestjs/config';
+        import { validate } from './config/env.validation';
+
+        @Module({
+          imports: [
+            ConfigModule.forRoot({
+              isGlobal: true,
+              validate, // Áp dụng hàm xác thực tại đây
+            }),
+            // ...
+          ],
+        })
+        export class AppModule {}
+        ```
+*   **Kế hoạch Kiểm thử:**
+    *   **Kiểm thử Thủ công (Manual Test):**
+        *   Tạm thời xóa hoặc đổi tên biến `CLERK_SECRET_KEY` trong file `.env`.
+        *   Chạy ứng dụng (`npm run start:dev`).
+        *   Xác minh rằng ứng dụng ném ra lỗi và không khởi động thành công, với thông báo lỗi rõ ràng về biến môi trường bị thiếu.
+        *   Khôi phục lại biến và xác minh ứng dụng khởi động bình thường.
+
+---
+
+#### **Vấn đề 3.3: (Vấn đề #9) Định dạng Phản hồi Không nhất quán**
+
+*   **Tóm tắt:** Các API endpoint trả về các cấu trúc dữ liệu khác nhau, gây khó khăn cho phía client trong việc xử lý phản hồi một cách nhất quán.
+*   **Phân tích Nguyên nhân Gốc rễ:** Thiếu một quy ước chung về cấu trúc phản hồi API cho toàn bộ dự án.
+*   **Giải pháp Kỹ thuật:**
+    1.  **Định nghĩa một DTO Phản hồi Chuẩn:** Tạo một DTO chung để bao bọc tất cả các phản hồi thành công.
+        ```typescript
+        // src/common/dto/api-response.dto.ts
+        import { ApiProperty } from '@nestjs/swagger';
+
+        export class ApiResponseDto<T> {
+          @ApiProperty()
+          public readonly success: boolean;
+        
+          @ApiProperty()
+          public readonly message: string;
+        
+          @ApiProperty()
+          public readonly data: T;
+
+          constructor(data: T, message = 'Success') {
+            this.success = true;
+            this.message = message;
+            this.data = data;
+          }
+        }
+        ```
+    2.  **Tạo một Interceptor để Chuẩn hóa Phản hồi:** Interceptor này sẽ tự động bao bọc dữ liệu trả về từ các controller vào trong `ApiResponseDto`.
+        ```typescript
+        // src/common/interceptors/transform.interceptor.ts
+        import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+        import { Observable } from 'rxjs';
+        import { map } from 'rxjs/operators';
+        import { ApiResponseDto } from '../dto/api-response.dto';
+
+        @Injectable()
+        export class TransformInterceptor<T> implements NestInterceptor<T, ApiResponseDto<T>> {
+          intercept(context: ExecutionContext, next: CallHandler): Observable<ApiResponseDto<T>> {
+            return next.handle().pipe(map(data => new ApiResponseDto(data)));
+          }
+        }
+        ```
+    3.  **Áp dụng Interceptor Toàn cục:** Đăng ký interceptor trong `main.ts` hoặc `app.module.ts`.
+        ```typescript
+        // src/main.ts
+        import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+        
+        async function bootstrap() {
+          const app = await NestFactory.create(AppModule);
+          // ...
+          app.useGlobalInterceptors(new TransformInterceptor());
+          // ...
+          await app.listen(3000);
+        }
+        ```
+*   **Kế hoạch Kiểm thử:**
+    *   **E2E Test:**
+        *   Tạo một endpoint test trả về một object đơn giản, ví dụ: `{ id: 1, name: 'Test' }`.
+        *   Gọi API đến endpoint này.
+        *   Xác minh rằng cấu trúc phản hồi nhận được là `{ success: true, message: 'Success', data: { id: 1, name: 'Test' } }`.
+        *   Kiểm tra một vài endpoint hiện có để đảm bảo chúng cũng tuân theo định dạng mới.
+
+---
+*Ghi chú: Giai đoạn 4 sẽ được lên kế hoạch chi tiết sau khi hoàn tất Giai đoạn 3.*
+
+### **Giai đoạn 4: Tối ưu Kiến trúc và Tài liệu (LOW)**
+
+#### **Vấn đề 4.1: (Vấn đề #15) Kiến trúc Module Không nhất quán**
+
+*   **Tóm tắt:** Hiện tại có sự chồng chéo về trách nhiệm giữa `ClerkModule` (được định vị là infrastructure) và `AuthModule` (application). `ClerkModule` nên chỉ tập trung vào việc cung cấp các khối xây dựng cơ bản để tương tác với Clerk, trong khi `AuthModule` nên xử lý logic nghiệp vụ về phân quyền (authorization).
+*   **Phân tích Nguyên nhân Gốc rễ:** Sự phân chia trách nhiệm giữa các lớp (layer) chưa được thực thi một cách nghiêm ngặt trong quá trình phát triển, dẫn đến logic nghiệp vụ bị rò rỉ vào lớp cơ sở hạ tầng.
+*   **Giải pháp Kỹ thuật:**
+    1.  **Xác định lại vai trò:**
+        *   `ClerkModule`: Cung cấp `ClerkClient`, `ClerkAuthGuard` (chỉ xác thực token, không phân quyền), và `ClerkSessionService` (chỉ tương tác API Clerk). Nó **export** các thành phần này.
+        *   `AuthModule`: **Import** `ClerkModule`. Chứa `RolesGuard` (sử dụng `ClerkAuthGuard` và xử lý logic phân quyền), và `AuthService` (logic nghiệp vụ liên quan đến người dùng).
+    2.  **Tái cấu trúc `ClerkModule`:**
+        ```typescript
+        // src/modules/Infrastructure/clerk/clerk.module.ts
+        import { Global, Module } from '@nestjs/common';
+        // ... (các imports khác)
+
+        @Global() // Biến ClerkModule thành global để các module khác có thể inject mà không cần import
+        @Module({
+          imports: [ConfigModule],
+          providers: [ClerkClientProvider, ClerkSessionService, ClerkAuthGuard],
+          exports: [ClerkSessionService, ClerkAuthGuard, CLERK_CLIENT], // Chỉ export những gì cần thiết
+        })
+        export class ClerkModule {}
+        ```
+    3.  **Tái cấu trúc `AuthModule`:**
+        ```typescript
+        // src/modules/auth/auth.module.ts
+        import { Module } from '@nestjs/common';
+        import { RolesGuard } from './guards/roles.guard';
+        import { AuthService } from './auth.service';
+        // ClerkModule không cần import ở đây nữa vì đã là Global
+
+        @Module({
+          providers: [AuthService, RolesGuard],
+          exports: [AuthService, RolesGuard],
+        })
+        export class AuthModule {}
+        ```
+    4.  **Cập nhật `AppModule`:** Import `ClerkModule` và `AuthModule`.
+        ```typescript
+        // src/app.module.ts
+        // ...
+        import { ClerkModule } from './modules/Infrastructure/clerk/clerk.module';
+        import { AuthModule } from './modules/auth/auth.module';
+
+        @Module({
+          imports: [
+            // ... các modules khác
+            ClerkModule,
+            AuthModule,
+          ],
+          // ...
+        })
+        export class AppModule {}
+        ```
+*   **Kế hoạch Kiểm thử:**
+    *   **Tái cấu trúc (Refactoring):** Bản chất của nhiệm vụ này là tái cấu trúc.
+    *   **Kiểm thử Hồi quy (Regression Testing):** Chạy lại toàn bộ bộ kiểm thử (unit, integration, e2e) đã có để đảm bảo rằng việc thay đổi cấu trúc không phá vỡ bất kỳ chức năng nào. Các bài kiểm thử hiện có phải pass 100%.
+
+---
+
+#### **Vấn đề 4.2: (Vấn đề #13) Thiếu Giám sát và Quan sát (Monitoring & Observability)**
+
+*   **Tóm tắt:** Hệ thống thiếu các công cụ để theo dõi hiệu suất và các lỗi của luồng xác thực, gây khó khăn trong việc phát hiện các vấn đề tiềm ẩn hoặc các mẫu tấn công.
+*   **Phân tích Nguyên nhân Gốc rễ:** Các yếu tố về vận hành (operations) và giám sát (monitoring) thường được xem là có độ ưu tiên thấp và bị bỏ qua trong giai đoạn đầu.
+*   **Giải pháp Kỹ thuật:**
+    1.  **Tích hợp Prometheus:** Sử dụng `prom-client` để tạo và theo dõi các metric tùy chỉnh.
+        ```bash
+        npm install prom-client
+        ```
+    2.  **Tạo Metrics Service:** Xây dựng một service chuyên dụng để quản lý các metric.
+        ```typescript
+        // src/modules/metrics/metrics.service.ts
+        import { Injectable } from '@nestjs/common';
+        import { Counter, Histogram, register } from 'prom-client';
+
+        @Injectable()
+        export class MetricsService {
+          public readonly authAttempts = new Counter({
+            name: 'theshoebolt_auth_attempts_total',
+            help: 'Total number of authentication attempts.',
+            labelNames: ['status', 'guard'], // success, failure
+          });
+
+          public readonly authDuration = new Histogram({
+            name: 'theshoebolt_auth_duration_seconds',
+            help: 'Authentication duration in seconds.',
+            labelNames: ['guard'],
+          });
+
+          constructor() {
+            register.registerMetric(this.authAttempts);
+            register.registerMetric(this.authDuration);
+          }
+        }
+        ```
+    3.  **Inject và Sử dụng MetricsService:** Cập nhật các guard để ghi lại metric.
+        ```typescript
+        // src/modules/Infrastructure/clerk/guards/clerk-auth.guard.ts
+        // ...
+        import { MetricsService } from 'src/modules/metrics/metrics.service';
+        
+        export class ClerkAuthGuard implements CanActivate {
+          constructor(
+            //...
+            private readonly metricsService: MetricsService,
+          ) {}
+
+          async canActivate(context: ExecutionContext): Promise<boolean> {
+            const end = this.metricsService.authDuration.startTimer({ guard: 'clerk' });
+            try {
+              //... logic xác thực
+              this.metricsService.authAttempts.inc({ status: 'success', guard: 'clerk' });
+              return true;
+            } catch (error) {
+              this.metricsService.authAttempts.inc({ status: 'failure', guard: 'clerk' });
+              throw error;
+            } finally {
+              end();
+            }
+          }
+        }
+        ```
+    4.  **Tạo Endpoint `/metrics`:**
+        ```typescript
+        // src/modules/metrics/metrics.controller.ts
+        import { Controller, Get, Res } from '@nestjs/common';
+        import { register } from 'prom-client';
+        import { Response } from 'express';
+
+        @Controller('metrics')
+        export class MetricsController {
+          @Get()
+          async getMetrics(@Res() res: Response) {
+            res.set('Content-Type', register.contentType);
+            res.end(await register.metrics());
+          }
+        }
+        ```
+*   **Kế hoạch Kiểm thử:**
+    *   **Unit Test:**
+        *   Kiểm tra `MetricsService` khởi tạo các metric đúng cách.
+        *   Kiểm tra trong `ClerkAuthGuard`, các phương thức `inc` và `startTimer` của metric được gọi đúng lúc.
+    *   **E2E Test:**
+        *   Gọi một vài API được bảo vệ.
+        *   Sau đó, gọi API `GET /metrics`.
+        *   Xác minh rằng nội dung trả về chứa tên các metric đã định nghĩa (`theshoebolt_auth_attempts_total`) và giá trị của chúng đã được cập nhật.
+
+---
+
+#### **Vấn đề 4.3: (Vấn đề #14) Thiếu Tài liệu Hóa (Documentation)**
+
+*   **Tóm tắt:** Thiếu các bình luận mã nguồn (JSDoc/TSDoc) và tài liệu API, gây khó khăn cho việc bảo trì và onboarding thành viên mới.
+*   **Phân tích Nguyên nhân Gốc rễ:** Viết tài liệu là một công việc thường bị trì hoãn hoặc bỏ qua để ưu tiên cho việc hoàn thành tính năng.
+*   **Giải pháp Kỹ thuật:**
+    1.  **Áp dụng Quy ước JSDoc/TSDoc:** Duyệt qua các file đã được sửa đổi trong các giai đoạn trước và thêm các khối bình luận chi tiết cho:
+        *   Mục đích của các class (đặc biệt là services và guards).
+        *   Mô tả, tham số (`@param`), và giá trị trả về (`@returns`) cho các phương thức public phức tạp.
+        *   Ví dụ sử dụng (`@example`) cho các hàm quan trọng.
+    2.  **Tích hợp Swagger:** Sử dụng `@nestjs/swagger` để tự động tạo tài liệu API tương tác.
+        ```bash
+        npm install @nestjs/swagger swagger-ui-express
+        ```
+    3.  **Cấu hình Swagger trong `main.ts`:**
+        ```typescript
+        // src/main.ts
+        import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+
+        async function bootstrap() {
+          const app = await NestFactory.create(AppModule);
+          
+          const config = new DocumentBuilder()
+            .setTitle('TheShoeBolt API')
+            .setDescription('API documentation for TheShoeBolt application')
+            .setVersion('1.0')
+            .addBearerAuth()
+            .build();
+          const document = SwaggerModule.createDocument(app, config);
+          SwaggerModule.setup('api-docs', app, document);
+
+          // ...
+          await app.listen(3000);
+        }
+        ```
+    4.  **Trang trí (Decorate) DTOs và Controllers:** Sử dụng các decorator như `@ApiProperty()`, `@ApiOperation()`, `@ApiResponse()` để làm phong phú thêm tài liệu Swagger.
+*   **Kế hoạch Kiểm thử:**
+    *   **Kiểm tra Thủ công:**
+        *   Chạy ứng dụng và truy cập vào đường dẫn `/api-docs`.
+        *   Xác minh rằng giao diện Swagger UI hiển thị chính xác.
+        *   Kiểm tra một vài endpoint để đảm bảo mô tả, tham số, và các phản hồi mẫu được hiển thị đúng như đã định nghĩa bằng decorator.
+        *   Thực hiện một yêu cầu API thử nghiệm trực tiếp từ Swagger UI.
+
 ## 4. Definition of Done (DoD)
 
 Toàn bộ kế hoạch được xem là **Hoàn thành** khi tất cả các điều kiện sau được thỏa mãn:
