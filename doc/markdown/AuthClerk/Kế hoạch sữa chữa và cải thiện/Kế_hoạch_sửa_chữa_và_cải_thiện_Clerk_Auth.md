@@ -60,17 +60,21 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         import { Provider } from '@nestjs/common';
         import { ConfigService } from '@nestjs/config';
         import { ClerkClient, createClerkClient } from '@clerk/backend';
-
+        
         export const CLERK_CLIENT = 'ClerkClient';
-
+        
         export const ClerkClientProvider: Provider = {
           provide: CLERK_CLIENT,
           useFactory: (configService: ConfigService): ClerkClient => {
-            const secretKey = configService.get<string>('CLERK_SECRET_KEY');
+            publishableKey: configService.get<string>('CLERK_PUBLISHABLE_KEY'),
+            secretKey: configService.get<string>('CLERK_SECRET_KEY'),
             if (!secretKey) {
               throw new Error('CLERK_SECRET_KEY is not set in environment variables.');
             }
-            return createClerkClient({ secretKey });
+            if (!publishableKey) {
+                throw new Error('CLERK_PUBLISHABLE_KEY is not set in environment variables.');
+            }
+            return createClerkClient({ secretKey, publishableKey });
           },
           inject: [ConfigService],
         };
@@ -84,7 +88,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         import { ClerkSessionService } from './clerk.session.service';
         import { ClerkAuthGuard } from './guards/clerk-auth.guard';
         // ...
-
+        
         @Module({
           imports: [ConfigModule],
           providers: [ClerkClientProvider, ClerkSessionService, ClerkAuthGuard],
@@ -98,7 +102,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         import { Inject, Injectable } from '@nestjs/common';
         import { ClerkClient } from '@clerk/backend';
         import { CLERK_CLIENT } from './providers/clerk-client.provider';
-
+        
         @Injectable()
         export class ClerkSessionService {
           constructor(@Inject(CLERK_CLIENT) private readonly clerkClient: ClerkClient) {}
@@ -125,27 +129,30 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         # .env
         CLERK_JWT_KEY=-----BEGIN PUBLIC KEY-----\nYOUR_JWT_PUBLIC_KEY\n-----END PUBLIC KEY-----
         ```
-    2.  **Cập nhật `ClerkClientProvider` để sử dụng `jwtKey`:**
+    2.  **Cập nhật  để sử dụng `jwtKey`:**
+        
         ```typescript
-        // src/modules/Infrastructure/clerk/providers/clerk-client.provider.ts
-        // ...
-        export const ClerkClientProvider: Provider = {
-          provide: CLERK_CLIENT,
-          useFactory: (configService: ConfigService): ClerkClient => {
-            const secretKey = configService.get<string>('CLERK_SECRET_KEY');
-            const jwtKey = configService.get<string>('CLERK_JWT_KEY'); // Thêm dòng này
-
-            if (!secretKey) {
-              throw new Error('CLERK_SECRET_KEY is not set.');
+         const jwtKey = this.configService.get('CLERK_JWT_KEY');
+             try {
+              const { sessionId, userId, orgId, claims } = await authenticateRequest({
+                headers: request.headers,
+                cookies: request.cookies,
+              }, {
+                jwtKey: jwtKey,
+                secretKey: this.configService.get('CLERK_SECRET_KEY'),
+                authorizedParties: [this.configService.get('CLERK_FRONTEND_API_URL')],
+              });
+        
+              if (!userId) {
+                throw new UnauthorizedException('User not authenticated');
+              }
+        
+              // Attach user info to request
+              request['clerkUser'] = { sessionId, userId, orgId, claims };
+              return true;
+            } catch (error) {
+              throw new UnauthorizedException('Authentication failed');
             }
-            if (!jwtKey) {
-                throw new Error('CLERK_JWT_KEY is not set for networkless authentication.');
-            }
-
-            return createClerkClient({ secretKey, jwtKey }); // Cập nhật tại đây
-          },
-          inject: [ConfigService],
-        };
         ```
 *   **Kế hoạch Kiểm thử:**
     *   **Unit Test:**
@@ -169,37 +176,39 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
     import { ClerkClient, authenticateRequest } from '@clerk/backend';
     import { CLERK_CLIENT } from '../providers/clerk-client.provider';
     import { ConfigService } from '@nestjs/config';
-
+    
     @Injectable()
     export class ClerkAuthGuard implements CanActivate {
       private readonly logger = new Logger(ClerkAuthGuard.name);
-
+    
       constructor(
         @Inject(CLERK_CLIENT) private readonly clerkClient: ClerkClient,
         private readonly configService: ConfigService
       ) {}
-
+    
       async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest<Request>();
         
-        try {
-          const authResult = await authenticateRequest({
-            request,
+        const jwtKey = this.configService.get('CLERK_JWT_KEY');
+         try {
+          const { sessionId, userId, orgId, claims } = await authenticateRequest({
+            headers: request.headers,
+            cookies: request.cookies,
+          }, {
+            jwtKey: jwtKey,
             secretKey: this.configService.get('CLERK_SECRET_KEY'),
-            jwtKey: this.configService.get('CLERK_JWT_KEY'),
+            authorizedParties: [this.configService.get('CLERK_FRONTEND_API_URL')],
           });
-
-          if (!authResult.toAuth().userId) {
-            throw new UnauthorizedException('User not authenticated.');
+    
+          if (!userId) {
+            throw new UnauthorizedException('User not authenticated');
           }
-          
-          // Gắn thông tin auth vào request để các phần khác có thể sử dụng
-          (request as any).auth = authResult.toAuth();
-          
+    
+          // Attach user info to request
+          request['clerkUser'] = { sessionId, userId, orgId, claims };
           return true;
         } catch (error) {
-          this.logger.error(`Authentication failed: ${error.message}`, error.stack);
-          throw new UnauthorizedException('Authentication failed.');
+          throw new UnauthorizedException('Authentication failed');
         }
       }
     }
@@ -228,22 +237,30 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         context.getHandler(),
         context.getClass(),
       ]);
-
+    
       // ✅ Sửa lỗi: Mặc định từ chối nếu không có vai trò nào được định nghĩa
       if (!requiredRoles || requiredRoles.length === 0) {
         // Trả về false để từ chối truy cập theo nguyên tắc fail-safe.
         return false; 
       }
-
-      const { auth } = context.switchToHttp().getRequest();
-      if (!auth || !auth.userId) {
+    
+      const { clerkUser } = context.switchToHttp().getRequest();
+      if (!clerkUser || !clerkUser.userId) {
+        this.logger.warn('Access denied: No roles specified for protected endpoint');
         throw new UnauthorizedException('User not authenticated.');
       }
-
-      const userRoles = auth.sessionClaims?.public_metadata?.roles || [];
+    
+      const userRoles = clerkUser.claims?.public_metadata?.roles || [];
+      
+      if (!userRoles) {
+        this.logger.warn(`Access denied: User ${user.id} has no publicMetadata`);
+        throw new ForbiddenException('Access denied: User metadata not found');
+      }
+    
       const hasPermission = requiredRoles.every((role) => userRoles.includes(role));
-
+    
       if (!hasPermission) {
+          this.logger.warn(`Access denied: User ${user.id} with role ${userRole} attempted to access endpoint requiring roles: ${requiredRoles.join(', ')}`);
           throw new ForbiddenException('Insufficient permissions.');
       }
       
@@ -270,18 +287,24 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
     // ...
     async canActivate(context: ExecutionContext): Promise<boolean> {
       // ... (logic lấy requiredRoles và auth object như trên)
-
+    
       const userRoles = auth.sessionClaims?.public_metadata?.roles || [];
       
       // ✅ Sửa lỗi: Sử dụng 'every' để yêu cầu TẤT CẢ các vai trò
       const hasPermission = requiredRoles.every((role) => userRoles.includes(role));
-
+    
       if (!hasPermission) {
           throw new ForbiddenException('Insufficient permissions.');
       }
       
       return true;
     }
+    
+    
+    
+    // Tạo 2 decorator riêng:
+    @RolesAny(UserRole.ADMIN, UserRole.MODERATOR) // OR logic
+    @RolesAll(UserRole.ADMIN, UserRole.FINANCE_MANAGER) // AND logic
     ```
 *   **Kế hoạch Kiểm thử:**
     *   **Unit Test:**
@@ -309,13 +332,13 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
     // src/modules/Infrastructure/clerk/clerk.session.service.ts
     import { Inject, Injectable, Logger, NotFoundException, ForbiddenException, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
     //...
-
+    
     @Injectable()
     export class ClerkSessionService {
       private readonly logger = new Logger(ClerkSessionService.name);
-
+    
       constructor(@Inject(CLERK_CLIENT) private readonly clerkClient: ClerkClient) {}
-
+    
       async getSessionList(userId: string): Promise<Session[]> {
         try {
           this.logger.debug(`Attempting to get sessions for user: ${userId}`);
@@ -371,14 +394,14 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         ```typescript
         // src/modules/Infrastructure/clerk/dto/clerk-params.dto.ts
         import { IsString, Matches, IsNotEmpty } from 'class-validator';
-
+        
         export class SessionIdParamDto {
           @IsString()
           @IsNotEmpty()
           @Matches(/^sess_[a-zA-Z0-9]+$/, { message: 'Invalid session ID format.' })
           sessionId: string;
         }
-
+        
         export class UserIdParamDto {
           @IsString()
           @IsNotEmpty()
@@ -400,7 +423,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
           async revokeSession(@Param() params: SessionIdParamDto) {
             // ...
           }
-
+        
           @Get('admin/users/:userId/sessions')
           async getAnyUserSessions(@Param() params: UserIdParamDto) {
             // ...
@@ -492,10 +515,10 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
                     req.rawBodyBuffer = buf;
                 }
             };
-
+        
             app.use(json({ verify: rawBodyBuffer }));
             app.use(urlencoded({ verify: rawBodyBuffer, extended: true }));
-
+        
             // ... các cấu hình khác như global pipes
             await app.listen(3000);
         }
@@ -508,19 +531,19 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         import { Webhook } from 'svix';
         import { ConfigService } from '@nestjs/config';
         import { UsersService } from 'src/modules/users/users.service';
-
+        
         @Controller('webhooks')
         export class ClerkWebhookController {
           private readonly logger = new Logger(ClerkWebhookController.name);
-
+        
           constructor(
             private readonly configService: ConfigService,
             private readonly usersService: UsersService,
           ) {}
-
+        
           @Post('clerk')
           async handleClerkWebhook(@Headers() headers, @Req() req: Request, @Res() res: Response) {
-            const webhookSecret = this.configService.get<string>('CLERK_WEBHOOK_SIGNING_SECRET');
+            const webhookSecret = this.configService.get<string>('CLERK_WEBHOOK_SECRET');
             if (!webhookSecret) {
               this.logger.error('Clerk webhook secret is not configured.');
               throw new Error('Webhook secret is not configured.');
@@ -533,14 +556,23 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
                 'svix-timestamp': headers['svix-timestamp'] as string,
                 'svix-signature': headers['svix-signature'] as string,
               };
-
+        
               const wh = new Webhook(webhookSecret);
               const evt = wh.verify(payload, svixHeaders) as any;
-
+        
               this.logger.log(`Webhook with type ${evt.type} received`);
-
-              // Logic xử lý các loại event (user.created, user.updated, user.deleted)
-              // Ví dụ: await this.usersService.syncFromClerk(evt.data);
+        
+              switch (evt.type) {
+              case 'user.created':
+                await this.authService.syncUserFromClerk(evt.data);
+                break;
+              case 'user.updated':
+                await this.authService.updateUserFromClerk(evt.data);
+                break;
+              case 'user.deleted':
+                await this.authService.deleteUser(evt.data.id);
+                break;
+            }
               
               res.status(200).json({ message: 'Webhook processed' });
             } catch (err) {
@@ -552,6 +584,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         ```
     4.  **Cập nhật `UsersService`:** Thêm các phương thức để xử lý logic đồng bộ dữ liệu từ Clerk vào CSDL cục bộ.
 *   **Kế hoạch Kiểm thử:**
+    
     *   **Unit Test:**
         *   Mock `Webhook.verify` để trả về một payload sự kiện mẫu. Kiểm tra controller gọi đúng phương thức của `usersService`.
         *   Mock `Webhook.verify` để ném ra lỗi. Xác minh controller ném ra `BadRequestException`.
@@ -591,12 +624,202 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         }
         ```
     2.  **Viết Unit Test cho Services và Guards:**
-        *   Tập trung vào việc kiểm thử các logic quan trọng trong `ClerkSessionService` và `RolesGuard`.
-        *   Sử dụng mock để cô lập các phụ thuộc bên ngoài (như `clerkClient`, `ConfigService`, `Reflector`).
-        *   Viết các ca kiểm thử cho cả trường hợp thành công và thất bại.
+        
+        ```typescript
+        // test/unit/clerk-auth.guard.spec.ts
+        describe('ClerkAuthGuard', () => {
+          let guard: ClerkAuthGuard;
+          let configService: ConfigService;
+        
+          beforeEach(async () => {
+            const module = await Test.createTestingModule({
+              providers: [
+                ClerkAuthGuard,
+                {
+                  provide: ConfigService,
+                  useValue: {
+                    get: jest.fn((key: string) => {
+                      const config = {
+                        CLERK_JWT_KEY: 'test-jwt-key',
+                        CLERK_SECRET_KEY: 'test-secret-key',
+                        CLERK_FRONTEND_API_URL: 'https://test.clerk.accounts.dev',
+                      };
+                      return config[key];
+                    }),
+                  },
+                },
+              ],
+            }).compile();
+        
+            guard = module.get<ClerkAuthGuard>(ClerkAuthGuard);
+            configService = module.get<ConfigService>(ConfigService);
+          });
+        
+          describe('canActivate', () => {
+            it('should return true for valid authentication', async () => {
+              const mockContext = createMockExecutionContext({
+                headers: { authorization: 'Bearer valid_token' },
+                cookies: { __session: 'valid_session' },
+              });
+        
+              jest.spyOn(require('@clerk/backend'), 'authenticateRequest')
+                .mockResolvedValue({
+                  sessionId: 'sess_123',
+                  userId: 'user_456',
+                  orgId: null,
+                  claims: { sub: 'user_456' },
+                });
+        
+              const result = await guard.canActivate(mockContext);
+              expect(result).toBe(true);
+              expect(mockContext.switchToHttp().getRequest()['clerkUser']).toBeDefined();
+            });
+        
+            it('should throw UnauthorizedException for invalid token', async () => {
+              const mockContext = createMockExecutionContext({
+                headers: { authorization: 'Bearer invalid_token' },
+              });
+        
+              jest.spyOn(require('@clerk/backend'), 'authenticateRequest')
+                .mockRejectedValue(new Error('Invalid token'));
+        
+              await expect(guard.canActivate(mockContext)).rejects.toThrow(UnauthorizedException);
+            });
+        
+            it('should throw UnauthorizedException when no userId returned', async () => {
+              const mockContext = createMockExecutionContext({
+                headers: { authorization: 'Bearer token_without_user' },
+              });
+        
+              jest.spyOn(require('@clerk/backend'), 'authenticateRequest')
+                .mockResolvedValue({
+                  sessionId: null,
+                  userId: null,
+                  orgId: null,
+                  claims: {},
+                });
+        
+              await expect(guard.canActivate(mockContext)).rejects.toThrow(UnauthorizedException);
+            });
+          });
+        });
+        ```
+        
+        
     3.  **Viết Integration Test cho Controllers:**
-        *   Sử dụng `@nestjs/testing` và `supertest` để tạo các bài kiểm thử cho `ClerkController` và các controller khác có sử dụng guard.
-        *   Kiểm tra toàn bộ luồng request-response, bao gồm cả hoạt động của guards và pipes.
+        
+        ```typescript
+        // test/integration/auth-flow.integration.spec.ts
+        describe('Authentication Flow Integration', () => {
+          let app: INestApplication;
+          let clerkClient: ClerkClient;
+        
+          beforeAll(async () => {
+            const moduleFixture = await Test.createTestingModule({
+              imports: [AppModule],
+            })
+            .overrideProvider('ClerkClient')
+            .useValue(createMockClerkClient())
+            .compile();
+        
+            app = moduleFixture.createNestApplication();
+            app.useGlobalFilters(new GlobalExceptionFilter());
+            app.useGlobalPipes(new ValidationPipe());
+            await app.init();
+        
+            clerkClient = app.get('ClerkClient');
+          });
+        
+          describe('Protected Endpoints', () => {
+            it('should allow access with valid authentication', async () => {
+              const mockUser = {
+                sessionId: 'sess_123',
+                userId: 'user_456',
+                claims: { sub: 'user_456' },
+              };
+        
+              jest.spyOn(require('@clerk/backend'), 'authenticateRequest')
+                .mockResolvedValue(mockUser);
+        
+              const response = await request(app.getHttpServer())
+                .get('/clerk/sessions')
+                .set('Authorization', 'Bearer valid_token')
+                .expect(200);
+        
+              expect(response.body.success).toBe(true);
+              expect(response.body.data).toBeDefined();
+            });
+        
+            it('should reject requests without authentication', async () => {
+              await request(app.getHttpServer())
+                .get('/clerk/sessions')
+                .expect(401)
+                .expect((res) => {
+                  expect(res.body.errorCode).toBe('AUTH_REQUIRED');
+                  expect(res.body.success).toBe(false);
+                });
+            });
+        
+            it('should handle Clerk API errors gracefully', async () => {
+              jest.spyOn(require('@clerk/backend'), 'authenticateRequest')
+                .mockRejectedValue({ status: 429, message: 'Rate limit exceeded' });
+        
+              await request(app.getHttpServer())
+                .get('/clerk/sessions')
+                .set('Authorization', 'Bearer rate_limited_token')
+                .expect(429)
+                .expect((res) => {
+                  expect(res.body.errorCode).toBe('RATE_LIMIT_EXCEEDED');
+                });
+            });
+          });
+        
+          describe('Role-based Authorization', () => {
+            it('should allow admin access to admin endpoints', async () => {
+              const mockAdminUser = {
+                sessionId: 'sess_admin',
+                userId: 'user_admin',
+                claims: {
+                  sub: 'user_admin',
+                  public_metadata: { role: 'ADMIN' }
+                },
+              };
+        
+              jest.spyOn(require('@clerk/backend'), 'authenticateRequest')
+                .mockResolvedValue(mockAdminUser);
+        
+              await request(app.getHttpServer())
+                .get('/clerk/admin/users/user_123/sessions')
+                .set('Authorization', 'Bearer admin_token')
+                .expect(200);
+            });
+        
+            it('should deny regular user access to admin endpoints', async () => {
+              const mockRegularUser = {
+                sessionId: 'sess_user',
+                userId: 'user_regular',
+                claims: {
+                  sub: 'user_regular',
+                  public_metadata: { role: 'USER' }
+                },
+              };
+        
+              jest.spyOn(require('@clerk/backend'), 'authenticateRequest')
+                .mockResolvedValue(mockRegularUser);
+        
+              await request(app.getHttpServer())
+                .get('/clerk/admin/users/user_123/sessions')
+                .set('Authorization', 'Bearer user_token')
+                .expect(403)
+                .expect((res) => {
+                  expect(res.body.errorCode).toBe('INSUFFICIENT_PERMISSIONS');
+                });
+            });
+          });
+        });
+        ```
+        
+        
     4.  **Thiết lập ngưỡng Code Coverage:** Đặt mục tiêu độ bao phủ mã nguồn tối thiểu (ví dụ: 80%) và tích hợp vào quy trình CI/CD để đảm bảo chất lượng.
 *   **Kế hoạch Kiểm thử:**
     *   Bản thân nhiệm vụ này là về việc viết kiểm thử.
@@ -618,19 +841,23 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         // src/config/env.validation.ts
         import { plainToInstance } from 'class-transformer';
         import { IsNotEmpty, IsString, validateSync } from 'class-validator';
-
+        
         class EnvironmentVariables {
           @IsString()
           @IsNotEmpty()
           CLERK_SECRET_KEY: string;
-
+        
           @IsString()
           @IsNotEmpty()
           CLERK_JWT_KEY: string;
+            
+          @IsString()
+          @IsNotEmpty()
+          CLERK_PUBLISHABLE_KEY: string;
           
           // Thêm các biến môi trường quan trọng khác ở đây
         }
-
+        
         export function validate(config: Record<string, unknown>) {
           const validatedConfig = plainToInstance(
             EnvironmentVariables,
@@ -638,7 +865,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
             { enableImplicitConversion: true },
           );
           const errors = validateSync(validatedConfig, { skipMissingProperties: false });
-
+        
           if (errors.length > 0) {
             throw new Error(errors.toString());
           }
@@ -650,7 +877,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         // src/app.module.ts
         import { ConfigModule } from '@nestjs/config';
         import { validate } from './config/env.validation';
-
+        
         @Module({
           imports: [
             ConfigModule.forRoot({
@@ -680,7 +907,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         ```typescript
         // src/common/dto/api-response.dto.ts
         import { ApiProperty } from '@nestjs/swagger';
-
+        
         export class ApiResponseDto<T> {
           @ApiProperty()
           public readonly success: boolean;
@@ -690,7 +917,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         
           @ApiProperty()
           public readonly data: T;
-
+        
           constructor(data: T, message = 'Success') {
             this.success = true;
             this.message = message;
@@ -705,7 +932,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         import { Observable } from 'rxjs';
         import { map } from 'rxjs/operators';
         import { ApiResponseDto } from '../dto/api-response.dto';
-
+        
         @Injectable()
         export class TransformInterceptor<T> implements NestInterceptor<T, ApiResponseDto<T>> {
           intercept(context: ExecutionContext, next: CallHandler): Observable<ApiResponseDto<T>> {
@@ -751,7 +978,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         // src/modules/Infrastructure/clerk/clerk.module.ts
         import { Global, Module } from '@nestjs/common';
         // ... (các imports khác)
-
+        
         @Global() // Biến ClerkModule thành global để các module khác có thể inject mà không cần import
         @Module({
           imports: [ConfigModule],
@@ -767,7 +994,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         import { RolesGuard } from './guards/roles.guard';
         import { AuthService } from './auth.service';
         // ClerkModule không cần import ở đây nữa vì đã là Global
-
+        
         @Module({
           providers: [AuthService, RolesGuard],
           exports: [AuthService, RolesGuard],
@@ -780,7 +1007,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         // ...
         import { ClerkModule } from './modules/Infrastructure/clerk/clerk.module';
         import { AuthModule } from './modules/auth/auth.module';
-
+        
         @Module({
           imports: [
             // ... các modules khác
@@ -811,7 +1038,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         // src/modules/metrics/metrics.service.ts
         import { Injectable } from '@nestjs/common';
         import { Counter, Histogram, register } from 'prom-client';
-
+        
         @Injectable()
         export class MetricsService {
           public readonly authAttempts = new Counter({
@@ -819,13 +1046,13 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
             help: 'Total number of authentication attempts.',
             labelNames: ['status', 'guard'], // success, failure
           });
-
+        
           public readonly authDuration = new Histogram({
             name: 'theshoebolt_auth_duration_seconds',
             help: 'Authentication duration in seconds.',
             labelNames: ['guard'],
           });
-
+        
           constructor() {
             register.registerMetric(this.authAttempts);
             register.registerMetric(this.authDuration);
@@ -843,7 +1070,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
             //...
             private readonly metricsService: MetricsService,
           ) {}
-
+        
           async canActivate(context: ExecutionContext): Promise<boolean> {
             const end = this.metricsService.authDuration.startTimer({ guard: 'clerk' });
             try {
@@ -865,7 +1092,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         import { Controller, Get, Res } from '@nestjs/common';
         import { register } from 'prom-client';
         import { Response } from 'express';
-
+        
         @Controller('metrics')
         export class MetricsController {
           @Get()
@@ -903,7 +1130,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         ```typescript
         // src/main.ts
         import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-
+        
         async function bootstrap() {
           const app = await NestFactory.create(AppModule);
           
@@ -915,7 +1142,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
             .build();
           const document = SwaggerModule.createDocument(app, config);
           SwaggerModule.setup('api-docs', app, document);
-
+        
           // ...
           await app.listen(3000);
         }
