@@ -2,11 +2,13 @@
   "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": "../",
   "testEnvironment": "node",
-  "testRegex": "test/integration/.*\\.integration\\.spec\\.ts$",
+  "testRegex": "test/component/.*\\.component\\.spec\\.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "moduleNameMapper": {
     "^src/(.*)$": "<rootDir>/src/$1"
-  }
-} 
+  },
+  "displayName": "Component Tests",
+  "testTimeout": 30000
+}
