@@ -14,15 +14,15 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ClerkSessionService = void 0;
 const common_1 = require("@nestjs/common");
-const clerk_sdk_node_1 = require("@clerk/clerk-sdk-node");
+const clerk_client_provider_1 = require("./providers/clerk-client.provider");
 let ClerkSessionService = class ClerkSessionService {
-    constructor(options) {
+    constructor(clerkClient, options) {
+        this.clerkClient = clerkClient;
         this.options = options;
-        this.clerk = clerk_sdk_node_1.clerkClient;
     }
     async getSessionList(userId) {
         try {
-            const sessions = await this.clerk.sessions.getSessionList({
+            const sessions = await this.clerkClient.sessions.getSessionList({
                 userId,
             });
             return sessions;
@@ -33,7 +33,7 @@ let ClerkSessionService = class ClerkSessionService {
     }
     async revokeSession(sessionId) {
         try {
-            const revokedSession = await this.clerk.sessions.revokeSession(sessionId);
+            const revokedSession = await this.clerkClient.sessions.revokeSession(sessionId);
             return revokedSession;
         }
         catch (error) {
@@ -42,11 +42,22 @@ let ClerkSessionService = class ClerkSessionService {
     }
     async verifySessionToken(token) {
         try {
-            const sessionClaims = await this.clerk.verifyToken(token, {
-                secretKey: this.options.secretKey,
-                issuer: `https://clerk.${this.options.publishableKey.split('_')[1]}.lcl.dev`,
+            const headers = new Headers({
+                'Authorization': `Bearer ${token}`,
+                'Cookie': `__session=${token}`,
             });
-            return sessionClaims;
+            const webRequest = new globalThis.Request('https://api.clerk.dev', {
+                method: 'GET',
+                headers: headers,
+            });
+            const authState = await this.clerkClient.authenticateRequest(webRequest, {
+                secretKey: this.options.secretKey,
+            });
+            if (!authState.isAuthenticated) {
+                throw new common_1.UnauthorizedException('Token is not valid or expired');
+            }
+            const authObject = authState.toAuth();
+            return authObject.sessionClaims;
         }
         catch (error) {
             throw new common_1.UnauthorizedException(`Invalid session token: ${error.message}`);
@@ -54,7 +65,7 @@ let ClerkSessionService = class ClerkSessionService {
     }
     async getSession(sessionId) {
         try {
-            const session = await this.clerk.sessions.getSession(sessionId);
+            const session = await this.clerkClient.sessions.getSession(sessionId);
             return session;
         }
         catch (error) {
@@ -63,7 +74,7 @@ let ClerkSessionService = class ClerkSessionService {
     }
     async getUser(userId) {
         try {
-            const user = await this.clerk.users.getUser(userId);
+            const user = await this.clerkClient.users.getUser(userId);
             return user;
         }
         catch (error) {
@@ -72,7 +83,22 @@ let ClerkSessionService = class ClerkSessionService {
     }
     async verifyTokenAndGetAuthData(token) {
         try {
-            const sessionClaims = await this.verifySessionToken(token);
+            const headers = new Headers({
+                'Authorization': `Bearer ${token}`,
+                'Cookie': `__session=${token}`,
+            });
+            const webRequest = new globalThis.Request('https://api.clerk.dev', {
+                method: 'GET',
+                headers: headers,
+            });
+            const authState = await this.clerkClient.authenticateRequest(webRequest, {
+                secretKey: this.options.secretKey,
+            });
+            if (!authState.isAuthenticated) {
+                throw new common_1.UnauthorizedException('Token is not valid or expired');
+            }
+            const authObject = authState.toAuth();
+            const sessionClaims = authObject.sessionClaims;
             const session = await this.getSession(sessionClaims.sid);
             if (!session || session.status !== 'active') {
                 throw new common_1.UnauthorizedException('Invalid or inactive session');
@@ -96,8 +122,8 @@ let ClerkSessionService = class ClerkSessionService {
     }
     async revokeAllUserSessions(userId) {
         try {
-            const sessions = await this.getSessionList(userId);
-            const revokedSessions = await Promise.all(sessions.map(session => this.revokeSession(session.id)));
+            const sessionsResponse = await this.getSessionList(userId);
+            const revokedSessions = await Promise.all(sessionsResponse.data.map((session) => this.revokeSession(session.id)));
             return revokedSessions;
         }
         catch (error) {
@@ -108,7 +134,8 @@ let ClerkSessionService = class ClerkSessionService {
 exports.ClerkSessionService = ClerkSessionService;
 exports.ClerkSessionService = ClerkSessionService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, common_1.Inject)('CLERK_OPTIONS')),
-    __metadata("design:paramtypes", [Object])
+    __param(0, (0, common_1.Inject)(clerk_client_provider_1.CLERK_CLIENT)),
+    __param(1, (0, common_1.Inject)('CLERK_OPTIONS')),
+    __metadata("design:paramtypes", [Object, Object])
 ], ClerkSessionService);
 //# sourceMappingURL=clerk.session.service.js.map

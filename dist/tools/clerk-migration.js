@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv_1 = require("dotenv");
 const typeorm_1 = require("typeorm");
 const user_entity_1 = require("../modules/users/entities/user.entity");
-const clerk_sdk_node_1 = require("@clerk/clerk-sdk-node");
+const backend_1 = require("@clerk/backend");
 (0, dotenv_1.config)();
 const AppDataSource = new typeorm_1.DataSource({
     type: 'postgres',
@@ -19,6 +19,10 @@ const AppDataSource = new typeorm_1.DataSource({
 async function migrateUsersToClerk() {
     console.log('Starting migration of users to Clerk...');
     try {
+        const clerkClient = (0, backend_1.createClerkClient)({
+            secretKey: process.env.CLERK_SECRET_KEY,
+            publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+        });
         await AppDataSource.initialize();
         console.log('Database connection established');
         const users = await AppDataSource.manager.find(user_entity_1.User);
@@ -27,29 +31,29 @@ async function migrateUsersToClerk() {
         let errors = 0;
         for (const user of users) {
             try {
-                const existingUsers = await clerk_sdk_node_1.clerkClient.users.getUserList({
+                const existingUsers = await clerkClient.users.getUserList({
                     emailAddress: [user.email],
                 });
-                if (existingUsers.length > 0) {
+                if (existingUsers.data.length > 0) {
                     console.log(`User with email ${user.email} already exists in Clerk, updating metadata`);
-                    await clerk_sdk_node_1.clerkClient.users.updateUser(existingUsers[0].id, {
+                    await clerkClient.users.updateUser(existingUsers.data[0].id, {
                         firstName: user.firstName,
                         lastName: user.lastName,
                         publicMetadata: {
                             role: user.role,
                             localUserId: user.id,
-                            ...existingUsers[0].publicMetadata,
+                            ...existingUsers.data[0].publicMetadata,
                         },
                     });
                     await AppDataSource.manager.update(user_entity_1.User, user.id, {
-                        clerkId: existingUsers[0].id,
+                        clerkId: existingUsers.data[0].id,
                     });
                     created++;
                 }
                 else {
                     console.log(`Creating user ${user.email} in Clerk`);
                     const tempPassword = Math.random().toString(36).slice(-10);
-                    const clerkUser = await clerk_sdk_node_1.clerkClient.users.createUser({
+                    const clerkUser = await clerkClient.users.createUser({
                         emailAddress: [user.email],
                         firstName: user.firstName,
                         lastName: user.lastName,

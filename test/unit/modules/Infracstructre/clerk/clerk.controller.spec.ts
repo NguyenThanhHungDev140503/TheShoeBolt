@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ClerkController } from 'src/modules/Infracstructre/clerk/clerk.controller';
-import { ClerkSessionService } from 'src/modules/Infracstructre/clerk/clerk.session.service';
+import { ClerkController } from 'src/modules/Infrastructure/clerk/clerk.controller';
+import { ClerkSessionService } from 'src/modules/Infrastructure/clerk/clerk.session.service';
 import { RolesGuard } from 'src/modules/auth/guards/roles.guard';
-import { ClerkAuthGuard } from 'src/modules/Infracstructre/clerk/guards/clerk-auth.guard';
+import { ClerkAuthGuard } from 'src/modules/Infrastructure/clerk/guards/clerk-auth.guard';
 import { Reflector } from '@nestjs/core';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { UserRole } from 'src/modules/users/entities/user.entity';
@@ -65,10 +65,13 @@ describe('ClerkController', () => {
 
   describe('User Session Endpoints', () => {
     const mockRequest = {
-      user: {
-        id: 'test-user-id',
-        publicMetadata: {
-          role: UserRole.USER,
+      clerkUser: {
+        userId: 'test-user-id',
+        sessionId: 'test-session-id',
+        claims: {
+          public_metadata: {
+            role: UserRole.USER,
+          },
         },
       },
     };
@@ -118,10 +121,13 @@ describe('ClerkController', () => {
 
     beforeEach(() => {
       mockAdminRequest = {
-        user: {
-          id: 'admin-user-id',
-          publicMetadata: {
-            role: UserRole.ADMIN,
+        clerkUser: {
+          userId: 'admin-user-id',
+          sessionId: 'admin-session-id',
+          claims: {
+            public_metadata: {
+              role: UserRole.ADMIN,
+            },
           },
         },
       };
@@ -150,7 +156,7 @@ describe('ClerkController', () => {
       });
 
       it('should deny access for non-admin users', () => {
-        mockAdminRequest.user.publicMetadata.role = UserRole.USER;
+        mockAdminRequest.clerkUser.claims.public_metadata.role = UserRole.USER;
         mockReflector.getAllAndOverride.mockReturnValue([UserRole.ADMIN]);
 
         expect(() => {
@@ -221,9 +227,12 @@ describe('ClerkController', () => {
 
     it('should properly handle authorization errors for admin endpoints', () => {
       const mockNonAdminRequest = {
-        user: {
-          id: 'user-id',
-          publicMetadata: { role: UserRole.USER },
+        clerkUser: {
+          userId: 'user-id',
+          sessionId: 'user-session-id',
+          claims: {
+            public_metadata: { role: UserRole.USER },
+          },
         },
       };
 

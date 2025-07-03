@@ -13,6 +13,7 @@ const config_1 = require("@nestjs/config");
 const clerk_session_service_1 = require("./clerk.session.service");
 const clerk_controller_1 = require("./clerk.controller");
 const clerk_auth_guard_1 = require("./guards/clerk-auth.guard");
+const clerk_client_provider_1 = require("./providers/clerk-client.provider");
 let ClerkModule = ClerkModule_1 = class ClerkModule {
     static forRoot(options) {
         return {
@@ -23,10 +24,11 @@ let ClerkModule = ClerkModule_1 = class ClerkModule {
                     provide: 'CLERK_OPTIONS',
                     useValue: options,
                 },
+                clerk_client_provider_1.ClerkClientProvider,
                 clerk_session_service_1.ClerkSessionService,
                 clerk_auth_guard_1.ClerkAuthGuard,
             ],
-            exports: [clerk_session_service_1.ClerkSessionService, clerk_auth_guard_1.ClerkAuthGuard, 'CLERK_OPTIONS'],
+            exports: [clerk_session_service_1.ClerkSessionService, clerk_auth_guard_1.ClerkAuthGuard, 'CLERK_OPTIONS', clerk_client_provider_1.CLERK_CLIENT],
             global: true,
         };
     }
@@ -44,10 +46,11 @@ let ClerkModule = ClerkModule_1 = class ClerkModule {
                     }),
                     inject: [config_1.ConfigService],
                 },
+                clerk_client_provider_1.ClerkClientProvider,
                 clerk_session_service_1.ClerkSessionService,
                 clerk_auth_guard_1.ClerkAuthGuard,
             ],
-            exports: [clerk_session_service_1.ClerkSessionService, clerk_auth_guard_1.ClerkAuthGuard, 'CLERK_OPTIONS'],
+            exports: [clerk_session_service_1.ClerkSessionService, clerk_auth_guard_1.ClerkAuthGuard, 'CLERK_OPTIONS', clerk_client_provider_1.CLERK_CLIENT],
             global: true,
         };
     }

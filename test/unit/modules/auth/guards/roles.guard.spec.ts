@@ -37,10 +37,13 @@ describe('RolesGuard', () => {
 
     beforeEach(() => {
       mockRequest = {
-        user: {
-          id: 'test-user-id',
-          publicMetadata: {
-            role: UserRole.ADMIN,
+        clerkUser: {
+          userId: 'test-user-id',
+          sessionId: 'test-session-id',
+          claims: {
+            public_metadata: {
+              role: UserRole.ADMIN,
+            },
           },
         },
       };
@@ -118,7 +121,7 @@ describe('RolesGuard', () => {
       
       const mockNullUserContext: Partial<ExecutionContext> = {
         switchToHttp: () => ({
-          getRequest: () => ({ user: null }) as any,
+          getRequest: () => ({ clerkUser: null }) as any,
           getResponse: jest.fn(),
           getNext: jest.fn(),
         }),
@@ -141,10 +144,13 @@ describe('RolesGuard', () => {
 
     it('should extract role from single role format (current format)', () => {
       const mockRequest = {
-        user: {
-          id: 'test-user-id',
-          publicMetadata: {
-            role: UserRole.ADMIN,
+        clerkUser: {
+          userId: 'test-user-id',
+          sessionId: 'test-session-id',
+          claims: {
+            public_metadata: {
+              role: UserRole.ADMIN,
+            },
           },
         },
       };
@@ -165,10 +171,13 @@ describe('RolesGuard', () => {
 
     it('should extract roles from array format (future support)', () => {
       const mockRequest = {
-        user: {
-          id: 'test-user-id',
-          publicMetadata: {
-            roles: [UserRole.ADMIN, UserRole.USER],
+        clerkUser: {
+          userId: 'test-user-id',
+          sessionId: 'test-session-id',
+          claims: {
+            public_metadata: {
+              roles: [UserRole.ADMIN, UserRole.USER],
+            },
           },
         },
       };
@@ -189,11 +198,14 @@ describe('RolesGuard', () => {
 
     it('should prioritize roles array over single role when both exist', () => {
       const mockRequest = {
-        user: {
-          id: 'test-user-id',
-          publicMetadata: {
-            role: UserRole.USER, // This should be ignored
-            roles: [UserRole.ADMIN], // This should be used
+        clerkUser: {
+          userId: 'test-user-id',
+          sessionId: 'test-session-id',
+          claims: {
+            public_metadata: {
+              role: UserRole.USER, // This should be ignored
+              roles: [UserRole.ADMIN], // This should be used
+            },
           },
         },
       };
@@ -214,9 +226,12 @@ describe('RolesGuard', () => {
 
     it('should throw ForbiddenException when user has no publicMetadata', () => {
       const mockRequest = {
-        user: {
-          id: 'test-user-id',
-          // No publicMetadata
+        clerkUser: {
+          userId: 'test-user-id',
+          sessionId: 'test-session-id',
+          claims: {
+            // No public_metadata
+          },
         },
       };
 

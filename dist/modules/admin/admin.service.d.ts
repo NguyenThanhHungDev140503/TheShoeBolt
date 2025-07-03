@@ -19,11 +19,17 @@ export declare class AdminService {
         from?: number;
         size?: number;
     }): Promise<{
-        hits: any[];
+        hits: {
+            id: string;
+            score: number;
+        }[];
         total: number | import("@elastic/elasticsearch/lib/api/types").SearchTotalHits;
     }>;
     searchUsers(query: string, options?: any): Promise<{
-        hits: any[];
+        hits: {
+            id: string;
+            score: number;
+        }[];
         total: number | import("@elastic/elasticsearch/lib/api/types").SearchTotalHits;
     }>;
     getChatStats(startDate?: Date, endDate?: Date): Promise<{
