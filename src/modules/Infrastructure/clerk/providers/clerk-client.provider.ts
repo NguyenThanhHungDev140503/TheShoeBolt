@@ -24,7 +24,7 @@ export const ClerkClientProvider: Provider = {
     return createClerkClient({
       secretKey,
       publishableKey,
-      // jwtKey
+      jwtKey
     });
   },
   inject: [ConfigService],

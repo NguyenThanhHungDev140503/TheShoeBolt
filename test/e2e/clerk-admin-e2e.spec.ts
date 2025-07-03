@@ -2,9 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
-import { ClerkSessionService } from '../../src/modules/Infracstructre/clerk/clerk.session.service';
+import { ClerkSessionService } from '../../src/modules/Infrastructure/clerk/clerk.session.service';
 import { RolesGuard } from '../../src/modules/auth/guards/roles.guard';
-import { ClerkAuthGuard } from '../../src/modules/Infracstructre/clerk/guards/clerk-auth.guard';
+import { ClerkAuthGuard } from '../../src/modules/Infrastructure/clerk/guards/clerk-auth.guard';
 import { UserRole } from '../../src/modules/users/entities/user.entity';
 
 describe('Clerk Admin E2E Flows', () => {

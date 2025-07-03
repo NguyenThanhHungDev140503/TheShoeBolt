@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { ClerkController } from '../../src/modules/Infracstructre/clerk/clerk.controller';
-import { ClerkSessionService } from '../../src/modules/Infracstructre/clerk/clerk.session.service';
+import { ClerkController } from '../../src/modules/Infrastructure/clerk/clerk.controller';
+import { ClerkSessionService } from '../../src/modules/Infrastructure/clerk/clerk.session.service';
 import { RolesGuard } from '../../src/modules/auth/guards/roles.guard';
-import { ClerkAuthGuard } from '../../src/modules/Infracstructre/clerk/guards/clerk-auth.guard';
+import { ClerkAuthGuard } from '../../src/modules/Infrastructure/clerk/guards/clerk-auth.guard';
 import { Reflector } from '@nestjs/core';
 import { UserRole } from '../../src/modules/users/entities/user.entity';
 
