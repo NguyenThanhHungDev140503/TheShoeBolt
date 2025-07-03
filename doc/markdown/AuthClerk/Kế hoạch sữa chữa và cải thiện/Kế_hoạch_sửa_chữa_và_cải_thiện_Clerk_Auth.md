@@ -133,6 +133,9 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         
         ```typescript
          const jwtKey = this.configService.get('CLERK_JWT_KEY');
+         if (!jwtKey) {
+            throw new Error('CLERK_JWT_KEY is not set in environment variables.');
+          }
              try {
               const { sessionId, userId, orgId, claims } = await authenticateRequest({
                 headers: request.headers,
@@ -216,7 +219,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
 *   **Kế hoạch Kiểm thử:**
     *   **Unit Test:**
         *   Mock `authenticateRequest` và kiểm tra các trường hợp: thành công, thất bại, ném lỗi.
-        *   Kiểm tra `auth` object được gắn vào `request` khi thành công.
+        *   Kiểm tra `clerkUser` object được gắn vào `request` khi thành công.
     *   **Integration Test:**
         *   Gửi request với header `Authorization` chứa token hợp lệ, mong đợi `2xx` status.
         *   Gửi request với header `Authorization` chứa token không hợp lệ, mong đợi `401 Unauthorized`.
@@ -308,11 +311,12 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
     ```
 *   **Kế hoạch Kiểm thử:**
     *   **Unit Test:**
-        *   Test `RolesGuard` với decorator `@Roles('ADMIN', 'MANAGER')`: user có `[ADMIN, MANAGER]` -> pass; user có `[ADMIN]` -> fail.
+        *   Test `RolesGuard` với decorator `@RolesAll('ADMIN', 'CUSTOMER')`: user có `[ADMIN, CUSTOMER]` -> pass; user có `[ADMIN]` -> fail.
+        *   Test `RolesGuard` với decorator `@RolesAny('ADMIN', 'CUSTOMER')`: user có `[ADMIN, CUSTOMER]` -> pass; user có `[ADMIN]` -> pass.
     *   **Integration Test:**
-        *   Tạo endpoint với `@Roles('admin', 'super-user')`.
+        *   Tạo endpoint với `@RolesAll('admin', 'customer')`.
         *   Test với user chỉ có role `admin` -> mong đợi `403 Forbidden`.
-        *   Test với user có cả `admin` và `super-user` -> mong đợi `200 OK`.
+        *   Test với user có cả `admin` và `customer` -> mong đợi `200 OK`.
 
 ---
 *Ghi chú: Các giai đoạn 2, 3, 4 sẽ được lên kế hoạch chi tiết sau khi hoàn tất Giai đoạn 1.*
@@ -357,15 +361,16 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         }
       }
       
-      // Áp dụng mô hình try-catch tương tự cho các phương thức khác như revokeSession.
+      // Áp dụng mô hình try-catch tương tự trong ClerkSessionService cho các phương thức khác như revokeSession, ..... .
+      
     }
     ```
 *   **Kế hoạch Kiểm thử:**
     *   **Unit Test:**
-        *   Mock `clerkClient.sessions.getSessionList` để ném ra một lỗi mô phỏng từ Clerk với `status: 404`. Xác minh rằng service ném ra `NotFoundException`.
-        *   Mock phương thức để ném ra lỗi với `status: 403`. Xác minh rằng `ForbiddenException` được ném ra.
-        *   Mock phương thức để ném ra một `Error` chung. Xác minh rằng `InternalServerErrorException` được ném ra.
-        *   Trong mọi trường hợp lỗi, xác minh rằng `logger.error` đã được gọi.
+        *   Mock `clerkClient.sessions.getSessionList` để ném ra một lỗi mô phỏng từ Clerk với `status: 404`. Xác minh rằng service ném ra `NotFoundException` và log lỗi.
+        *   Mock phương thức để ném ra lỗi với `status: 403`. Xác minh rằng `ForbiddenException` được ném ra và log lỗi.
+        *   Mock phương thức để ném ra một `Error` chung. Xác minh rằng `InternalServerErrorException` được ném ra và log lỗi.
+        *   Trong mọi trường hợp lỗi, xác minh rằng `logger.error` đã được gọi với thông báo lỗi và stack trace.
 
 ---
 
