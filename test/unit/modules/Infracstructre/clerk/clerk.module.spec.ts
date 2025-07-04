@@ -95,4 +95,85 @@ describe('ClerkModule', () => {
         expect(options.secretKey).toBeUndefined();
     });
   });
-}); 
+
+  describe('ClerkModule.forRoot() Static Method', () => {
+    it('should create dynamic module with forRoot method', async () => {
+      const options = {
+        secretKey: 'test-secret-key',
+        publishableKey: 'test-publishable-key',
+        jwtKey: 'test-jwt-key',
+      };
+
+      const dynamicModule = ClerkModule.forRoot(options);
+
+      expect(dynamicModule).toBeDefined();
+      expect(dynamicModule.module).toBe(ClerkModule);
+      expect(dynamicModule.controllers).toContain(require('src/modules/Infrastructure/clerk/clerk.controller').ClerkController);
+      expect(dynamicModule.providers).toBeDefined();
+      expect(dynamicModule.exports).toBeDefined();
+
+      // Check that CLERK_OPTIONS provider is configured correctly
+      const clerkOptionsProvider = dynamicModule.providers?.find(
+        (provider: any) => provider.provide === 'CLERK_OPTIONS'
+      ) as any;
+      expect(clerkOptionsProvider).toBeDefined();
+      expect(clerkOptionsProvider.useValue).toEqual(options);
+    });
+
+    it('should create module with different options', async () => {
+      const customOptions = {
+        secretKey: 'custom-secret',
+        publishableKey: 'custom-publishable',
+        jwtKey: 'custom-jwt',
+      };
+
+      const dynamicModule = ClerkModule.forRoot(customOptions);
+
+      const clerkOptionsProvider = dynamicModule.providers?.find(
+        (provider: any) => provider.provide === 'CLERK_OPTIONS'
+      ) as any;
+      expect(clerkOptionsProvider.useValue).toEqual(customOptions);
+    });
+
+    it('should include all required providers in forRoot', () => {
+      const options = {
+        secretKey: 'test-secret-key',
+        publishableKey: 'test-publishable-key',
+        jwtKey: 'test-jwt-key',
+      };
+
+      const dynamicModule = ClerkModule.forRoot(options);
+
+      expect(dynamicModule.providers).toHaveLength(4); // CLERK_OPTIONS, ClerkClientProvider, ClerkSessionService, ClerkAuthGuard
+
+      // Check for specific providers
+      const providerTokens = dynamicModule.providers?.map((provider: any) =>
+        provider.provide || provider.name || provider
+      );
+
+      expect(providerTokens).toContain('CLERK_OPTIONS');
+      expect(providerTokens).toContain(CLERK_CLIENT);
+    });
+
+    it('should include all required exports in forRoot', () => {
+      const options = {
+        secretKey: 'test-secret-key',
+        publishableKey: 'test-publishable-key',
+        jwtKey: 'test-jwt-key',
+      };
+
+      const dynamicModule = ClerkModule.forRoot(options);
+
+      expect(dynamicModule.exports).toHaveLength(4); // ClerkSessionService, ClerkAuthGuard, CLERK_OPTIONS, ClerkClient
+
+      // Check that specific exports are included
+      const exportNames = dynamicModule.exports?.map((exp: any) =>
+        exp.name || exp
+      );
+      expect(exportNames).toContain('ClerkSessionService');
+      expect(exportNames).toContain('ClerkAuthGuard');
+      expect(exportNames).toContain('CLERK_OPTIONS');
+      expect(exportNames).toContain('ClerkClient');
+    });
+  });
+});

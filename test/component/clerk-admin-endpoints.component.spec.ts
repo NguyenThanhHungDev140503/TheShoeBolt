@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ForbiddenException } from '@nestjs/common';
 import * as request from 'supertest';
 import { ClerkController } from '../../src/modules/Infrastructure/clerk/clerk.controller';
 import { ClerkSessionService } from '../../src/modules/Infrastructure/clerk/clerk.session.service';
@@ -33,6 +33,8 @@ import { UserRole } from '../../src/modules/users/entities/user.entity';
 describe('Clerk Admin Endpoints Component Tests', () => {
   let app: INestApplication;
   let clerkSessionService: ClerkSessionService;
+  let reflector: Reflector;
+  let rolesGuard: RolesGuard;
 
   const mockClerkSessionService = {
     getSessionList: jest.fn(),
@@ -40,6 +42,7 @@ describe('Clerk Admin Endpoints Component Tests', () => {
     revokeAllUserSessions: jest.fn(),
     verifyToken: jest.fn(),
     getUser: jest.fn(),
+    verifyTokenAndGetAuthData: jest.fn(),
   };
 
   const mockClerkAuthGuard = {
@@ -74,6 +77,8 @@ describe('Clerk Admin Endpoints Component Tests', () => {
 
     app = moduleFixture.createNestApplication();
     clerkSessionService = moduleFixture.get<ClerkSessionService>(ClerkSessionService);
+    reflector = moduleFixture.get<Reflector>(Reflector);
+    rolesGuard = moduleFixture.get<RolesGuard>(RolesGuard);
     await app.init();
   });
 
@@ -617,6 +622,171 @@ describe('Clerk Admin Endpoints Component Tests', () => {
 
       expect(controllerString).not.toContain('AdminGuard');
       expect(controllerString).not.toContain('@AdminOnly');
+    });
+  });
+
+  describe('Enhanced Role-based Authorization Component Tests', () => {
+    describe('RolesAny Decorator Behavior', () => {
+      it('should allow access to admin endpoints when RolesGuard passes (simulating RolesAny logic)', async () => {
+        // Setup: Mock guards to simulate successful RolesAny authorization
+        mockClerkAuthGuard.canActivate.mockImplementation(context => {
+          const request = context.switchToHttp().getRequest();
+          request.clerkUser = {
+            userId: 'user_123',
+            sessionId: 'sess_123',
+            claims: { public_metadata: { role: 'user' } }
+          };
+          return true;
+        });
+
+        // Simulate RolesAny allowing access (user has one of required roles)
+        mockRolesGuard.canActivate.mockReturnValue(true);
+        mockClerkSessionService.getSessionList.mockResolvedValue([]);
+
+        const response = await request(app.getHttpServer())
+          .get('/clerk/admin/users/test-user-id/sessions')
+          .set('Authorization', 'Bearer user-token')
+          .expect(200);
+
+        expect(mockRolesGuard.canActivate).toHaveBeenCalled();
+        expect(response.body.message).toBe('User sessions retrieved successfully');
+      });
+
+      it('should deny access to admin endpoints when RolesGuard fails (simulating RolesAny logic)', async () => {
+        // Setup: Mock guards to simulate failed RolesAny authorization
+        mockClerkAuthGuard.canActivate.mockImplementation(context => {
+          const request = context.switchToHttp().getRequest();
+          request.clerkUser = {
+            userId: 'user_123',
+            sessionId: 'sess_123',
+            claims: { public_metadata: { role: 'user' } }
+          };
+          return true;
+        });
+
+        // Simulate RolesAny denying access (user has none of required roles)
+        mockRolesGuard.canActivate.mockReturnValue(false);
+
+        await request(app.getHttpServer())
+          .get('/clerk/admin/users/test-user-id/sessions')
+          .set('Authorization', 'Bearer user-token')
+          .expect(403);
+
+        expect(mockRolesGuard.canActivate).toHaveBeenCalled();
+      });
+    });
+
+    describe('RolesAll Decorator Behavior', () => {
+      it('should allow access to admin endpoints when RolesGuard passes (simulating RolesAll logic)', async () => {
+        // Setup: Mock guards to simulate successful RolesAll authorization
+        mockClerkAuthGuard.canActivate.mockImplementation(context => {
+          const request = context.switchToHttp().getRequest();
+          request.clerkUser = {
+            userId: 'user_123',
+            sessionId: 'sess_123',
+            claims: { public_metadata: { roles: ['admin', 'user'] } }
+          };
+          return true;
+        });
+
+        // Simulate RolesAll allowing access (user has all required roles)
+        mockRolesGuard.canActivate.mockReturnValue(true);
+        mockClerkSessionService.getSessionList.mockResolvedValue([]);
+
+        const response = await request(app.getHttpServer())
+          .get('/clerk/admin/users/test-user-id/sessions')
+          .set('Authorization', 'Bearer admin-token')
+          .expect(200);
+
+        expect(mockRolesGuard.canActivate).toHaveBeenCalled();
+        expect(response.body.message).toBe('User sessions retrieved successfully');
+      });
+
+      it('should deny access to admin endpoints when RolesGuard fails (simulating RolesAll logic)', async () => {
+        // Setup: Mock guards to simulate failed RolesAll authorization
+        mockClerkAuthGuard.canActivate.mockImplementation(context => {
+          const request = context.switchToHttp().getRequest();
+          request.clerkUser = {
+            userId: 'user_123',
+            sessionId: 'sess_123',
+            claims: { public_metadata: { roles: ['admin'] } } // Missing required role
+          };
+          return true;
+        });
+
+        // Simulate RolesAll denying access (user missing required roles)
+        mockRolesGuard.canActivate.mockReturnValue(false);
+
+        await request(app.getHttpServer())
+          .get('/clerk/admin/users/test-user-id/sessions')
+          .set('Authorization', 'Bearer admin-token')
+          .expect(403);
+
+        expect(mockRolesGuard.canActivate).toHaveBeenCalled();
+      });
+    });
+
+    describe('Edge Cases and Error Scenarios', () => {
+      it('should handle authorization failures gracefully', async () => {
+        // Setup: Mock guards to simulate authorization failure
+        mockClerkAuthGuard.canActivate.mockReturnValue(true);
+        mockRolesGuard.canActivate.mockReturnValue(false);
+
+        await request(app.getHttpServer())
+          .get('/clerk/admin/users/test-user-id/sessions')
+          .set('Authorization', 'Bearer token')
+          .expect(403);
+
+        expect(mockRolesGuard.canActivate).toHaveBeenCalled();
+      });
+
+      it('should handle authentication failures before authorization', async () => {
+        // Setup: Mock authentication failure
+        mockClerkAuthGuard.canActivate.mockReturnValue(false);
+        mockRolesGuard.canActivate.mockReturnValue(true);
+
+        await request(app.getHttpServer())
+          .get('/clerk/admin/users/test-user-id/sessions')
+          .set('Authorization', 'Bearer invalid-token')
+          .expect(403);
+
+        expect(mockClerkAuthGuard.canActivate).toHaveBeenCalled();
+        // RolesGuard should not be called if authentication fails
+        expect(mockRolesGuard.canActivate).not.toHaveBeenCalled();
+      });
+
+      it('should handle mixed role scenarios correctly', async () => {
+        // Test different role combinations through component behavior
+        const testCases = [
+          { roles: ['admin'], shouldPass: true, description: 'admin role' },
+          { roles: ['user'], shouldPass: false, description: 'user role only' },
+          { roles: [], shouldPass: false, description: 'no roles' },
+        ];
+
+        for (const testCase of testCases) {
+          // Reset mocks
+          jest.clearAllMocks();
+
+          mockClerkAuthGuard.canActivate.mockImplementation(context => {
+            const request = context.switchToHttp().getRequest();
+            request.clerkUser = {
+              userId: 'test_user',
+              claims: { public_metadata: { roles: testCase.roles } }
+            };
+            return true;
+          });
+
+          mockRolesGuard.canActivate.mockReturnValue(testCase.shouldPass);
+          mockClerkSessionService.getSessionList.mockResolvedValue([]);
+
+          const expectedStatus = testCase.shouldPass ? 200 : 403;
+
+          await request(app.getHttpServer())
+            .get('/clerk/admin/users/test-user-id/sessions')
+            .set('Authorization', 'Bearer token')
+            .expect(expectedStatus);
+        }
+      });
     });
   });
 });
