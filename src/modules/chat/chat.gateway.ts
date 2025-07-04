@@ -13,8 +13,9 @@ import { Server, Socket } from 'socket.io';
 import { Logger, UseGuards, Inject } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { CreateChatMessageDto } from './dto/create-chat-message.dto';
-import { clerkClient } from '@clerk/clerk-sdk-node';
-import { ClerkModuleOptions } from '../Infracstructre/clerk/clerk.module';
+import { ClerkClient } from '@clerk/backend';
+import { ClerkModuleOptions } from '../Infrastructure/clerk/clerk.module';
+import { CLERK_CLIENT } from '../Infrastructure/clerk/providers/clerk-client.provider';
 
 @WebSocketGateway({
   cors: {
@@ -29,7 +30,8 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
   constructor(
     private readonly chatService: ChatService,
-    @Inject('CLERK_OPTIONS') private options: ClerkModuleOptions,
+    @Inject('CLERK_OPTIONS') private readonly options: ClerkModuleOptions,
+    @Inject(CLERK_CLIENT) private readonly clerkClient: ClerkClient,
   ) {}
 
   afterInit(server: Server) {
@@ -47,22 +49,39 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         return;
       }
 
-      // Verify token using Clerk
+      // Verify token using Clerk authenticateRequest
       try {
-        const sessionToken = await clerkClient.verifyToken(token, {
-          secretKey: this.options.secretKey,
-          issuer: `https://clerk.${this.options.publishableKey.split('_')[1]}.lcl.dev`,
+        // Create a minimal Web API Request for authentication
+        const headers = new Headers({
+          'Authorization': `Bearer ${token}`,
+          'Cookie': `__session=${token}`, // Include session token in cookies as well
         });
-        
+
+        const webRequest = new globalThis.Request('https://api.clerk.dev', {
+          method: 'GET',
+          headers: headers,
+        });
+
+        const authState = await this.clerkClient.authenticateRequest(webRequest, {
+          secretKey: this.options.secretKey,
+        });
+
+        if (!authState.isAuthenticated) {
+          throw new Error('Token is not valid or expired');
+        }
+
+        const authObject = authState.toAuth();
+        const sessionClaims = authObject.sessionClaims;
+
         // Get session information
-        const session = await clerkClient.sessions.getSession(sessionToken.sid);
-        
+        const session = await this.clerkClient.sessions.getSession(sessionClaims.sid);
+
         if (!session || session.status !== 'active') {
           throw new Error('Invalid or inactive session');
         }
-        
+
         // Get user information
-        const user = await clerkClient.users.getUser(session.userId);
+        const user = await this.clerkClient.users.getUser(session.userId);
         const userId = user.id;
 
         // Store the connection

@@ -19,11 +19,12 @@ const socket_io_1 = require("socket.io");
 const common_1 = require("@nestjs/common");
 const chat_service_1 = require("./chat.service");
 const create_chat_message_dto_1 = require("./dto/create-chat-message.dto");
-const clerk_sdk_node_1 = require("@clerk/clerk-sdk-node");
+const clerk_client_provider_1 = require("../Infrastructure/clerk/providers/clerk-client.provider");
 let ChatGateway = ChatGateway_1 = class ChatGateway {
-    constructor(chatService, options) {
+    constructor(chatService, options, clerkClient) {
         this.chatService = chatService;
         this.options = options;
+        this.clerkClient = clerkClient;
         this.logger = new common_1.Logger(ChatGateway_1.name);
         this.connectedUsers = new Map();
     }
@@ -39,15 +40,27 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
                 return;
             }
             try {
-                const sessionToken = await clerk_sdk_node_1.clerkClient.verifyToken(token, {
-                    secretKey: this.options.secretKey,
-                    issuer: `https://clerk.${this.options.publishableKey.split('_')[1]}.lcl.dev`,
+                const headers = new Headers({
+                    'Authorization': `Bearer ${token}`,
+                    'Cookie': `__session=${token}`,
                 });
-                const session = await clerk_sdk_node_1.clerkClient.sessions.getSession(sessionToken.sid);
+                const webRequest = new globalThis.Request('https://api.clerk.dev', {
+                    method: 'GET',
+                    headers: headers,
+                });
+                const authState = await this.clerkClient.authenticateRequest(webRequest, {
+                    secretKey: this.options.secretKey,
+                });
+                if (!authState.isAuthenticated) {
+                    throw new Error('Token is not valid or expired');
+                }
+                const authObject = authState.toAuth();
+                const sessionClaims = authObject.sessionClaims;
+                const session = await this.clerkClient.sessions.getSession(sessionClaims.sid);
                 if (!session || session.status !== 'active') {
                     throw new Error('Invalid or inactive session');
                 }
-                const user = await clerk_sdk_node_1.clerkClient.users.getUser(session.userId);
+                const user = await this.clerkClient.users.getUser(session.userId);
                 const userId = user.id;
                 this.connectedUsers.set(userId, client.id);
                 client.data.userId = userId;
@@ -178,6 +191,7 @@ exports.ChatGateway = ChatGateway = ChatGateway_1 = __decorate([
         },
     }),
     __param(1, (0, common_1.Inject)('CLERK_OPTIONS')),
-    __metadata("design:paramtypes", [chat_service_1.ChatService, Object])
+    __param(2, (0, common_1.Inject)(clerk_client_provider_1.CLERK_CLIENT)),
+    __metadata("design:paramtypes", [chat_service_1.ChatService, Object, Object])
 ], ChatGateway);
 //# sourceMappingURL=chat.gateway.js.map

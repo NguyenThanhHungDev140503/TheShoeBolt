@@ -3,38 +3,86 @@ import {
   CanActivate,
   ExecutionContext,
   UnauthorizedException,
+  Inject,
+  Logger,
 } from '@nestjs/common';
-import { ClerkSessionService } from '../clerk.session.service';
+import { Request } from 'express';
+import { ClerkClient } from '@clerk/backend';
+import { CLERK_CLIENT } from '../providers/clerk-client.provider';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ClerkAuthGuard implements CanActivate {
+  private readonly logger = new Logger(ClerkAuthGuard.name);
+
   constructor(
-    private readonly clerkSessionService: ClerkSessionService,
+    @Inject(CLERK_CLIENT) private readonly clerkClient: ClerkClient,
+    private readonly configService: ConfigService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
-    
+    const request = context.switchToHttp().getRequest<Request>();
+
     try {
-      // Extract token from Authorization header
-      const authHeader = request.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        throw new UnauthorizedException('Missing or invalid authorization header');
+      // Convert Express Request to Web API Request for Clerk
+      const webRequest = this.convertToWebRequest(request);
+
+      // Use authenticateRequest from ClerkClient
+      const authState = await this.clerkClient.authenticateRequest(webRequest, {
+        jwtKey: this.configService.get('CLERK_JWT_KEY'),
+        secretKey: this.configService.get('CLERK_SECRET_KEY'),
+      });
+
+      if (!authState.isAuthenticated) {
+        this.logger.error('User not authenticated');
+        throw new UnauthorizedException('User not authenticated');
       }
 
-      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+      // Get auth object from authenticated state
+      const authObject = authState.toAuth();
 
-      // Use ClerkSessionService to verify token and get authentication data
-      const authData = await this.clerkSessionService.verifyTokenAndGetAuthData(token);
-
-      // Attach authentication data to request object
-      request.user = authData.user;
-      request.session = authData.session;
-      request.sessionClaims = authData.sessionClaims;
-
+      // Attach user info to request
+      request['clerkUser'] = {
+        sessionId: authObject.sessionId,
+        userId: authObject.userId,
+        orgId: authObject.orgId,
+        claims: authObject.sessionClaims
+      };
+      this.logger.debug(`User ${authObject.userId} authenticated`);
       return true;
     } catch (error) {
-      throw new UnauthorizedException(`Authentication failed: ${error.message}`);
+      this.logger.error(`Authentication failed: ${error.message}`);
+      throw new UnauthorizedException('Authentication failed');
     }
   }
-} 
+
+  /**
+   * Convert Express Request to Web API Request for Clerk
+   */
+  private convertToWebRequest(expressRequest: Request): globalThis.Request {
+    const url = `${expressRequest.protocol}://${expressRequest.get('host')}${expressRequest.originalUrl}`;
+
+    // Create headers object
+    const headers = new Headers();
+    Object.entries(expressRequest.headers).forEach(([key, value]) => {
+      if (typeof value === 'string') {
+        headers.set(key, value);
+      } else if (Array.isArray(value)) {
+        headers.set(key, value.join(', '));
+      }
+    });
+
+    // Add cookies to headers if they exist
+    if (expressRequest.cookies && Object.keys(expressRequest.cookies).length > 0) {
+      const cookieString = Object.entries(expressRequest.cookies)
+        .map(([key, value]) => `${key}=${String(value)}`)
+        .join('; ');
+      headers.set('Cookie', cookieString);
+    }
+
+    return new globalThis.Request(url, {
+      method: expressRequest.method,
+      headers: headers,
+    });
+  }
+}

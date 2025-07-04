@@ -12,7 +12,10 @@ export declare class AdminController {
         from?: number;
         size?: number;
     }): Promise<{
-        hits: any[];
+        hits: {
+            id: string;
+            score: number;
+        }[];
         total: number | import("@elastic/elasticsearch/lib/api/types").SearchTotalHits;
     }>;
     getChatStats(startDate?: string, endDate?: string): Promise<{
@@ -26,7 +29,10 @@ export declare class AdminController {
         }[];
     }>;
     searchUsers(query: string, from?: number, size?: number): Promise<{
-        hits: any[];
+        hits: {
+            id: string;
+            score: number;
+        }[];
         total: number | import("@elastic/elasticsearch/lib/api/types").SearchTotalHits;
     }>;
 }

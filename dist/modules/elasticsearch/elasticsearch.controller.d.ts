@@ -17,11 +17,17 @@ export declare class ElasticsearchController {
         from?: number;
         size?: number;
     }): Promise<{
-        hits: any[];
+        hits: {
+            id: string;
+            score: number;
+        }[];
         total: number | import("@elastic/elasticsearch/lib/api/types").SearchTotalHits;
     }>;
     searchUsers(query: string, from?: number, size?: number): Promise<{
-        hits: any[];
+        hits: {
+            id: string;
+            score: number;
+        }[];
         total: number | import("@elastic/elasticsearch/lib/api/types").SearchTotalHits;
     }>;
 }

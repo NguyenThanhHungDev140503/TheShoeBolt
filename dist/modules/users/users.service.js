@@ -82,10 +82,7 @@ let UsersService = class UsersService {
         const user = await this.findOne(id);
         await this.usersRepository.remove(user);
         try {
-            await this.elasticsearchService.client.delete({
-                index: `${this.elasticsearchService.indexPrefix}users`,
-                id,
-            });
+            await this.elasticsearchService.deleteUser(id);
         }
         catch (error) {
             console.error(`Failed to delete user from Elasticsearch: ${error.message}`);

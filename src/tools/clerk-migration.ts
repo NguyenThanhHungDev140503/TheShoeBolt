@@ -9,7 +9,7 @@
 import { config } from 'dotenv';
 import { DataSource } from 'typeorm';
 import { User } from '../modules/users/entities/user.entity';
-import { clerkClient } from '@clerk/clerk-sdk-node';
+import { createClerkClient } from '@clerk/backend';
 
 // Load environment variables
 config();
@@ -30,6 +30,12 @@ async function migrateUsersToClerk() {
   console.log('Starting migration of users to Clerk...');
 
   try {
+    // Initialize Clerk client
+    const clerkClient = createClerkClient({
+      secretKey: process.env.CLERK_SECRET_KEY!,
+      publishableKey: process.env.CLERK_PUBLISHABLE_KEY!,
+    });
+
     // Initialize database connection
     await AppDataSource.initialize();
     console.log('Database connection established');
@@ -49,23 +55,23 @@ async function migrateUsersToClerk() {
           emailAddress: [user.email],
         });
 
-        if (existingUsers.length > 0) {
+        if (existingUsers.data.length > 0) {
           console.log(`User with email ${user.email} already exists in Clerk, updating metadata`);
           
           // Update user metadata in Clerk
-          await clerkClient.users.updateUser(existingUsers[0].id, {
+          await clerkClient.users.updateUser(existingUsers.data[0].id, {
             firstName: user.firstName,
             lastName: user.lastName,
             publicMetadata: {
               role: user.role,
               localUserId: user.id,
-              ...existingUsers[0].publicMetadata,
+              ...existingUsers.data[0].publicMetadata,
             },
           });
-          
+
           // Update user in local database with Clerk ID
           await AppDataSource.manager.update(User, user.id, {
-            clerkId: existingUsers[0].id,
+            clerkId: existingUsers.data[0].id,
           });
 
           created++;

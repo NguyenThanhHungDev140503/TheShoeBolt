@@ -2,14 +2,16 @@ import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, WsResponse } f
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
 import { CreateChatMessageDto } from './dto/create-chat-message.dto';
-import { ClerkModuleOptions } from '../Infracstructre/clerk/clerk.module';
+import { ClerkClient } from '@clerk/backend';
+import { ClerkModuleOptions } from '../Infrastructure/clerk/clerk.module';
 export declare class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     private readonly chatService;
-    private options;
+    private readonly options;
+    private readonly clerkClient;
     server: Server;
     private readonly logger;
     private readonly connectedUsers;
-    constructor(chatService: ChatService, options: ClerkModuleOptions);
+    constructor(chatService: ChatService, options: ClerkModuleOptions, clerkClient: ClerkClient);
     afterInit(server: Server): void;
     handleConnection(client: Socket): Promise<void>;
     handleDisconnect(client: Socket): void;

@@ -27,7 +27,7 @@ export class ClerkController {
   @ApiResponse({ status: 200, description: 'Sessions retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getUserSessions(@Request() req) {
-    const sessions = await this.clerkSessionService.getSessionList(req.user.id);
+    const sessions = await this.clerkSessionService.getSessionList(req.clerkUser.userId);
     return {
       message: 'Sessions retrieved successfully',
       sessions,
@@ -35,24 +35,30 @@ export class ClerkController {
   }
 
   @Delete('sessions/:sessionId')
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Revoke a specific session' })
   @ApiParam({ name: 'sessionId', description: 'Session ID to revoke' })
-  @ApiResponse({ status: 204, description: 'Session revoked successfully' })
+  @ApiResponse({ status: 200, description: 'Session revoked successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async revokeSession(@Param('sessionId') sessionId: string) {
-    await this.clerkSessionService.revokeSession(sessionId);
-    return;
+    const revokedSession = await this.clerkSessionService.revokeSession(sessionId);
+    return {
+        message: `Session ${sessionId} revoked successfully`,
+        session: revokedSession,
+    };
   }
 
   @Delete('sessions')
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Revoke all sessions for current user' })
-  @ApiResponse({ status: 204, description: 'All sessions revoked successfully' })
+  @ApiResponse({ status: 200, description: 'All sessions revoked successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async revokeAllSessions(@Request() req) {
-    await this.clerkSessionService.revokeAllUserSessions(req.user.id);
-    return;
+    const revokedInfo = await this.clerkSessionService.revokeAllUserSessions(req.clerkUser.userId);
+    return {
+        message: 'All sessions revoked successfully',
+        details: revokedInfo,
+    };
   }
 
   @UseGuards(ClerkAuthGuard, RolesGuard)
@@ -72,11 +78,14 @@ export class ClerkController {
   @UseGuards(ClerkAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Delete('admin/users/:userId/sessions')
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Admin: Revoke all sessions for any user' })
   @ApiParam({ name: 'userId', description: 'User ID to revoke sessions for' })
   async revokeAllUserSessions(@Param('userId') userId: string) {
-    await this.clerkSessionService.revokeAllUserSessions(userId);
-    return;
+    const revokedInfo = await this.clerkSessionService.revokeAllUserSessions(userId);
+    return {
+        message: `All sessions for user ${userId} revoked successfully`,
+        details: revokedInfo,
+    };
   }
 }

@@ -16,7 +16,7 @@ import { QueuesModule } from './modules/queues/queues.module';
 import { HealthModule } from './modules/health/health.module';
 import { ElasticsearchModule } from './modules/elasticsearch/elasticsearch.module';
 import { ChatModule } from './modules/chat/chat.module';
-import { ClerkModule } from './modules/Infracstructre/clerk/clerk.module';
+import { ClerkModule } from './modules/Infrastructure/clerk/clerk.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -24,6 +24,8 @@ import { databaseConfig } from './config/database.config';
 import { redisConfig } from './config/redis.config';
 import { elasticsearchConfig } from './config/elasticsearch.config';
 import { mongodbConfig } from './config/mongodb.config';
+import { validateEnvironment } from './config/env.validation';
+import { EnvConfigService } from './config/env.config';
 
 @Module({
   imports: [
@@ -31,6 +33,11 @@ import { mongodbConfig } from './config/mongodb.config';
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
       load: [databaseConfig, redisConfig, elasticsearchConfig, mongodbConfig],
+      validate: validateEnvironment,
+      validationOptions: {
+        allowUnknown: false,
+        abortEarly: false,
+      },
     }),
     
     WinstonModule.forRoot({
@@ -60,21 +67,25 @@ import { mongodbConfig } from './config/mongodb.config';
       ],
     }),
 
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60000,
-        limit: 100,
-      },
-    ]),
+    ThrottlerModule.forRootAsync({
+      inject: [EnvConfigService],
+      useFactory: (envConfig: EnvConfigService) => [
+        {
+          ttl: envConfig.throttle.ttl,
+          limit: envConfig.throttle.limit,
+        },
+      ],
+    }),
 
     CacheModule.registerAsync({
       isGlobal: true,
-      useFactory: async () => ({
+      inject: [EnvConfigService],
+      useFactory: async (envConfig: EnvConfigService) => ({
         store: redisStore,
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT) || 6379,
-        password: process.env.REDIS_PASSWORD,
-        ttl: 300,
+        host: envConfig.redis.host,
+        port: envConfig.redis.port,
+        password: envConfig.redis.password,
+        ttl: envConfig.cache.ttl,
       }),
     }),
 
@@ -90,6 +101,7 @@ import { mongodbConfig } from './config/mongodb.config';
     ClerkModule.forRootAsync(),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, EnvConfigService],
+  exports: [EnvConfigService],
 })
 export class AppModule {}

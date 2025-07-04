@@ -17,7 +17,7 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const emails_service_1 = require("./emails.service");
 const send_email_dto_1 = require("./dto/send-email.dto");
-const clerk_auth_guard_1 = require("../Infracstructre/clerk/guards/clerk-auth.guard");
+const clerk_auth_guard_1 = require("../Infrastructure/clerk/guards/clerk-auth.guard");
 let EmailsController = class EmailsController {
     constructor(emailsService) {
         this.emailsService = emailsService;

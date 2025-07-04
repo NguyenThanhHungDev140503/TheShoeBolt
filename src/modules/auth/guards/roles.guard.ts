@@ -7,90 +7,121 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ROLES_KEY } from '../decorators/roles.decorator';
+import { ROLES_KEY, ROLES_ANY_KEY, ROLES_ALL_KEY } from '../decorators/roles.decorator';
 import { UserRole } from '../../users/entities/user.entity';
 
 // Định nghĩa một kiểu cho payload của người dùng từ Clerk để tăng tính an toàn về kiểu
 interface ClerkUserPayload {
-  publicMetadata?: {
-    role?: UserRole; // Hỗ trợ vai trò đơn lẻ như hiện tại
-    roles?: UserRole[]; // Hỗ trợ mảng các vai trò cho tương lai
+  sessionId?: string;
+  userId?: string;
+  orgId?: string;
+  claims?: {
+    public_metadata?: {
+      role?: UserRole; // Hỗ trợ vai trò đơn lẻ như hiện tại
+      roles?: UserRole[]; // Hỗ trợ mảng các vai trò cho tương lai
+    };
+    // Thêm các thuộc tính khác của claims nếu cần
+    sub?: string;
   };
-  // Thêm các thuộc tính khác của user nếu cần
-  id?: string;
-  emailAddresses?: Array<{ emailAddress: string }>;
 }
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   private readonly logger = new Logger(RolesGuard.name);
 
-  constructor(private reflector: Reflector) {}
+  constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    // Sử dụng getAllAndOverride để lấy các vai trò từ cả handler và class
-    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
+    // Kiểm tra các loại decorator roles khác nhau
+    const rolesAll = this.reflector.getAllAndOverride<UserRole[]>(ROLES_ALL_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
+    const rolesAny = this.reflector.getAllAndOverride<UserRole[]>(ROLES_ANY_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    const rolesLegacy = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    // Xác định loại logic và roles cần kiểm tra
+    let requiredRoles: UserRole[] | null = null;
+    let requireAll = false; // Mặc định là logic ANY
+
+    if (rolesAll && rolesAll.length > 0) {
+      requiredRoles = rolesAll;
+      requireAll = true;
+    } else if (rolesAny && rolesAny.length > 0) {
+      requiredRoles = rolesAny;
+      requireAll = false;
+    } else if (rolesLegacy && rolesLegacy.length > 0) {
+      // Thay đổi: @Roles decorator cũ bây giờ sử dụng logic ALL (AND) thay vì ANY (OR)
+      requiredRoles = rolesLegacy;
+      requireAll = true;
+    }
+
     // Nếu không có vai trò nào được yêu cầu, áp dụng nguyên tắc fail-safe
-    // Guard này chỉ nên được kích hoạt trên các endpoint CÓ decorator @Roles.
-    // Các endpoint công khai nên được xử lý bởi một @Public decorator và một AuthGuard toàn cục.
     if (!requiredRoles || requiredRoles.length === 0) {
-      this.logger.warn('RolesGuard được áp dụng cho endpoint không có @Roles decorator. Từ chối truy cập theo nguyên tắc fail-safe.');
+      this.logger.warn('RolesGuard được áp dụng cho endpoint không có role decorator. Từ chối truy cập theo nguyên tắc fail-safe.');
       throw new ForbiddenException('Access denied: No role requirements specified for this endpoint.');
     }
 
     const request = context.switchToHttp().getRequest();
-    const user = request.user as ClerkUserPayload;
+    const clerkUser = request.clerkUser as ClerkUserPayload;
 
-    // 1. Kiểm tra phòng vệ: Đảm bảo `user` tồn tại
-    if (!user) {
-      this.logger.error('User object is missing in RolesGuard. Ensure an authentication guard runs before it.');
+    // 1. Kiểm tra phòng vệ: Đảm bảo `clerkUser` tồn tại
+    if (!clerkUser) {
+      this.logger.error('ClerkUser object is missing in RolesGuard. Ensure ClerkAuthGuard runs before it.');
       throw new InternalServerErrorException('User authentication data is not available.');
     }
 
     // 2. Trích xuất vai trò của người dùng một cách an toàn
-    const userRoles = this.extractUserRoles(user);
+    const userRoles = this.extractUserRoles(clerkUser);
 
     // 3. Kiểm tra xem người dùng có vai trò hay không
     if (!userRoles || userRoles.length === 0) {
-      this.logger.warn(`User ${user.id || 'unknown'} không có vai trò nào được gán.`);
+      this.logger.warn(`User ${clerkUser.userId ?? 'unknown'} không có vai trò nào được gán.`);
       throw new ForbiddenException('You have not been assigned any roles.');
     }
 
     // 4. Thực hiện so khớp vai trò
-    const hasPermission = this.matchRoles(requiredRoles, userRoles);
+    const hasPermission = this.matchRoles(requiredRoles, userRoles, requireAll);
 
     if (!hasPermission) {
-      this.logger.warn(`User ${user.id || 'unknown'} với roles [${userRoles.join(', ')}] không có quyền truy cập endpoint yêu cầu roles [${requiredRoles.join(', ')}].`);
+      const logicType = requireAll ? 'ALL' : 'ANY';
+      this.logger.warn(`User ${clerkUser.userId ?? 'unknown'} với roles [${userRoles.join(', ')}] không có quyền truy cập endpoint yêu cầu ${logicType} roles [${requiredRoles.join(', ')}].`);
       throw new ForbiddenException('You do not have the required permissions to access this resource.');
     }
 
-    this.logger.debug(`User ${user.id || 'unknown'} được phép truy cập với roles [${userRoles.join(', ')}].`);
+    this.logger.debug(`User ${clerkUser.userId ?? 'unknown'} được phép truy cập với roles [${userRoles.join(', ')}].`);
     return true;
   }
 
   /**
    * Trích xuất danh sách vai trò của người dùng từ Clerk payload
    * Hỗ trợ cả định dạng cũ (role đơn lẻ) và định dạng mới (roles array)
-   * @param user Clerk user payload
+   * @param clerkUser Clerk user payload
    * @returns Mảng các vai trò của người dùng
    */
-  private extractUserRoles(user: ClerkUserPayload): UserRole[] {
-    if (!user.publicMetadata) {
+  private extractUserRoles(clerkUser: ClerkUserPayload): UserRole[] {
+    if (!clerkUser.claims?.public_metadata) {
       return [];
     }
 
+    const publicMetadata = clerkUser.claims.public_metadata;
+
     // Ưu tiên sử dụng roles array nếu có (cho tương lai)
-    if (user.publicMetadata.roles && Array.isArray(user.publicMetadata.roles)) {
-      return user.publicMetadata.roles;
+    if (publicMetadata.roles && Array.isArray(publicMetadata.roles)) {
+      return publicMetadata.roles;
     }
 
     // Fallback sang role đơn lẻ (hiện tại)
-    if (user.publicMetadata.role) {
-      return [user.publicMetadata.role];
+    if (publicMetadata.role) {
+      return [publicMetadata.role];
     }
 
     // Không có vai trò nào
@@ -101,12 +132,16 @@ export class RolesGuard implements CanActivate {
    * So khớp vai trò yêu cầu với vai trò của người dùng.
    * @param requiredRoles Các vai trò được yêu cầu bởi endpoint.
    * @param userRoles Các vai trò mà người dùng hiện tại có.
-   * @returns `true` nếu người dùng có ít nhất một trong các vai trò yêu cầu.
+   * @param requireAll Nếu true, yêu cầu tất cả roles (AND logic). Nếu false, yêu cầu ít nhất một role (OR logic).
+   * @returns `true` nếu người dùng thỏa mãn yêu cầu vai trò.
    */
-  private matchRoles(requiredRoles: UserRole[], userRoles: UserRole[]): boolean {
-    // Logic cơ bản: kiểm tra intersection
-    // Có thể được mở rộng ở đây để hỗ trợ thừa kế vai trò trong tương lai
-    // Ví dụ: nếu requiredRoles có 'USER' và userRoles có 'ADMIN', nó nên trả về true.
-    return requiredRoles.some((role) => userRoles.includes(role));
+  private matchRoles(requiredRoles: UserRole[], userRoles: UserRole[], requireAll: boolean): boolean {
+    if (requireAll) {
+      // Logic AND: Người dùng phải có TẤT CẢ các vai trò yêu cầu
+      return requiredRoles.every((role) => userRoles.includes(role));
+    } else {
+      // Logic OR: Người dùng chỉ cần có ÍT NHẤT MỘT trong các vai trò yêu cầu
+      return requiredRoles.some((role) => userRoles.includes(role));
+    }
   }
 }

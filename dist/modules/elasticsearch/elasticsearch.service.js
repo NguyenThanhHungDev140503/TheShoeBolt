@@ -230,6 +230,19 @@ let ElasticsearchService = ElasticsearchService_1 = class ElasticsearchService {
             throw error;
         }
     }
+    async deleteUser(userId) {
+        try {
+            const result = await this.client.delete({
+                index: `${this.indexPrefix}users`,
+                id: userId,
+            });
+            return result;
+        }
+        catch (error) {
+            this.logger.error(`Error deleting user with ID ${userId} from Elasticsearch`, error);
+            throw error;
+        }
+    }
     async searchUsers(query, options = {}) {
         const { from = 0, size = 10 } = options;
         try {

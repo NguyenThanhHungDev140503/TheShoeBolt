@@ -16,7 +16,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ChatController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const clerk_auth_guard_1 = require("../Infracstructre/clerk/guards/clerk-auth.guard");
+const clerk_auth_guard_1 = require("../Infrastructure/clerk/guards/clerk-auth.guard");
 const chat_service_1 = require("./chat.service");
 const create_chat_message_dto_1 = require("./dto/create-chat-message.dto");
 const create_chat_room_dto_1 = require("./dto/create-chat-room.dto");

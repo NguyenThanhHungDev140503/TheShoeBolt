@@ -17,7 +17,7 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const payments_service_1 = require("./payments.service");
 const create_payment_dto_1 = require("./dto/create-payment.dto");
-const clerk_auth_guard_1 = require("../Infracstructre/clerk/guards/clerk-auth.guard");
+const clerk_auth_guard_1 = require("../Infrastructure/clerk/guards/clerk-auth.guard");
 let PaymentsController = class PaymentsController {
     constructor(paymentsService) {
         this.paymentsService = paymentsService;

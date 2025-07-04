@@ -17,7 +17,10 @@ export declare class ElasticsearchService implements OnModuleInit {
         errors: boolean;
     }>;
     searchChatMessages(query: any, options?: any): Promise<{
-        hits: any[];
+        hits: {
+            id: string;
+            score: number;
+        }[];
         total: number | import("@elastic/elasticsearch/lib/api/types").SearchTotalHits;
     }>;
     searchChatHistory(params: {
@@ -29,12 +32,19 @@ export declare class ElasticsearchService implements OnModuleInit {
         from?: number;
         size?: number;
     }): Promise<{
-        hits: any[];
+        hits: {
+            id: string;
+            score: number;
+        }[];
         total: number | import("@elastic/elasticsearch/lib/api/types").SearchTotalHits;
     }>;
     indexUser(user: any): Promise<import("@elastic/elasticsearch/lib/api/types").WriteResponseBase>;
+    deleteUser(userId: string): Promise<import("@elastic/elasticsearch/lib/api/types").WriteResponseBase>;
     searchUsers(query: string, options?: any): Promise<{
-        hits: any[];
+        hits: {
+            id: string;
+            score: number;
+        }[];
         total: number | import("@elastic/elasticsearch/lib/api/types").SearchTotalHits;
     }>;
     checkHealth(): Promise<{

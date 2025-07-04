@@ -20,47 +20,76 @@ let RolesGuard = RolesGuard_1 = class RolesGuard {
         this.logger = new common_1.Logger(RolesGuard_1.name);
     }
     canActivate(context) {
-        const requiredRoles = this.reflector.getAllAndOverride(roles_decorator_1.ROLES_KEY, [
+        const rolesAll = this.reflector.getAllAndOverride(roles_decorator_1.ROLES_ALL_KEY, [
             context.getHandler(),
             context.getClass(),
         ]);
+        const rolesAny = this.reflector.getAllAndOverride(roles_decorator_1.ROLES_ANY_KEY, [
+            context.getHandler(),
+            context.getClass(),
+        ]);
+        const rolesLegacy = this.reflector.getAllAndOverride(roles_decorator_1.ROLES_KEY, [
+            context.getHandler(),
+            context.getClass(),
+        ]);
+        let requiredRoles = null;
+        let requireAll = false;
+        if (rolesAll && rolesAll.length > 0) {
+            requiredRoles = rolesAll;
+            requireAll = true;
+        }
+        else if (rolesAny && rolesAny.length > 0) {
+            requiredRoles = rolesAny;
+            requireAll = false;
+        }
+        else if (rolesLegacy && rolesLegacy.length > 0) {
+            requiredRoles = rolesLegacy;
+            requireAll = true;
+        }
         if (!requiredRoles || requiredRoles.length === 0) {
-            this.logger.warn('RolesGuard được áp dụng cho endpoint không có @Roles decorator. Từ chối truy cập theo nguyên tắc fail-safe.');
+            this.logger.warn('RolesGuard được áp dụng cho endpoint không có role decorator. Từ chối truy cập theo nguyên tắc fail-safe.');
             throw new common_1.ForbiddenException('Access denied: No role requirements specified for this endpoint.');
         }
         const request = context.switchToHttp().getRequest();
-        const user = request.user;
-        if (!user) {
-            this.logger.error('User object is missing in RolesGuard. Ensure an authentication guard runs before it.');
+        const clerkUser = request.clerkUser;
+        if (!clerkUser) {
+            this.logger.error('ClerkUser object is missing in RolesGuard. Ensure ClerkAuthGuard runs before it.');
             throw new common_1.InternalServerErrorException('User authentication data is not available.');
         }
-        const userRoles = this.extractUserRoles(user);
+        const userRoles = this.extractUserRoles(clerkUser);
         if (!userRoles || userRoles.length === 0) {
-            this.logger.warn(`User ${user.id || 'unknown'} không có vai trò nào được gán.`);
+            this.logger.warn(`User ${clerkUser.userId ?? 'unknown'} không có vai trò nào được gán.`);
             throw new common_1.ForbiddenException('You have not been assigned any roles.');
         }
-        const hasPermission = this.matchRoles(requiredRoles, userRoles);
+        const hasPermission = this.matchRoles(requiredRoles, userRoles, requireAll);
         if (!hasPermission) {
-            this.logger.warn(`User ${user.id || 'unknown'} với roles [${userRoles.join(', ')}] không có quyền truy cập endpoint yêu cầu roles [${requiredRoles.join(', ')}].`);
+            const logicType = requireAll ? 'ALL' : 'ANY';
+            this.logger.warn(`User ${clerkUser.userId ?? 'unknown'} với roles [${userRoles.join(', ')}] không có quyền truy cập endpoint yêu cầu ${logicType} roles [${requiredRoles.join(', ')}].`);
             throw new common_1.ForbiddenException('You do not have the required permissions to access this resource.');
         }
-        this.logger.debug(`User ${user.id || 'unknown'} được phép truy cập với roles [${userRoles.join(', ')}].`);
+        this.logger.debug(`User ${clerkUser.userId ?? 'unknown'} được phép truy cập với roles [${userRoles.join(', ')}].`);
         return true;
     }
-    extractUserRoles(user) {
-        if (!user.publicMetadata) {
+    extractUserRoles(clerkUser) {
+        if (!clerkUser.claims?.public_metadata) {
             return [];
         }
-        if (user.publicMetadata.roles && Array.isArray(user.publicMetadata.roles)) {
-            return user.publicMetadata.roles;
+        const publicMetadata = clerkUser.claims.public_metadata;
+        if (publicMetadata.roles && Array.isArray(publicMetadata.roles)) {
+            return publicMetadata.roles;
         }
-        if (user.publicMetadata.role) {
-            return [user.publicMetadata.role];
+        if (publicMetadata.role) {
+            return [publicMetadata.role];
         }
         return [];
     }
-    matchRoles(requiredRoles, userRoles) {
-        return requiredRoles.some((role) => userRoles.includes(role));
+    matchRoles(requiredRoles, userRoles, requireAll) {
+        if (requireAll) {
+            return requiredRoles.every((role) => userRoles.includes(role));
+        }
+        else {
+            return requiredRoles.some((role) => userRoles.includes(role));
+        }
     }
 };
 exports.RolesGuard = RolesGuard;
