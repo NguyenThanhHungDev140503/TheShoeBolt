@@ -335,14 +335,15 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
     ```typescript
     // src/modules/Infrastructure/clerk/clerk.session.service.ts
     import { Inject, Injectable, Logger, NotFoundException, ForbiddenException, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
-    //...
-    
+    import { ClerkClient } from '@clerk/backend';
+    import { CLERK_CLIENT } from './providers/clerk-client.provider';
+
     @Injectable()
     export class ClerkSessionService {
       private readonly logger = new Logger(ClerkSessionService.name);
-    
+
       constructor(@Inject(CLERK_CLIENT) private readonly clerkClient: ClerkClient) {}
-    
+
       async getSessionList(userId: string): Promise<Session[]> {
         try {
           this.logger.debug(`Attempting to get sessions for user: ${userId}`);
@@ -351,18 +352,65 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
           return sessions;
         } catch (error) {
           this.logger.error(`Failed to get sessions for user ${userId}:`, error.stack);
-          if (error.status === 404) {
+
+          // Kiểm tra error format từ Clerk API - có thể là error.status hoặc error.response?.status
+          const statusCode = error.status || error.response?.status || error.statusCode;
+
+          if (statusCode === 404) {
             throw new NotFoundException(`User with ID ${userId} not found.`);
           }
-          if (error.status === 403) {
+          if (statusCode === 403) {
             throw new ForbiddenException(`Access denied to retrieve sessions for user ${userId}.`);
           }
+          if (statusCode === 401) {
+            throw new UnauthorizedException(`Authentication failed for user ${userId}.`);
+          }
+
+          // Log chi tiết error để debugging
+          this.logger.error(`Unexpected error details:`, {
+            message: error.message,
+            status: statusCode,
+            response: error.response?.data,
+            stack: error.stack
+          });
+
           throw new InternalServerErrorException('An unexpected error occurred while retrieving user sessions.');
         }
       }
-      
-      // Áp dụng mô hình try-catch tương tự trong ClerkSessionService cho các phương thức khác như revokeSession, ..... .
-      
+
+      async revokeSession(sessionId: string) {
+        try {
+          this.logger.debug(`Attempting to revoke session: ${sessionId}`);
+          const revokedSession = await this.clerkClient.sessions.revokeSession(sessionId);
+          this.logger.debug(`Successfully revoked session: ${sessionId}`);
+          return revokedSession;
+        } catch (error) {
+          this.logger.error(`Failed to revoke session ${sessionId}:`, error.stack);
+
+          const statusCode = error.status || error.response?.status || error.statusCode;
+
+          if (statusCode === 404) {
+            throw new NotFoundException(`Session with ID ${sessionId} not found.`);
+          }
+          if (statusCode === 403) {
+            throw new ForbiddenException(`Access denied to revoke session ${sessionId}.`);
+          }
+          if (statusCode === 401) {
+            throw new UnauthorizedException(`Authentication failed for session ${sessionId}.`);
+          }
+
+          this.logger.error(`Unexpected error details:`, {
+            message: error.message,
+            status: statusCode,
+            response: error.response?.data,
+            stack: error.stack
+          });
+
+          throw new InternalServerErrorException('An unexpected error occurred while revoking session.');
+        }
+      }
+
+      // Áp dụng mô hình try-catch tương tự cho tất cả các phương thức khác
     }
     ```
 *   **Kế hoạch Kiểm thử:**
@@ -450,41 +498,71 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
 *   **Giải pháp Kỹ thuật:**
     1.  **Cài đặt và Cấu hình `nestjs-throttler`:**
         ```bash
-        npm install @nestjs/throttler
+        # Dependency đã có trong package.json: "@nestjs/throttler": "^5.0.1"
+        # Không cần cài đặt thêm
         ```
     2.  **Import và Cấu hình `ThrottlerModule`:** Trong `app.module.ts`, thiết lập giới hạn mặc định và đăng ký `ThrottlerGuard` trên toàn cục.
         ```typescript
         // src/app.module.ts
         import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
         import { APP_GUARD } from '@nestjs/core';
-        
+
         @Module({
           imports: [
+            // ... existing imports
             ThrottlerModule.forRoot([{
-              ttl: 60000, // 1 phút
+              name: 'default',
+              ttl: 60000, // 1 phút (60 giây)
               limit: 20,  // 20 yêu cầu mỗi phút
             }]),
-            // ...
+            // ... other imports
           ],
           providers: [
+            // ... existing providers
             {
               provide: APP_GUARD,
               useClass: ThrottlerGuard,
             },
-            // ...
+            // ... other providers
           ],
         })
         export class AppModule {}
         ```
-    3.  **Tùy chỉnh Giới hạn cho Endpoint Cụ thể (Tùy chọn):** Áp dụng giới hạn chặt chẽ hơn cho các endpoint đặc biệt nhạy cảm.
+    3.  **Tùy chỉnh Giới hạn cho Endpoint Cụ thể:** Áp dụng giới hạn chặt chẽ hơn cho các endpoint đặc biệt nhạy cảm.
         ```typescript
         // src/modules/Infrastructure/clerk/clerk.controller.ts
         import { Throttle } from '@nestjs/throttler';
-        
-        @Delete('sessions/:sessionId')
-        @Throttle({ default: { limit: 5, ttl: 60000 } }) // Ghi đè: 5 yêu cầu/phút
-        async revokeSession(@Param() params: SessionIdParamDto) {
-          // ...
+        import { SessionIdParamDto, UserIdParamDto } from './dto/clerk-params.dto';
+
+        @Controller('clerk')
+        @UseGuards(ClerkAuthGuard) // Existing guard
+        export class ClerkController {
+
+          @Delete('sessions/:sessionId')
+          @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 yêu cầu/phút cho sensitive operations
+          @HttpCode(HttpStatus.NO_CONTENT)
+          async revokeSession(@Param() params: SessionIdParamDto) {
+            await this.clerkSessionService.revokeSession(params.sessionId);
+            return;
+          }
+
+          @Delete('sessions')
+          @Throttle({ default: { limit: 3, ttl: 60000 } }) // 3 yêu cầu/phút cho revoke all
+          @HttpCode(HttpStatus.NO_CONTENT)
+          async revokeAllSessions(@Request() req) {
+            await this.clerkSessionService.revokeAllUserSessions(req.user.id);
+            return;
+          }
+
+          @Delete('admin/users/:userId/sessions')
+          @UseGuards(ClerkAuthGuard, RolesGuard)
+          @Roles(UserRole.ADMIN)
+          @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 yêu cầu/phút cho admin operations
+          @HttpCode(HttpStatus.NO_CONTENT)
+          async revokeAllUserSessions(@Param() params: UserIdParamDto) {
+            await this.clerkSessionService.revokeAllUserSessions(params.userId);
+            return;
+          }
         }
         ```
 *   **Kế hoạch Kiểm thử:**
@@ -505,89 +583,389 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
     1.  **Cài đặt các thư viện cần thiết:**
         ```bash
         npm install svix raw-body
+        npm install --save-dev @types/raw-body
         ```
-    2.  **Kích hoạt Raw Body Parser:** Cần có `rawBody` để xác thực chữ ký webhook. Cấu hình trong `main.ts`.
+    2.  **Cấu hình Raw Body Parser:** Cần có `rawBody` để xác thực chữ ký webhook. Merge với existing setup trong `main.ts`.
         ```typescript
         // src/main.ts
+        import { NestFactory } from '@nestjs/core';
+        import { ValidationPipe, Logger } from '@nestjs/common';
+        import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+        import { ConfigService } from '@nestjs/config';
+        import * as helmet from 'helmet';
+        import * as compression from 'compression';
+        import * as express from 'express';
+        import { AppModule } from './app.module';
+        import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+        import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+        import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+
         async function bootstrap() {
-            const app = await NestFactory.create(AppModule, {
-                bodyParser: false, // Tắt body parser mặc định
-            });
-            
-            const rawBodyBuffer = (req, res, buf, encoding) => {
-                if (buf && buf.length) {
-                    req.rawBody = buf.toString(encoding || 'utf8');
-                    req.rawBodyBuffer = buf;
-                }
-            };
-        
-            app.use(json({ verify: rawBodyBuffer }));
-            app.use(urlencoded({ verify: rawBodyBuffer, extended: true }));
-        
-            // ... các cấu hình khác như global pipes
-            await app.listen(3000);
+          const app = await NestFactory.create(AppModule);
+          const configService = app.get(ConfigService);
+          const logger = new Logger('Bootstrap');
+
+          // Security middleware
+          app.use(helmet());
+          app.use(compression());
+
+          // Global prefix
+          app.setGlobalPrefix('api/v1');
+
+          // CORS configuration
+          app.enableCors({
+            origin: configService.get('CORS_ORIGIN') || 'http://localhost:3000',
+            credentials: true,
+          });
+
+          // ✅ WEBHOOK RAW BODY PARSER - Chỉ cho webhook endpoints
+          app.use('/api/v1/webhooks/clerk', express.raw({ type: 'application/json' }));
+
+          // Global pipes (existing)
+          app.useGlobalPipes(
+            new ValidationPipe({
+              whitelist: true,
+              forbidNonWhitelisted: true,
+              transform: true,
+              transformOptions: {
+                enableImplicitConversion: true,
+              },
+            }),
+          );
+
+          // Global filters and interceptors (existing)
+          app.useGlobalFilters(new AllExceptionsFilter());
+          app.useGlobalInterceptors(new LoggingInterceptor());
+          app.useGlobalInterceptors(new TransformInterceptor());
+
+          // Swagger documentation (existing)
+          if (configService.get('NODE_ENV') !== 'production') {
+            const config = new DocumentBuilder()
+              .setTitle('NestJS Backend API')
+              .setDescription('Robust backend system with PostgreSQL, Redis, RabbitMQ, Stripe, and Resend')
+              .setVersion('1.0')
+              .addBearerAuth()
+              .addTag('Authentication')
+              .addTag('Users')
+              .addTag('Payments')
+              .addTag('Emails')
+              .addTag('Webhooks')
+              .build();
+
+            const document = SwaggerModule.createDocument(app, config);
+            SwaggerModule.setup('api/docs', app, document);
+          }
+
+          const port = configService.get('PORT') || 3000;
+          await app.listen(port);
+          logger.log(`Application is running on: http://localhost:${port}`);
         }
+        bootstrap();
         ```
-    3.  **Tạo Webhook Controller:**
+    3.  **Tạo Webhook Module và Controller:**
+        ```typescript
+        // src/modules/webhooks/webhooks.module.ts
+        import { Module } from '@nestjs/common';
+        import { ConfigModule } from '@nestjs/config';
+        import { ClerkWebhookController } from './clerk-webhook.controller';
+        import { UsersModule } from '../users/users.module';
+
+        @Module({
+          imports: [ConfigModule, UsersModule],
+          controllers: [ClerkWebhookController],
+        })
+        export class WebhooksModule {}
+        ```
+
         ```typescript
         // src/modules/webhooks/clerk-webhook.controller.ts
-        import { Controller, Post, Req, Res, Headers, BadRequestException, Logger } from '@nestjs/common';
+        import { Controller, Post, Req, Res, Headers, BadRequestException, Logger, HttpStatus } from '@nestjs/common';
         import { Request, Response } from 'express';
         import { Webhook } from 'svix';
-        import { ConfigService } from '@nestjs/config';
-        import { UsersService } from 'src/modules/users/users.service';
-        
+        import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+        import { EnvConfigService } from '../../config/env.config';
+        import { UsersService } from '../users/users.service';
+
+        @ApiTags('Webhooks')
         @Controller('webhooks')
         export class ClerkWebhookController {
           private readonly logger = new Logger(ClerkWebhookController.name);
-        
+
           constructor(
-            private readonly configService: ConfigService,
+            private readonly envConfig: EnvConfigService,
             private readonly usersService: UsersService,
           ) {}
-        
+
           @Post('clerk')
+          @ApiOperation({ summary: 'Handle Clerk webhook events' })
+          @ApiResponse({ status: 200, description: 'Webhook processed successfully' })
+          @ApiResponse({ status: 400, description: 'Invalid webhook signature' })
           async handleClerkWebhook(@Headers() headers, @Req() req: Request, @Res() res: Response) {
-            const webhookSecret = this.configService.get<string>('CLERK_WEBHOOK_SECRET');
+            const webhookSecret = this.envConfig.clerk.webhookSecret;
             if (!webhookSecret) {
               this.logger.error('Clerk webhook secret is not configured.');
-              throw new Error('Webhook secret is not configured.');
+              return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+                error: 'Webhook secret not configured'
+              });
             }
-            
+
             try {
-              const payload = (req as any).rawBody;
+              // Get raw body from express.raw() middleware
+              const payload = req.body;
+              const payloadString = payload.toString();
+
               const svixHeaders = {
                 'svix-id': headers['svix-id'] as string,
                 'svix-timestamp': headers['svix-timestamp'] as string,
                 'svix-signature': headers['svix-signature'] as string,
               };
-        
+
+              // Verify webhook signature
               const wh = new Webhook(webhookSecret);
-              const evt = wh.verify(payload, svixHeaders) as any;
-        
-              this.logger.log(`Webhook with type ${evt.type} received`);
-        
+              const evt = wh.verify(payloadString, svixHeaders) as any;
+
+              this.logger.log(`Webhook event received: ${evt.type} for ${evt.data?.id || 'unknown'}`);
+
+              // Process webhook events
               switch (evt.type) {
-              case 'user.created':
-                await this.authService.syncUserFromClerk(evt.data);
-                break;
-              case 'user.updated':
-                await this.authService.updateUserFromClerk(evt.data);
-                break;
-              case 'user.deleted':
-                await this.authService.deleteUser(evt.data.id);
-                break;
-            }
-              
-              res.status(200).json({ message: 'Webhook processed' });
+                case 'user.created':
+                  await this.handleUserCreated(evt.data);
+                  break;
+                case 'user.updated':
+                  await this.handleUserUpdated(evt.data);
+                  break;
+                case 'user.deleted':
+                  await this.handleUserDeleted(evt.data);
+                  break;
+                case 'session.created':
+                  await this.handleSessionCreated(evt.data);
+                  break;
+                case 'session.ended':
+                  await this.handleSessionEnded(evt.data);
+                  break;
+                default:
+                  this.logger.warn(`Unhandled webhook event type: ${evt.type}`);
+              }
+
+              return res.status(HttpStatus.OK).json({
+                success: true,
+                message: 'Webhook processed successfully',
+                eventType: evt.type
+              });
+
             } catch (err) {
-              this.logger.error('Error verifying Clerk webhook:', err.message);
-              throw new BadRequestException('Webhook signature verification failed.');
+              this.logger.error('Error processing Clerk webhook:', {
+                error: err.message,
+                stack: err.stack,
+                headers: headers
+              });
+
+              return res.status(HttpStatus.BAD_REQUEST).json({
+                success: false,
+                error: 'Webhook signature verification failed'
+              });
+            }
+          }
+
+          private async handleUserCreated(userData: any) {
+            try {
+              this.logger.debug(`Processing user.created for user: ${userData.id}`);
+              await this.usersService.syncUserFromClerk(userData);
+              this.logger.log(`Successfully synced new user: ${userData.id}`);
+            } catch (error) {
+              this.logger.error(`Failed to sync user.created for ${userData.id}:`, error);
+              throw error;
+            }
+          }
+
+          private async handleUserUpdated(userData: any) {
+            try {
+              this.logger.debug(`Processing user.updated for user: ${userData.id}`);
+              await this.usersService.updateUserFromClerk(userData);
+              this.logger.log(`Successfully updated user: ${userData.id}`);
+            } catch (error) {
+              this.logger.error(`Failed to sync user.updated for ${userData.id}:`, error);
+              throw error;
+            }
+          }
+
+          private async handleUserDeleted(userData: any) {
+            try {
+              this.logger.debug(`Processing user.deleted for user: ${userData.id}`);
+              await this.usersService.deleteUser(userData.id);
+              this.logger.log(`Successfully deleted user: ${userData.id}`);
+            } catch (error) {
+              this.logger.error(`Failed to sync user.deleted for ${userData.id}:`, error);
+              throw error;
+            }
+          }
+
+          private async handleSessionCreated(sessionData: any) {
+            try {
+              this.logger.debug(`Processing session.created for session: ${sessionData.id}`);
+              // Implement session tracking logic if needed
+              this.logger.log(`Session created: ${sessionData.id} for user: ${sessionData.user_id}`);
+            } catch (error) {
+              this.logger.error(`Failed to process session.created for ${sessionData.id}:`, error);
+            }
+          }
+
+          private async handleSessionEnded(sessionData: any) {
+            try {
+              this.logger.debug(`Processing session.ended for session: ${sessionData.id}`);
+              // Implement session cleanup logic if needed
+              this.logger.log(`Session ended: ${sessionData.id} for user: ${sessionData.user_id}`);
+            } catch (error) {
+              this.logger.error(`Failed to process session.ended for ${sessionData.id}:`, error);
             }
           }
         }
         ```
-    4.  **Cập nhật `UsersService`:** Thêm các phương thức để xử lý logic đồng bộ dữ liệu từ Clerk vào CSDL cục bộ.
+    4.  **Cập nhật `app.module.ts`:** Import WebhooksModule vào AppModule.
+        ```typescript
+        // src/app.module.ts
+        import { Module } from '@nestjs/common';
+        // ... other imports
+        import { WebhooksModule } from './modules/webhooks/webhooks.module';
+
+        @Module({
+          imports: [
+            // ... existing imports
+            WebhooksModule,
+            // ... other imports
+          ],
+          // ... rest of module configuration
+        })
+        export class AppModule {}
+        ```
+    5.  **Cập nhật Environment Configuration:** Thêm CLERK_WEBHOOK_SECRET vào env validation.
+        ```typescript
+        // src/config/env.validation.ts
+        export class EnvironmentVariables {
+          // ... existing properties
+
+          @IsString()
+          @IsNotEmpty()
+          CLERK_WEBHOOK_SECRET: string;
+
+          // ... other properties
+        }
+        ```
+    6.  **Cập nhật `UsersService`:** Thêm các phương thức để xử lý logic đồng bộ dữ liệu từ Clerk vào CSDL cục bộ.
+        ```typescript
+        // src/modules/users/users.service.ts
+        import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+        // ... other imports
+
+        @Injectable()
+        export class UsersService {
+          private readonly logger = new Logger(UsersService.name);
+
+          // ... existing methods
+
+          /**
+           * Sync user data from Clerk webhook
+           */
+          async syncUserFromClerk(clerkUserData: any): Promise<void> {
+            try {
+              this.logger.debug(`Syncing user from Clerk: ${clerkUserData.id}`);
+
+              const userData = {
+                clerkId: clerkUserData.id,
+                email: clerkUserData.email_addresses?.[0]?.email_address,
+                firstName: clerkUserData.first_name,
+                lastName: clerkUserData.last_name,
+                profileImageUrl: clerkUserData.profile_image_url,
+                publicMetadata: clerkUserData.public_metadata,
+                privateMetadata: clerkUserData.private_metadata,
+                createdAt: new Date(clerkUserData.created_at),
+                updatedAt: new Date(clerkUserData.updated_at),
+              };
+
+              // Check if user already exists
+              const existingUser = await this.findByClerkId(clerkUserData.id);
+
+              if (existingUser) {
+                this.logger.warn(`User ${clerkUserData.id} already exists, updating instead`);
+                await this.updateUserFromClerk(clerkUserData);
+                return;
+              }
+
+              // Create new user
+              await this.create(userData);
+              this.logger.log(`Successfully synced new user: ${clerkUserData.id}`);
+
+            } catch (error) {
+              this.logger.error(`Failed to sync user from Clerk: ${clerkUserData.id}`, error);
+              throw error;
+            }
+          }
+
+          /**
+           * Update user data from Clerk webhook
+           */
+          async updateUserFromClerk(clerkUserData: any): Promise<void> {
+            try {
+              this.logger.debug(`Updating user from Clerk: ${clerkUserData.id}`);
+
+              const existingUser = await this.findByClerkId(clerkUserData.id);
+              if (!existingUser) {
+                this.logger.warn(`User ${clerkUserData.id} not found, creating instead`);
+                await this.syncUserFromClerk(clerkUserData);
+                return;
+              }
+
+              const updateData = {
+                email: clerkUserData.email_addresses?.[0]?.email_address,
+                firstName: clerkUserData.first_name,
+                lastName: clerkUserData.last_name,
+                profileImageUrl: clerkUserData.profile_image_url,
+                publicMetadata: clerkUserData.public_metadata,
+                privateMetadata: clerkUserData.private_metadata,
+                updatedAt: new Date(clerkUserData.updated_at),
+              };
+
+              await this.update(existingUser.id, updateData);
+              this.logger.log(`Successfully updated user: ${clerkUserData.id}`);
+
+            } catch (error) {
+              this.logger.error(`Failed to update user from Clerk: ${clerkUserData.id}`, error);
+              throw error;
+            }
+          }
+
+          /**
+           * Delete user from Clerk webhook
+           */
+          async deleteUser(clerkUserId: string): Promise<void> {
+            try {
+              this.logger.debug(`Deleting user from Clerk webhook: ${clerkUserId}`);
+
+              const existingUser = await this.findByClerkId(clerkUserId);
+              if (!existingUser) {
+                this.logger.warn(`User ${clerkUserId} not found for deletion`);
+                return;
+              }
+
+              await this.remove(existingUser.id);
+              this.logger.log(`Successfully deleted user: ${clerkUserId}`);
+
+            } catch (error) {
+              this.logger.error(`Failed to delete user from Clerk: ${clerkUserId}`, error);
+              throw error;
+            }
+          }
+
+          /**
+           * Find user by Clerk ID
+           */
+          async findByClerkId(clerkId: string): Promise<any> {
+            // Implementation depends on your database setup
+            // This is a placeholder - adjust according to your User entity
+            return await this.userRepository.findOne({ where: { clerkId } });
+          }
+        }
+        ```
 *   **Kế hoạch Kiểm thử:**
     
     *   **Unit Test:**
