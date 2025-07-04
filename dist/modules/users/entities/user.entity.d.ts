@@ -13,6 +13,9 @@ export declare class User {
     role: UserRole;
     isActive: boolean;
     clerkId: string;
+    profileImageUrl: string;
+    publicMetadata: any;
+    privateMetadata: any;
     payments: Payment[];
     createdAt: Date;
     updatedAt: Date;

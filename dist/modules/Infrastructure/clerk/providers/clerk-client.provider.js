@@ -22,6 +22,7 @@ exports.ClerkClientProvider = {
         return (0, backend_1.createClerkClient)({
             secretKey,
             publishableKey,
+            jwtKey
         });
     },
     inject: [config_1.ConfigService],

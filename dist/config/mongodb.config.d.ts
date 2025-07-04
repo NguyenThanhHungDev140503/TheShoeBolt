@@ -1,5 +1,2 @@
-export declare const mongodbConfig: (() => {
-    uri: string;
-}) & import("@nestjs/config").ConfigFactoryKeyHost<{
-    uri: string;
-}>;
+import { MongodbConfig } from './env.types';
+export declare const mongodbConfig: (() => MongodbConfig) & import("@nestjs/config").ConfigFactoryKeyHost<MongodbConfig>;

@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CacheModule } from '@nestjs/cache-manager';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import { redisStore } from 'cache-manager-redis-yet';
+import { APP_GUARD } from '@nestjs/core';
 
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -17,6 +18,7 @@ import { HealthModule } from './modules/health/health.module';
 import { ElasticsearchModule } from './modules/elasticsearch/elasticsearch.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { ClerkModule } from './modules/Infrastructure/clerk/clerk.module';
+import { WebhooksModule } from './modules/webhooks/webhooks.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -99,9 +101,17 @@ import { EnvConfigService } from './config/env.config';
     ElasticsearchModule,
     ChatModule,
     ClerkModule.forRootAsync(),
+    WebhooksModule,
   ],
   controllers: [AppController],
-  providers: [AppService, EnvConfigService],
+  providers: [
+    AppService,
+    EnvConfigService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
   exports: [EnvConfigService],
 })
 export class AppModule {}

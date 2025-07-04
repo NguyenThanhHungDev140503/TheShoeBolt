@@ -4,6 +4,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
 import * as compression from 'compression';
+import * as express from 'express';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -26,6 +27,9 @@ async function bootstrap() {
     origin: configService.get('CORS_ORIGIN') || 'http://localhost:3000',
     credentials: true,
   });
+
+  // ✅ WEBHOOK RAW BODY PARSER - Chỉ cho webhook endpoints
+  app.use('/api/v1/webhooks/clerk', express.raw({ type: 'application/json' }));
 
   // Global pipes
   app.useGlobalPipes(
@@ -55,6 +59,7 @@ async function bootstrap() {
       .addTag('Users')
       .addTag('Payments')
       .addTag('Emails')
+      .addTag('Webhooks')
       .build();
 
     const document = SwaggerModule.createDocument(app, config);

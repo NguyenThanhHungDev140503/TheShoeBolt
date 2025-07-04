@@ -1,11 +1,2 @@
-export declare const redisConfig: (() => {
-    host: string;
-    port: number;
-    password: string;
-    db: number;
-}) & import("@nestjs/config").ConfigFactoryKeyHost<{
-    host: string;
-    port: number;
-    password: string;
-    db: number;
-}>;
+import { RedisConfig } from './env.types';
+export declare const redisConfig: (() => RedisConfig) & import("@nestjs/config").ConfigFactoryKeyHost<RedisConfig>;
