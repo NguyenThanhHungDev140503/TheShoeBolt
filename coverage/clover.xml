@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1751541629311" clover="3.2.0">
-  <project timestamp="1751541629311" name="All files">
-    <metrics statements="225" coveredstatements="133" conditionals="53" coveredconditionals="28" methods="39" coveredmethods="18" elements="317" coveredelements="179" complexity="0" loc="225" ncloc="225" packages="7" files="9" classes="9"/>
+<coverage generated="1751607969190" clover="3.2.0">
+  <project timestamp="1751607969190" name="All files">
+    <metrics statements="225" coveredstatements="213" conditionals="53" coveredconditionals="43" methods="39" coveredmethods="31" elements="317" coveredelements="287" complexity="0" loc="225" ncloc="225" packages="7" files="9" classes="9"/>
     <package name="Infrastructure.clerk">
-      <metrics statements="84" coveredstatements="38" conditionals="5" coveredconditionals="0" methods="18" coveredmethods="9"/>
+      <metrics statements="84" coveredstatements="83" conditionals="5" coveredconditionals="5" methods="18" coveredmethods="17"/>
       <file name="clerk.controller.ts" path="/media/nguyenthanhhung/Code/TheShoeBolt/src/modules/Infrastructure/clerk/clerk.controller.ts">
         <metrics statements="24" coveredstatements="24" conditionals="0" coveredconditionals="0" methods="6" coveredmethods="6"/>
         <line num="1" count="2" type="stmt"/>
@@ -39,121 +39,121 @@
         <line num="4" count="1" type="stmt"/>
         <line num="5" count="1" type="stmt"/>
         <line num="6" count="1" type="stmt"/>
-        <line num="14" count="1" type="stmt"/>
-        <line num="16" count="0" type="stmt"/>
-        <line num="34" count="6" type="stmt"/>
-        <line num="41" count="6" type="stmt"/>
+        <line num="17" count="1" type="stmt"/>
+        <line num="19" count="0" type="stmt"/>
+        <line num="45" count="6" type="stmt"/>
+        <line num="52" count="6" type="stmt"/>
       </file>
       <file name="clerk.session.service.ts" path="/media/nguyenthanhhung/Code/TheShoeBolt/src/modules/Infrastructure/clerk/clerk.session.service.ts">
-        <metrics statements="50" coveredstatements="5" conditionals="5" coveredconditionals="0" methods="9" coveredmethods="1"/>
-        <line num="1" count="2" type="stmt"/>
-        <line num="4" count="2" type="stmt"/>
-        <line num="7" count="2" type="stmt"/>
-        <line num="9" count="6" type="stmt"/>
-        <line num="10" count="6" type="stmt"/>
-        <line num="19" count="0" type="stmt"/>
-        <line num="20" count="0" type="stmt"/>
-        <line num="23" count="0" type="stmt"/>
-        <line num="25" count="0" type="stmt"/>
-        <line num="35" count="0" type="stmt"/>
-        <line num="36" count="0" type="stmt"/>
-        <line num="37" count="0" type="stmt"/>
-        <line num="39" count="0" type="stmt"/>
-        <line num="49" count="0" type="stmt"/>
-        <line num="51" count="0" type="stmt"/>
-        <line num="56" count="0" type="stmt"/>
-        <line num="61" count="0" type="stmt"/>
-        <line num="65" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="66" count="0" type="stmt"/>
-        <line num="69" count="0" type="stmt"/>
-        <line num="70" count="0" type="stmt"/>
-        <line num="72" count="0" type="stmt"/>
-        <line num="82" count="0" type="stmt"/>
-        <line num="83" count="0" type="stmt"/>
-        <line num="84" count="0" type="stmt"/>
-        <line num="86" count="0" type="stmt"/>
-        <line num="96" count="0" type="stmt"/>
-        <line num="97" count="0" type="stmt"/>
-        <line num="98" count="0" type="stmt"/>
-        <line num="100" count="0" type="stmt"/>
-        <line num="110" count="0" type="stmt"/>
-        <line num="112" count="0" type="stmt"/>
-        <line num="117" count="0" type="stmt"/>
-        <line num="123" count="0" type="stmt"/>
-        <line num="127" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="128" count="0" type="stmt"/>
-        <line num="131" count="0" type="stmt"/>
-        <line num="132" count="0" type="stmt"/>
-        <line num="135" count="0" type="stmt"/>
-        <line num="137" count="0" type="cond" truecount="0" falsecount="3"/>
-        <line num="138" count="0" type="stmt"/>
-        <line num="142" count="0" type="stmt"/>
-        <line num="144" count="0" type="stmt"/>
-        <line num="156" count="0" type="stmt"/>
-        <line num="166" count="0" type="stmt"/>
-        <line num="168" count="0" type="stmt"/>
-        <line num="171" count="0" type="stmt"/>
-        <line num="172" count="0" type="stmt"/>
-        <line num="175" count="0" type="stmt"/>
-        <line num="177" count="0" type="stmt"/>
+        <metrics statements="50" coveredstatements="50" conditionals="5" coveredconditionals="5" methods="9" coveredmethods="9"/>
+        <line num="1" count="3" type="stmt"/>
+        <line num="4" count="3" type="stmt"/>
+        <line num="7" count="3" type="stmt"/>
+        <line num="9" count="31" type="stmt"/>
+        <line num="10" count="31" type="stmt"/>
+        <line num="19" count="6" type="stmt"/>
+        <line num="20" count="6" type="stmt"/>
+        <line num="23" count="4" type="stmt"/>
+        <line num="25" count="2" type="stmt"/>
+        <line num="35" count="5" type="stmt"/>
+        <line num="36" count="5" type="stmt"/>
+        <line num="37" count="3" type="stmt"/>
+        <line num="39" count="2" type="stmt"/>
+        <line num="49" count="4" type="stmt"/>
+        <line num="51" count="4" type="stmt"/>
+        <line num="56" count="4" type="stmt"/>
+        <line num="61" count="4" type="stmt"/>
+        <line num="65" count="3" type="cond" truecount="1" falsecount="0"/>
+        <line num="66" count="1" type="stmt"/>
+        <line num="69" count="2" type="stmt"/>
+        <line num="70" count="2" type="stmt"/>
+        <line num="72" count="2" type="stmt"/>
+        <line num="82" count="7" type="stmt"/>
+        <line num="83" count="7" type="stmt"/>
+        <line num="84" count="6" type="stmt"/>
+        <line num="86" count="1" type="stmt"/>
+        <line num="96" count="5" type="stmt"/>
+        <line num="97" count="5" type="stmt"/>
+        <line num="98" count="4" type="stmt"/>
+        <line num="100" count="1" type="stmt"/>
+        <line num="110" count="7" type="stmt"/>
+        <line num="112" count="7" type="stmt"/>
+        <line num="117" count="7" type="stmt"/>
+        <line num="123" count="7" type="stmt"/>
+        <line num="127" count="6" type="cond" truecount="1" falsecount="0"/>
+        <line num="128" count="1" type="stmt"/>
+        <line num="131" count="5" type="stmt"/>
+        <line num="132" count="5" type="stmt"/>
+        <line num="135" count="5" type="stmt"/>
+        <line num="137" count="5" type="cond" truecount="3" falsecount="0"/>
+        <line num="138" count="2" type="stmt"/>
+        <line num="142" count="3" type="stmt"/>
+        <line num="144" count="3" type="stmt"/>
+        <line num="156" count="4" type="stmt"/>
+        <line num="166" count="4" type="stmt"/>
+        <line num="168" count="4" type="stmt"/>
+        <line num="171" count="3" type="stmt"/>
+        <line num="172" count="3" type="stmt"/>
+        <line num="175" count="2" type="stmt"/>
+        <line num="177" count="2" type="stmt"/>
       </file>
     </package>
     <package name="Infrastructure.clerk.guards">
-      <metrics statements="32" coveredstatements="7" conditionals="7" coveredconditionals="0" methods="5" coveredmethods="1"/>
+      <metrics statements="32" coveredstatements="32" conditionals="7" coveredconditionals="7" methods="5" coveredmethods="5"/>
       <file name="clerk-auth.guard.ts" path="/media/nguyenthanhhung/Code/TheShoeBolt/src/modules/Infrastructure/clerk/guards/clerk-auth.guard.ts">
-        <metrics statements="32" coveredstatements="7" conditionals="7" coveredconditionals="0" methods="5" coveredmethods="1"/>
-        <line num="1" count="2" type="stmt"/>
-        <line num="11" count="2" type="stmt"/>
-        <line num="12" count="2" type="stmt"/>
-        <line num="15" count="2" type="stmt"/>
-        <line num="16" count="12" type="stmt"/>
-        <line num="19" count="12" type="stmt"/>
-        <line num="20" count="12" type="stmt"/>
-        <line num="24" count="0" type="stmt"/>
-        <line num="26" count="0" type="stmt"/>
-        <line num="28" count="0" type="stmt"/>
-        <line num="31" count="0" type="stmt"/>
-        <line num="36" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="37" count="0" type="stmt"/>
-        <line num="38" count="0" type="stmt"/>
-        <line num="42" count="0" type="stmt"/>
-        <line num="45" count="0" type="stmt"/>
-        <line num="51" count="0" type="stmt"/>
-        <line num="52" count="0" type="stmt"/>
-        <line num="54" count="0" type="stmt"/>
-        <line num="55" count="0" type="stmt"/>
-        <line num="63" count="0" type="stmt"/>
-        <line num="66" count="0" type="stmt"/>
-        <line num="67" count="0" type="stmt"/>
-        <line num="68" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="69" count="0" type="stmt"/>
-        <line num="70" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="71" count="0" type="stmt"/>
-        <line num="76" count="0" type="cond" truecount="0" falsecount="3"/>
-        <line num="77" count="0" type="stmt"/>
-        <line num="78" count="0" type="stmt"/>
-        <line num="80" count="0" type="stmt"/>
-        <line num="83" count="0" type="stmt"/>
+        <metrics statements="32" coveredstatements="32" conditionals="7" coveredconditionals="7" methods="5" coveredmethods="5"/>
+        <line num="1" count="3" type="stmt"/>
+        <line num="11" count="3" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="15" count="3" type="stmt"/>
+        <line num="16" count="25" type="stmt"/>
+        <line num="19" count="25" type="stmt"/>
+        <line num="20" count="25" type="stmt"/>
+        <line num="24" count="16" type="stmt"/>
+        <line num="26" count="16" type="stmt"/>
+        <line num="28" count="16" type="stmt"/>
+        <line num="31" count="16" type="stmt"/>
+        <line num="36" count="13" type="cond" truecount="1" falsecount="0"/>
+        <line num="37" count="3" type="stmt"/>
+        <line num="38" count="3" type="stmt"/>
+        <line num="42" count="10" type="stmt"/>
+        <line num="45" count="8" type="stmt"/>
+        <line num="51" count="8" type="stmt"/>
+        <line num="52" count="8" type="stmt"/>
+        <line num="54" count="8" type="stmt"/>
+        <line num="55" count="8" type="stmt"/>
+        <line num="63" count="16" type="stmt"/>
+        <line num="66" count="16" type="stmt"/>
+        <line num="67" count="16" type="stmt"/>
+        <line num="68" count="33" type="cond" truecount="2" falsecount="0"/>
+        <line num="69" count="32" type="stmt"/>
+        <line num="70" count="1" type="cond" truecount="1" falsecount="0"/>
+        <line num="71" count="1" type="stmt"/>
+        <line num="76" count="16" type="cond" truecount="3" falsecount="0"/>
+        <line num="77" count="1" type="stmt"/>
+        <line num="78" count="2" type="stmt"/>
+        <line num="80" count="1" type="stmt"/>
+        <line num="83" count="16" type="stmt"/>
       </file>
     </package>
     <package name="Infrastructure.clerk.providers">
-      <metrics statements="14" coveredstatements="4" conditionals="3" coveredconditionals="0" methods="1" coveredmethods="0"/>
+      <metrics statements="14" coveredstatements="14" conditionals="3" coveredconditionals="3" methods="1" coveredmethods="1"/>
       <file name="clerk-client.provider.ts" path="/media/nguyenthanhhung/Code/TheShoeBolt/src/modules/Infrastructure/clerk/providers/clerk-client.provider.ts">
-        <metrics statements="14" coveredstatements="4" conditionals="3" coveredconditionals="0" methods="1" coveredmethods="0"/>
-        <line num="2" count="2" type="stmt"/>
-        <line num="3" count="2" type="stmt"/>
-        <line num="5" count="2" type="stmt"/>
-        <line num="7" count="2" type="stmt"/>
-        <line num="10" count="0" type="stmt"/>
-        <line num="11" count="0" type="stmt"/>
-        <line num="12" count="0" type="stmt"/>
-        <line num="14" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="15" count="0" type="stmt"/>
-        <line num="17" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="18" count="0" type="stmt"/>
-        <line num="20" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="21" count="0" type="stmt"/>
-        <line num="24" count="0" type="stmt"/>
+        <metrics statements="14" coveredstatements="14" conditionals="3" coveredconditionals="3" methods="1" coveredmethods="1"/>
+        <line num="2" count="5" type="stmt"/>
+        <line num="3" count="5" type="stmt"/>
+        <line num="5" count="5" type="stmt"/>
+        <line num="7" count="5" type="stmt"/>
+        <line num="10" count="10" type="stmt"/>
+        <line num="11" count="10" type="stmt"/>
+        <line num="12" count="10" type="stmt"/>
+        <line num="14" count="10" type="cond" truecount="1" falsecount="0"/>
+        <line num="15" count="4" type="stmt"/>
+        <line num="17" count="6" type="cond" truecount="1" falsecount="0"/>
+        <line num="18" count="1" type="stmt"/>
+        <line num="20" count="5" type="cond" truecount="1" falsecount="0"/>
+        <line num="21" count="1" type="stmt"/>
+        <line num="24" count="4" type="stmt"/>
       </file>
     </package>
     <package name="auth.decorators">

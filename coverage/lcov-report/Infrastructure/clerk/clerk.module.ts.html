@@ -117,12 +117,32 @@
 <a name='L52'></a><a href='#L52'>52</a>
 <a name='L53'></a><a href='#L53'>53</a>
 <a name='L54'></a><a href='#L54'>54</a>
-<a name='L55'></a><a href='#L55'>55</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -150,6 +170,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -171,12 +199,21 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { DynamicModule, Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ClerkSessionService } from './clerk.session.service';
-import { ClerkController } from './clerk.controller';
-import { ClerkAuthGuard } from './guards/clerk-auth.guard';
-import { ClerkClientProvider, CLERK_CLIENT } from './providers/clerk-client.provider';
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { DynamicModule, Module } from "@nestjs/common";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { ClerkSessionService } from "./clerk.session.service";
+import { ClerkController } from "./clerk.controller";
+import { ClerkAuthGuard } from "./guards/clerk-auth.guard";
+import {
+  ClerkClientProvider,
+  CLERK_CLIENT,
+} from "./providers/clerk-client.provider";
 &nbsp;
 export interface ClerkModuleOptions {
   secretKey: string;
@@ -191,29 +228,37 @@ export class ClerkModule {
       controllers: [ClerkController],
       providers: [
         {
-          provide: 'CLERK_OPTIONS',
+          provide: "CLERK_OPTIONS",
           useValue: options,
         },
         ClerkClientProvider,
         ClerkSessionService,
         ClerkAuthGuard,
       ],
-      exports: [ClerkSessionService, ClerkAuthGuard, 'CLERK_OPTIONS', CLERK_CLIENT],
+      exports: [
+        ClerkSessionService,
+        ClerkAuthGuard,
+        "CLERK_OPTIONS",
+        CLERK_CLIENT,
+      ],
       global: true,
     };
   }
 &nbsp;
-  static forRootAsync(): DynamicModule {
+  static forRootAsync(options?: {
+    useFactory?: (...args: any[]) =&gt; ClerkModuleOptions;
+    inject?: any[];
+  }): DynamicModule {
     return {
       module: ClerkModule,
       imports: [ConfigModule],
       controllers: [ClerkController],
       providers: [
         {
-          provide: 'CLERK_OPTIONS',
+          provide: "CLERK_OPTIONS",
           useFactory: (configService: ConfigService): ClerkModuleOptions =&gt; ({
-            secretKey: configService.get&lt;string&gt;('CLERK_SECRET_KEY'),
-            publishableKey: configService.get&lt;string&gt;('CLERK_PUBLISHABLE_KEY'),
+            secretKey: configService.get&lt;string&gt;("CLERK_SECRET_KEY"),
+            publishableKey: configService.get&lt;string&gt;("CLERK_PUBLISHABLE_KEY"),
           }),
           inject: [ConfigService],
         },
@@ -221,18 +266,24 @@ export class ClerkModule {
         ClerkSessionService,
         ClerkAuthGuard,
       ],
-      exports: [ClerkSessionService, ClerkAuthGuard, 'CLERK_OPTIONS', CLERK_CLIENT],
+      exports: [
+        ClerkSessionService,
+        ClerkAuthGuard,
+        "CLERK_OPTIONS",
+        CLERK_CLIENT,
+      ],
       global: true,
     };
   }
-}</pre></td></tr></table></pre>
+}
+&nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-03T11:20:29.283Z
+                at 2025-07-04T05:46:09.173Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

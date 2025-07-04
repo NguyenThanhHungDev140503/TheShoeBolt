@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">28.57% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>4/14</span>
+                <span class='fraction'>14/14</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/3</span>
+                <span class='fraction'>3/3</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">28.57% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>4/14</span>
+                <span class='fraction'>14/14</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -95,29 +95,29 @@
 <a name='L30'></a><a href='#L30'>30</a>
 <a name='L31'></a><a href='#L31'>31</a>
 <a name='L32'></a><a href='#L32'>32</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -133,25 +133,25 @@ export const CLERK_CLIENT = 'ClerkClient';
 &nbsp;
 export const ClerkClientProvider: Provider = {
   provide: CLERK_CLIENT,
-  useFactory: <span class="fstat-no" title="function not covered" >(c</span>onfigService: ConfigService): ClerkClient =&gt; {
-    const secretKey = <span class="cstat-no" title="statement not covered" >configService.get&lt;string&gt;('CLERK_SECRET_KEY');</span>
-    const publishableKey = <span class="cstat-no" title="statement not covered" >configService.get&lt;string&gt;('CLERK_PUBLISHABLE_KEY');</span>
-    const jwtKey = <span class="cstat-no" title="statement not covered" >configService.get&lt;string&gt;('CLERK_JWT_KEY');</span>
+  useFactory: (configService: ConfigService): ClerkClient =&gt; {
+    const secretKey = configService.get&lt;string&gt;('CLERK_SECRET_KEY');
+    const publishableKey = configService.get&lt;string&gt;('CLERK_PUBLISHABLE_KEY');
+    const jwtKey = configService.get&lt;string&gt;('CLERK_JWT_KEY');
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!secretKey) {</span>
-<span class="cstat-no" title="statement not covered" >      throw new Error('CLERK_SECRET_KEY is not set in environment variables.');</span>
+    if (!secretKey) {
+      throw new Error('CLERK_SECRET_KEY is not set in environment variables.');
     }
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!publishableKey) {</span>
-<span class="cstat-no" title="statement not covered" >      throw new Error('CLERK_PUBLISHABLE_KEY is not set in environment variables.');</span>
+    if (!publishableKey) {
+      throw new Error('CLERK_PUBLISHABLE_KEY is not set in environment variables.');
     }
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!jwtKey) {</span>
-<span class="cstat-no" title="statement not covered" >      throw new Error('CLERK_JWT_KEY is not set in environment variables.');</span>
+    if (!jwtKey) {
+      throw new Error('CLERK_JWT_KEY is not set in environment variables.');
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    return createClerkClient({</span>
+    return createClerkClient({
       secretKey,
       publishableKey,
-      // jwtKey
+      jwtKey
     });
   },
   inject: [ConfigService],
@@ -163,7 +163,7 @@ export const ClerkClientProvider: Provider = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-03T11:20:29.283Z
+                at 2025-07-04T05:46:09.173Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
