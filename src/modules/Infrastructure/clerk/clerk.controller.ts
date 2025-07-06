@@ -6,7 +6,8 @@ import {
   UseGuards,
   Request,
   HttpCode,
-  HttpStatus
+  HttpStatus,
+  BadRequestException
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -28,6 +29,14 @@ export class ClerkController {
   @ApiResponse({ status: 200, description: 'Sessions retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getUserSessions(@Request() req) {
+    // Validate request context
+    if (!req.clerkUser) {
+      throw new BadRequestException('Missing user context in request');
+    }
+    if (!req.clerkUser.userId) {
+      throw new BadRequestException('Missing userId in user context');
+    }
+
     const sessions = await this.clerkSessionService.getSessionList(req.clerkUser.userId);
     return {
       message: 'Sessions retrieved successfully',
@@ -61,6 +70,14 @@ export class ClerkController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 429, description: 'Too Many Requests' })
   async revokeAllSessions(@Request() req) {
+    // Validate request context
+    if (!req.clerkUser) {
+      throw new BadRequestException('Missing user context in request');
+    }
+    if (!req.clerkUser.userId) {
+      throw new BadRequestException('Missing userId in user context');
+    }
+
     const revokedInfo = await this.clerkSessionService.revokeAllUserSessions(req.clerkUser.userId);
     return {
         message: 'All sessions revoked successfully',

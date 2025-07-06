@@ -8,5 +8,30 @@
   },
   "moduleNameMapper": {
     "^src/(.*)$": "<rootDir>/src/$1"
-  }
+  },
+  "displayName": {
+    "name": "🚀 E2E Tests",
+    "color": "magenta"
+  },
+  "testTimeout": 60000,
+  "verbose": true,
+  "silent": false,
+  "reporters": [
+    "<rootDir>/test/reporters/enhanced-reporter.js",
+    "<rootDir>/test/reporters/progress-reporter.js",
+    ["jest-junit", {
+      "outputDirectory": "./coverage",
+      "outputName": "e2e-test-results.xml",
+      "suiteName": "E2E Tests"
+    }]
+  ],
+  "collectCoverageFrom": [
+    "src/**/*.ts",
+    "!src/**/*.spec.ts",
+    "!src/**/*.e2e-spec.ts",
+    "!src/main.ts"
+  ],
+  "coverageDirectory": "./coverage/e2e",
+  "coverageReporters": ["text", "lcov", "html"],
+  "setupFilesAfterEnv": ["<rootDir>/test/jest.setup.ts"]
 }

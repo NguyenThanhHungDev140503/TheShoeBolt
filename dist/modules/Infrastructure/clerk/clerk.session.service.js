@@ -32,7 +32,7 @@ let ClerkSessionService = ClerkSessionService_1 = class ClerkSessionService {
             return sessions;
         }
         catch (error) {
-            this.logger.error(`Failed to get sessions for user ${userId}:`, error.stack);
+            this.logger.error(`Failed to get sessions for user ${userId}`);
             const statusCode = error.status || error.response?.status || error.statusCode;
             if (statusCode === 404) {
                 throw new common_1.NotFoundException(`User with ID ${userId} not found.`);
@@ -47,7 +47,6 @@ let ClerkSessionService = ClerkSessionService_1 = class ClerkSessionService {
                 message: error.message,
                 status: statusCode,
                 response: error.response?.data,
-                stack: error.stack
             });
             throw new common_1.InternalServerErrorException('An unexpected error occurred while retrieving user sessions.');
         }
@@ -60,7 +59,7 @@ let ClerkSessionService = ClerkSessionService_1 = class ClerkSessionService {
             return revokedSession;
         }
         catch (error) {
-            this.logger.error(`Failed to revoke session ${sessionId}:`, error.stack);
+            this.logger.error(`Failed to revoke session ${sessionId}:`);
             const statusCode = error.status ?? error.response?.status ?? error.statusCode;
             if (statusCode === 404) {
                 throw new common_1.NotFoundException(`Session with ID ${sessionId} not found.`);
@@ -75,7 +74,6 @@ let ClerkSessionService = ClerkSessionService_1 = class ClerkSessionService {
                 message: error.message,
                 status: statusCode,
                 response: error.response?.data,
-                stack: error.stack
             });
             throw new common_1.InternalServerErrorException('An unexpected error occurred while revoking session.');
         }
@@ -103,13 +101,12 @@ let ClerkSessionService = ClerkSessionService_1 = class ClerkSessionService {
             return authObject.sessionClaims;
         }
         catch (error) {
-            this.logger.error(`Session token verification failed:`, error.stack);
+            this.logger.error(`Session token verification failed:`);
             if (error instanceof common_1.UnauthorizedException) {
                 throw error;
             }
             this.logger.error(`Unexpected token verification error details:`, {
                 message: error.message,
-                stack: error.stack
             });
             throw new common_1.UnauthorizedException(`Invalid session token: ${error.message}`);
         }
@@ -122,7 +119,7 @@ let ClerkSessionService = ClerkSessionService_1 = class ClerkSessionService {
             return session;
         }
         catch (error) {
-            this.logger.error(`Failed to get session ${sessionId}:`, error.stack);
+            this.logger.error(`Failed to get session ${sessionId}`);
             const statusCode = error.status ?? error.response?.status ?? error.statusCode;
             if (statusCode === 404) {
                 throw new common_1.NotFoundException(`Session with ID ${sessionId} not found.`);
@@ -137,7 +134,6 @@ let ClerkSessionService = ClerkSessionService_1 = class ClerkSessionService {
                 message: error.message,
                 status: statusCode,
                 response: error.response?.data,
-                stack: error.stack
             });
             throw new common_1.InternalServerErrorException('An unexpected error occurred while retrieving session.');
         }
@@ -150,7 +146,7 @@ let ClerkSessionService = ClerkSessionService_1 = class ClerkSessionService {
             return user;
         }
         catch (error) {
-            this.logger.error(`Failed to get user ${userId}:`, error.stack);
+            this.logger.error(`Failed to get user ${userId}`);
             const statusCode = error.status ?? error.response?.status ?? error.statusCode;
             if (statusCode === 404) {
                 throw new common_1.NotFoundException(`User with ID ${userId} not found.`);
@@ -165,7 +161,6 @@ let ClerkSessionService = ClerkSessionService_1 = class ClerkSessionService {
                 message: error.message,
                 status: statusCode,
                 response: error.response?.data,
-                stack: error.stack
             });
             throw new common_1.InternalServerErrorException('An unexpected error occurred while retrieving user.');
         }
@@ -210,7 +205,7 @@ let ClerkSessionService = ClerkSessionService_1 = class ClerkSessionService {
             };
         }
         catch (error) {
-            this.logger.error(`Authentication failed:`, error.stack);
+            this.logger.error(`Authentication failed:`);
             if (error instanceof common_1.NotFoundException ||
                 error instanceof common_1.ForbiddenException ||
                 error instanceof common_1.UnauthorizedException ||
@@ -219,7 +214,6 @@ let ClerkSessionService = ClerkSessionService_1 = class ClerkSessionService {
             }
             this.logger.error(`Unexpected authentication error details:`, {
                 message: error.message,
-                stack: error.stack
             });
             throw new common_1.UnauthorizedException(`Authentication failed: ${error.message}`);
         }
@@ -237,7 +231,7 @@ let ClerkSessionService = ClerkSessionService_1 = class ClerkSessionService {
             return revokedSessions;
         }
         catch (error) {
-            this.logger.error(`Failed to revoke all user sessions for ${userId}:`, error.stack);
+            this.logger.error(`Failed to revoke all user sessions for ${userId}`);
             if (error instanceof common_1.NotFoundException ||
                 error instanceof common_1.ForbiddenException ||
                 error instanceof common_1.UnauthorizedException ||
@@ -246,7 +240,6 @@ let ClerkSessionService = ClerkSessionService_1 = class ClerkSessionService {
             }
             this.logger.error(`Unexpected error details:`, {
                 message: error.message,
-                stack: error.stack
             });
             throw new common_1.InternalServerErrorException('An unexpected error occurred while revoking all user sessions.');
         }

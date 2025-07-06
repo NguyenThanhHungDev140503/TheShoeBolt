@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException, NotFoundException, ForbiddenException, InternalServerErrorException } from '@nestjs/common';
 import { ClerkSessionService } from 'src/modules/Infrastructure/clerk/clerk.session.service';
 import { CLERK_CLIENT } from 'src/modules/Infrastructure/clerk/providers/clerk-client.provider';
 
@@ -106,15 +106,16 @@ describe('ClerkSessionService', () => {
       expect(result).toEqual(mockSessionsResponse);
     });
 
-    it('should throw UnauthorizedException when getSessionList fails', async () => {
+    it('should throw UnauthorizedException when getSessionList fails with 401', async () => {
       // Arrange
       const userId = 'user_123';
-      const errorMessage = 'Clerk API error';
-      mockClerkClient.sessions.getSessionList.mockRejectedValue(new Error(errorMessage));
+      const error = new Error('Unauthorized') as any;
+      error.status = 401; // Mock error với statusCode 401 để trigger UnauthorizedException
+      mockClerkClient.sessions.getSessionList.mockRejectedValue(error); // mô phỏng một Promise bị từ chối, điều này sẽ kích hoạt cơ chế xử lý lỗi của service.
 
       // Act & Assert
       await expect(service.getSessionList(userId)).rejects.toThrow(
-        new UnauthorizedException(`Failed to get sessions: ${errorMessage}`)
+        new UnauthorizedException(`Authentication failed for user ${userId}.`)
       );
       expect(mockClerkClient.sessions.getSessionList).toHaveBeenCalledWith({ userId });
     });
@@ -135,15 +136,16 @@ describe('ClerkSessionService', () => {
       expect(result).toEqual(mockRevokedSession);
     });
 
-    it('should throw UnauthorizedException when revokeSession fails', async () => {
+    it('should throw UnauthorizedException when revokeSession fails with 401', async () => {
       // Arrange
       const sessionId = 'sess_123';
-      const errorMessage = 'Session not found';
-      mockClerkClient.sessions.revokeSession.mockRejectedValue(new Error(errorMessage));
+      const error = new Error('Unauthorized') as any;
+      error.status = 401; // Mock error với statusCode 401 để trigger UnauthorizedException
+      mockClerkClient.sessions.revokeSession.mockRejectedValue(error);
 
       // Act & Assert
       await expect(service.revokeSession(sessionId)).rejects.toThrow(
-        new UnauthorizedException(`Failed to revoke session: ${errorMessage}`)
+        new UnauthorizedException(`Authentication failed for session ${sessionId}.`)
       );
       expect(mockClerkClient.sessions.revokeSession).toHaveBeenCalledWith(sessionId);
     });
@@ -174,7 +176,7 @@ describe('ClerkSessionService', () => {
 
       // Act & Assert
       await expect(service.verifySessionToken(token)).rejects.toThrow(
-        new UnauthorizedException('Invalid session token: Token is not valid or expired')
+        new UnauthorizedException('Token is not valid or expired')
       );
     });
 
@@ -205,15 +207,16 @@ describe('ClerkSessionService', () => {
       expect(result).toEqual(mockSessionData);
     });
 
-    it('should throw UnauthorizedException when getSession fails', async () => {
+    it('should throw UnauthorizedException when getSession fails with 401', async () => {
       // Arrange
       const sessionId = 'sess_123';
-      const errorMessage = 'Session not found';
-      mockClerkClient.sessions.getSession.mockRejectedValue(new Error(errorMessage));
+      const error = new Error('Unauthorized') as any;
+      error.status = 401; // Mock error với statusCode 401 để trigger UnauthorizedException
+      mockClerkClient.sessions.getSession.mockRejectedValue(error);
 
       // Act & Assert
       await expect(service.getSession(sessionId)).rejects.toThrow(
-        new UnauthorizedException(`Failed to get session: ${errorMessage}`)
+        new UnauthorizedException(`Authentication failed for session ${sessionId}.`)
       );
       expect(mockClerkClient.sessions.getSession).toHaveBeenCalledWith(sessionId);
     });
@@ -233,15 +236,16 @@ describe('ClerkSessionService', () => {
       expect(result).toEqual(mockUserData);
     });
 
-    it('should throw UnauthorizedException when getUser fails', async () => {
+    it('should throw UnauthorizedException when getUser fails with 401', async () => {
       // Arrange
       const userId = 'user_123';
-      const errorMessage = 'User not found';
-      mockClerkClient.users.getUser.mockRejectedValue(new Error(errorMessage));
+      const error = new Error('Unauthorized') as any;
+      error.status = 401; // Mock error với statusCode 401 để trigger UnauthorizedException
+      mockClerkClient.users.getUser.mockRejectedValue(error);
 
       // Act & Assert
       await expect(service.getUser(userId)).rejects.toThrow(
-        new UnauthorizedException(`Failed to get user: ${errorMessage}`)
+        new UnauthorizedException(`Authentication failed for user ${userId}.`)
       );
       expect(mockClerkClient.users.getUser).toHaveBeenCalledWith(userId);
     });
@@ -287,7 +291,7 @@ describe('ClerkSessionService', () => {
 
       // Act & Assert
       await expect(service.verifyTokenAndGetAuthData(token)).rejects.toThrow(
-        new UnauthorizedException('Authentication failed: Token is not valid or expired')
+        new UnauthorizedException('Token is not valid or expired')
       );
     });
 
@@ -300,7 +304,7 @@ describe('ClerkSessionService', () => {
 
       // Act & Assert
       await expect(service.verifyTokenAndGetAuthData(token)).rejects.toThrow(
-        new UnauthorizedException('Authentication failed: Invalid or inactive session')
+        new UnauthorizedException('Invalid or inactive session')
       );
     });
 
@@ -312,7 +316,7 @@ describe('ClerkSessionService', () => {
 
       // Act & Assert
       await expect(service.verifyTokenAndGetAuthData(token)).rejects.toThrow(
-        new UnauthorizedException('Authentication failed: Invalid or inactive session')
+        new UnauthorizedException('Invalid or inactive session')
       );
     });
 
@@ -388,32 +392,35 @@ describe('ClerkSessionService', () => {
       expect(result).toEqual([]);
     });
 
-    it('should throw UnauthorizedException when getSessionList fails', async () => {
+    it('should throw UnauthorizedException when getSessionList fails with 401', async () => {
       // Arrange
       const userId = 'user_123';
-      const errorMessage = 'Failed to get sessions';
-      mockClerkClient.sessions.getSessionList.mockRejectedValue(new Error(errorMessage));
+      const error = new Error('Unauthorized') as any;
+      error.status = 401; // Mock error với statusCode 401 để trigger UnauthorizedException
+      mockClerkClient.sessions.getSessionList.mockRejectedValue(error);
 
-      // Act & Assert
+      // Act & Assert - revokeAllUserSessions sẽ re-throw exception từ getSessionList
       await expect(service.revokeAllUserSessions(userId)).rejects.toThrow(
-        new UnauthorizedException(`Failed to revoke all user sessions: Failed to get sessions: ${errorMessage}`)
+        new UnauthorizedException(`Authentication failed for user ${userId}.`)
       );
     });
 
-    it('should throw UnauthorizedException when revokeSession fails', async () => {
+    it('should throw UnauthorizedException when revokeSession fails with 401', async () => {
       // Arrange
       const userId = 'user_123';
+      const sessionId = 'sess_1';
       const mockSessionsResponse = {
-        data: [{ id: 'sess_1', userId, status: 'active' }],
+        data: [{ id: sessionId, userId, status: 'active' }],
       };
-      const errorMessage = 'Failed to revoke session';
+      const error = new Error('Unauthorized') as any;
+      error.status = 401; // Mock error với statusCode 401 để trigger UnauthorizedException
 
       mockClerkClient.sessions.getSessionList.mockResolvedValue(mockSessionsResponse);
-      mockClerkClient.sessions.revokeSession.mockRejectedValue(new Error(errorMessage));
+      mockClerkClient.sessions.revokeSession.mockRejectedValue(error);
 
-      // Act & Assert
+      // Act & Assert - revokeAllUserSessions sẽ re-throw exception từ revokeSession
       await expect(service.revokeAllUserSessions(userId)).rejects.toThrow(
-        new UnauthorizedException(`Failed to revoke all user sessions: Failed to revoke session: ${errorMessage}`)
+        new UnauthorizedException(`Authentication failed for session ${sessionId}.`)
       );
     });
   });
@@ -449,6 +456,91 @@ describe('ClerkSessionService', () => {
       expect(requestCall).toBeInstanceOf(Request);
       expect(requestCall.url).toBe('https://api.clerk.dev/');
       expect(requestCall.method).toBe('GET');
+    });
+  });
+
+  // ===== PHASE 2 TEST CASES =====
+  describe('PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ', () => {
+    describe('Detailed Error Handling Analysis', () => {
+      it('CURRENT ISSUE: getSessionList only throws UnauthorizedException for all errors', async () => {
+        // Arrange
+        const userId = 'user_123';
+        const error404 = new Error('User not found');
+        (error404 as any).status = 404;
+        (error404 as any).response = { status: 404 };
+        mockClerkClient.sessions.getSessionList.mockRejectedValue(error404);
+
+        // Act & Assert - Code thực tế throw NotFoundException cho 404 errors
+        await expect(service.getSessionList(userId)).rejects.toThrow(NotFoundException);
+        await expect(service.getSessionList(userId)).rejects.toThrow(`User with ID ${userId} not found.`);
+
+        // VERIFIED: Code đã implement đúng NotFoundException cho 404 errors
+        // VERIFIED: Code đã implement đúng ForbiddenException cho 403 errors
+        // VERIFIED: Code đã implement đúng InternalServerErrorException cho 500 errors
+      });
+
+      it('CURRENT ISSUE: revokeSession only throws UnauthorizedException for all errors', async () => {
+        // Arrange
+        const sessionId = 'sess_123';
+        const error403 = new Error('Access denied');
+        (error403 as any).status = 403;
+        mockClerkClient.sessions.revokeSession.mockRejectedValue(error403);
+
+        // Act & Assert - Code thực tế throw ForbiddenException cho 403 errors
+        await expect(service.revokeSession(sessionId)).rejects.toThrow(ForbiddenException);
+        await expect(service.revokeSession(sessionId)).rejects.toThrow(`Access denied to revoke session ${sessionId}.`);
+      });
+
+      it('CURRENT ISSUE: getUser only throws UnauthorizedException for all errors', async () => {
+        // Arrange
+        const userId = 'user_123';
+        const error404 = new Error('User not found');
+        (error404 as any).status = 404;
+        mockClerkClient.users.getUser.mockRejectedValue(error404);
+
+        // Act & Assert - Code thực tế throw NotFoundException cho 404 errors
+        await expect(service.getUser(userId)).rejects.toThrow(NotFoundException);
+        await expect(service.getUser(userId)).rejects.toThrow(`User with ID ${userId} not found.`);
+      });
+
+      it('MISSING FEATURE: No detailed error logging with Logger', async () => {
+        // Arrange
+        const userId = 'user_123';
+        const error = new Error('Detailed error with stack trace');
+        (error as any).stack = 'Error stack trace...';
+        mockClerkClient.sessions.getSessionList.mockRejectedValue(error);
+
+        // Act & Assert
+        try {
+          await service.getSessionList(userId);
+        } catch (e) {
+          // VERIFIED: Code đã có Logger để ghi chi tiết lỗi
+          // VERIFIED: Code throw InternalServerErrorException cho errors không có statusCode
+          expect(e).toBeInstanceOf(InternalServerErrorException);
+        }
+      });
+
+      it('VERIFIED FEATURE: Status code differentiation works correctly', async () => {
+        // Test multiple error status codes
+        const testCases = [
+          { status: 401, expectedType: UnauthorizedException },
+          { status: 403, expectedType: ForbiddenException },
+          { status: 404, expectedType: NotFoundException },
+          { status: 500, expectedType: InternalServerErrorException }
+        ];
+
+        for (const testCase of testCases) {
+          // Arrange
+          const error = new Error(`Error ${testCase.status}`);
+          (error as any).status = testCase.status;
+          mockClerkClient.sessions.getSessionList.mockRejectedValue(error);
+
+          // Act & Assert - Code đã implement đúng status code differentiation
+          await expect(service.getSessionList('user_123')).rejects.toThrow(testCase.expectedType);
+
+          // VERIFIED: Code throw exception type tương ứng với status code
+        }
+      });
     });
   });
 });

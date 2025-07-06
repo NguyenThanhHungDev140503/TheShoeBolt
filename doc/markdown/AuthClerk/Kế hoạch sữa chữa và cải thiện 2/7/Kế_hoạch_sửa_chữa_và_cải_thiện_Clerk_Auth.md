@@ -337,13 +337,13 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
     import { Inject, Injectable, Logger, NotFoundException, ForbiddenException, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
     import { ClerkClient } from '@clerk/backend';
     import { CLERK_CLIENT } from './providers/clerk-client.provider';
-
+    
     @Injectable()
     export class ClerkSessionService {
       private readonly logger = new Logger(ClerkSessionService.name);
-
+    
       constructor(@Inject(CLERK_CLIENT) private readonly clerkClient: ClerkClient) {}
-
+    
       async getSessionList(userId: string): Promise<Session[]> {
         try {
           this.logger.debug(`Attempting to get sessions for user: ${userId}`);
@@ -352,10 +352,10 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
           return sessions;
         } catch (error) {
           this.logger.error(`Failed to get sessions for user ${userId}:`, error.stack);
-
+    
           // Kiểm tra error format từ Clerk API - có thể là error.status hoặc error.response?.status
           const statusCode = error.status || error.response?.status || error.statusCode;
-
+    
           if (statusCode === 404) {
             throw new NotFoundException(`User with ID ${userId} not found.`);
           }
@@ -365,7 +365,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
           if (statusCode === 401) {
             throw new UnauthorizedException(`Authentication failed for user ${userId}.`);
           }
-
+    
           // Log chi tiết error để debugging
           this.logger.error(`Unexpected error details:`, {
             message: error.message,
@@ -373,11 +373,11 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
             response: error.response?.data,
             stack: error.stack
           });
-
+    
           throw new InternalServerErrorException('An unexpected error occurred while retrieving user sessions.');
         }
       }
-
+    
       async revokeSession(sessionId: string) {
         try {
           this.logger.debug(`Attempting to revoke session: ${sessionId}`);
@@ -386,9 +386,9 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
           return revokedSession;
         } catch (error) {
           this.logger.error(`Failed to revoke session ${sessionId}:`, error.stack);
-
+    
           const statusCode = error.status || error.response?.status || error.statusCode;
-
+    
           if (statusCode === 404) {
             throw new NotFoundException(`Session with ID ${sessionId} not found.`);
           }
@@ -398,18 +398,18 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
           if (statusCode === 401) {
             throw new UnauthorizedException(`Authentication failed for session ${sessionId}.`);
           }
-
+    
           this.logger.error(`Unexpected error details:`, {
             message: error.message,
             status: statusCode,
             response: error.response?.data,
             stack: error.stack
           });
-
+    
           throw new InternalServerErrorException('An unexpected error occurred while revoking session.');
         }
       }
-
+    
       // Áp dụng mô hình try-catch tương tự cho tất cả các phương thức khác
     }
     ```
@@ -424,8 +424,10 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
 
 #### **Vấn đề 2.2: (Vấn đề #8) Thiếu Xác thực Dữ liệu Đầu vào**
 
-*   **Tóm tắt:** Các controller endpoint chấp nhận tham số như `userId` và `sessionId` trực tiếp mà không qua xác thực, tạo ra các rủi ro bảo mật (ví dụ: injection) và ảnh hưởng đến tính toàn vẹn dữ liệu.
-*   **Phân tích Nguyên nhân Gốc rễ:** Chưa tận dụng các tính năng xác thực sẵn có của NestJS như `class-validator` và `ValidationPipe`.
+* **Tóm tắt:** Các controller endpoint chấp nhận tham số như `userId` và `sessionId` trực tiếp mà không qua xác thực, tạo ra các rủi ro bảo mật (ví dụ: injection) và ảnh hưởng đến tính toàn vẹn dữ liệu.
+
+* **Phân tích Nguyên nhân Gốc rễ:** Chưa tận dụng các tính năng xác thực sẵn có của NestJS như `class-validator` và `ValidationPipe`.
+
 *   **Giải pháp Kỹ thuật:**
     1.  **Kích hoạt `ValidationPipe` Toàn cục:** Trong file `main.ts`, cấu hình `ValidationPipe` để tự động xác thực tất cả DTOs đầu vào.
         ```typescript
@@ -483,11 +485,28 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
           }
         }
         ```
+    
 *   **Kế hoạch Kiểm thử:**
-    *   **E2E Test:**
-        *   Gửi một yêu cầu đến `DELETE /clerk/sessions/invalid-id`. Xác minh rằng máy chủ trả về lỗi `400 Bad Request` cùng với thông báo lỗi rõ ràng.
-        *   Gửi một yêu cầu đến `DELETE /clerk/sessions/sess_validid123`. Xác minh rằng yêu cầu được xử lý (trả về lỗi khác 400, ví dụ 404 nếu session không tồn tại).
-        *   Lặp lại các kịch bản tương tự cho endpoint của `userId`.
+    *   **Unit Test:**
+        *   ClerkController Logic Test:
+            *   should call clerkSessionService.revokeSession with valid sessionId
+            *   should handle service errors properly
+            *   revokeAllUserSessions
+        *   DTO Validation Test:
+            *   SessionIdParamDto Validation
+                *   should reject invalid sessionId format (missing sess_ prefix)
+                *   should reject sessionId with invalid characters
+                *   should reject empty sessionId
+                *   should accept valid sessionId format (sess_xxx)
+            *   UserIdParamDto Validation
+                *   Tương  tự với phần trên
+        *   Kiểm tra DTO Classes Implementation
+            *   should have SessionIdParamDto with proper validation rules
+            *   should have UserIdParamDto with proper validation rules
+        *   Kiểm tra ValidationPipe Configuration
+            *   should have ValidationPipe configured globally in test environment
+        *    Security Risk Assessment - Validation Protection
+            *   ....
 
 ---
 
@@ -506,7 +525,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         // src/app.module.ts
         import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
         import { APP_GUARD } from '@nestjs/core';
-
+        
         @Module({
           imports: [
             // ... existing imports
@@ -533,11 +552,11 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         // src/modules/Infrastructure/clerk/clerk.controller.ts
         import { Throttle } from '@nestjs/throttler';
         import { SessionIdParamDto, UserIdParamDto } from './dto/clerk-params.dto';
-
+        
         @Controller('clerk')
         @UseGuards(ClerkAuthGuard) // Existing guard
         export class ClerkController {
-
+        
           @Delete('sessions/:sessionId')
           @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 yêu cầu/phút cho sensitive operations
           @HttpCode(HttpStatus.NO_CONTENT)
@@ -545,7 +564,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
             await this.clerkSessionService.revokeSession(params.sessionId);
             return;
           }
-
+        
           @Delete('sessions')
           @Throttle({ default: { limit: 3, ttl: 60000 } }) // 3 yêu cầu/phút cho revoke all
           @HttpCode(HttpStatus.NO_CONTENT)
@@ -553,7 +572,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
             await this.clerkSessionService.revokeAllUserSessions(req.user.id);
             return;
           }
-
+        
           @Delete('admin/users/:userId/sessions')
           @UseGuards(ClerkAuthGuard, RolesGuard)
           @Roles(UserRole.ADMIN)
@@ -599,28 +618,28 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
         import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
         import { TransformInterceptor } from './common/interceptors/transform.interceptor';
-
+        
         async function bootstrap() {
           const app = await NestFactory.create(AppModule);
           const configService = app.get(ConfigService);
           const logger = new Logger('Bootstrap');
-
+        
           // Security middleware
           app.use(helmet());
           app.use(compression());
-
+        
           // Global prefix
           app.setGlobalPrefix('api/v1');
-
+        
           // CORS configuration
           app.enableCors({
             origin: configService.get('CORS_ORIGIN') || 'http://localhost:3000',
             credentials: true,
           });
-
+        
           // ✅ WEBHOOK RAW BODY PARSER - Chỉ cho webhook endpoints
           app.use('/api/v1/webhooks/clerk', express.raw({ type: 'application/json' }));
-
+        
           // Global pipes (existing)
           app.useGlobalPipes(
             new ValidationPipe({
@@ -632,12 +651,12 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
               },
             }),
           );
-
+        
           // Global filters and interceptors (existing)
           app.useGlobalFilters(new AllExceptionsFilter());
           app.useGlobalInterceptors(new LoggingInterceptor());
           app.useGlobalInterceptors(new TransformInterceptor());
-
+        
           // Swagger documentation (existing)
           if (configService.get('NODE_ENV') !== 'production') {
             const config = new DocumentBuilder()
@@ -651,11 +670,11 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
               .addTag('Emails')
               .addTag('Webhooks')
               .build();
-
+        
             const document = SwaggerModule.createDocument(app, config);
             SwaggerModule.setup('api/docs', app, document);
           }
-
+        
           const port = configService.get('PORT') || 3000;
           await app.listen(port);
           logger.log(`Application is running on: http://localhost:${port}`);
@@ -669,7 +688,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         import { ConfigModule } from '@nestjs/config';
         import { ClerkWebhookController } from './clerk-webhook.controller';
         import { UsersModule } from '../users/users.module';
-
+        
         @Module({
           imports: [ConfigModule, UsersModule],
           controllers: [ClerkWebhookController],
@@ -685,17 +704,17 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
         import { EnvConfigService } from '../../config/env.config';
         import { UsersService } from '../users/users.service';
-
+        
         @ApiTags('Webhooks')
         @Controller('webhooks')
         export class ClerkWebhookController {
           private readonly logger = new Logger(ClerkWebhookController.name);
-
+        
           constructor(
             private readonly envConfig: EnvConfigService,
             private readonly usersService: UsersService,
           ) {}
-
+        
           @Post('clerk')
           @ApiOperation({ summary: 'Handle Clerk webhook events' })
           @ApiResponse({ status: 200, description: 'Webhook processed successfully' })
@@ -708,24 +727,24 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
                 error: 'Webhook secret not configured'
               });
             }
-
+        
             try {
               // Get raw body from express.raw() middleware
               const payload = req.body;
               const payloadString = payload.toString();
-
+        
               const svixHeaders = {
                 'svix-id': headers['svix-id'] as string,
                 'svix-timestamp': headers['svix-timestamp'] as string,
                 'svix-signature': headers['svix-signature'] as string,
               };
-
+        
               // Verify webhook signature
               const wh = new Webhook(webhookSecret);
               const evt = wh.verify(payloadString, svixHeaders) as any;
-
+        
               this.logger.log(`Webhook event received: ${evt.type} for ${evt.data?.id || 'unknown'}`);
-
+        
               // Process webhook events
               switch (evt.type) {
                 case 'user.created':
@@ -746,27 +765,27 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
                 default:
                   this.logger.warn(`Unhandled webhook event type: ${evt.type}`);
               }
-
+        
               return res.status(HttpStatus.OK).json({
                 success: true,
                 message: 'Webhook processed successfully',
                 eventType: evt.type
               });
-
+        
             } catch (err) {
               this.logger.error('Error processing Clerk webhook:', {
                 error: err.message,
                 stack: err.stack,
                 headers: headers
               });
-
+        
               return res.status(HttpStatus.BAD_REQUEST).json({
                 success: false,
                 error: 'Webhook signature verification failed'
               });
             }
           }
-
+        
           private async handleUserCreated(userData: any) {
             try {
               this.logger.debug(`Processing user.created for user: ${userData.id}`);
@@ -777,7 +796,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
               throw error;
             }
           }
-
+        
           private async handleUserUpdated(userData: any) {
             try {
               this.logger.debug(`Processing user.updated for user: ${userData.id}`);
@@ -788,7 +807,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
               throw error;
             }
           }
-
+        
           private async handleUserDeleted(userData: any) {
             try {
               this.logger.debug(`Processing user.deleted for user: ${userData.id}`);
@@ -799,7 +818,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
               throw error;
             }
           }
-
+        
           private async handleSessionCreated(sessionData: any) {
             try {
               this.logger.debug(`Processing session.created for session: ${sessionData.id}`);
@@ -809,7 +828,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
               this.logger.error(`Failed to process session.created for ${sessionData.id}:`, error);
             }
           }
-
+        
           private async handleSessionEnded(sessionData: any) {
             try {
               this.logger.debug(`Processing session.ended for session: ${sessionData.id}`);
@@ -827,7 +846,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         import { Module } from '@nestjs/common';
         // ... other imports
         import { WebhooksModule } from './modules/webhooks/webhooks.module';
-
+        
         @Module({
           imports: [
             // ... existing imports
@@ -843,11 +862,11 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         // src/config/env.validation.ts
         export class EnvironmentVariables {
           // ... existing properties
-
+        
           @IsString()
           @IsNotEmpty()
           CLERK_WEBHOOK_SECRET: string;
-
+        
           // ... other properties
         }
         ```
@@ -856,20 +875,20 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         // src/modules/users/users.service.ts
         import { Injectable, Logger, NotFoundException } from '@nestjs/common';
         // ... other imports
-
+        
         @Injectable()
         export class UsersService {
           private readonly logger = new Logger(UsersService.name);
-
+        
           // ... existing methods
-
+        
           /**
            * Sync user data from Clerk webhook
            */
           async syncUserFromClerk(clerkUserData: any): Promise<void> {
             try {
               this.logger.debug(`Syncing user from Clerk: ${clerkUserData.id}`);
-
+        
               const userData = {
                 clerkId: clerkUserData.id,
                 email: clerkUserData.email_addresses?.[0]?.email_address,
@@ -881,40 +900,40 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
                 createdAt: new Date(clerkUserData.created_at),
                 updatedAt: new Date(clerkUserData.updated_at),
               };
-
+        
               // Check if user already exists
               const existingUser = await this.findByClerkId(clerkUserData.id);
-
+        
               if (existingUser) {
                 this.logger.warn(`User ${clerkUserData.id} already exists, updating instead`);
                 await this.updateUserFromClerk(clerkUserData);
                 return;
               }
-
+        
               // Create new user
               await this.create(userData);
               this.logger.log(`Successfully synced new user: ${clerkUserData.id}`);
-
+        
             } catch (error) {
               this.logger.error(`Failed to sync user from Clerk: ${clerkUserData.id}`, error);
               throw error;
             }
           }
-
+        
           /**
            * Update user data from Clerk webhook
            */
           async updateUserFromClerk(clerkUserData: any): Promise<void> {
             try {
               this.logger.debug(`Updating user from Clerk: ${clerkUserData.id}`);
-
+        
               const existingUser = await this.findByClerkId(clerkUserData.id);
               if (!existingUser) {
                 this.logger.warn(`User ${clerkUserData.id} not found, creating instead`);
                 await this.syncUserFromClerk(clerkUserData);
                 return;
               }
-
+        
               const updateData = {
                 email: clerkUserData.email_addresses?.[0]?.email_address,
                 firstName: clerkUserData.first_name,
@@ -924,38 +943,38 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
                 privateMetadata: clerkUserData.private_metadata,
                 updatedAt: new Date(clerkUserData.updated_at),
               };
-
+        
               await this.update(existingUser.id, updateData);
               this.logger.log(`Successfully updated user: ${clerkUserData.id}`);
-
+        
             } catch (error) {
               this.logger.error(`Failed to update user from Clerk: ${clerkUserData.id}`, error);
               throw error;
             }
           }
-
+        
           /**
            * Delete user from Clerk webhook
            */
           async deleteUser(clerkUserId: string): Promise<void> {
             try {
               this.logger.debug(`Deleting user from Clerk webhook: ${clerkUserId}`);
-
+        
               const existingUser = await this.findByClerkId(clerkUserId);
               if (!existingUser) {
                 this.logger.warn(`User ${clerkUserId} not found for deletion`);
                 return;
               }
-
+        
               await this.remove(existingUser.id);
               this.logger.log(`Successfully deleted user: ${clerkUserId}`);
-
+        
             } catch (error) {
               this.logger.error(`Failed to delete user from Clerk: ${clerkUserId}`, error);
               throw error;
             }
           }
-
+        
           /**
            * Find user by Clerk ID
            */
@@ -1088,7 +1107,6 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         });
         ```
         
-        
     3.  **Viết Integration Test cho Controllers:**
         
         ```typescript
@@ -1201,7 +1219,6 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
           });
         });
         ```
-        
         
     4.  **Thiết lập ngưỡng Code Coverage:** Đặt mục tiêu độ bao phủ mã nguồn tối thiểu (ví dụ: 80%) và tích hợp vào quy trình CI/CD để đảm bảo chất lượng.
 *   **Kế hoạch Kiểm thử:**

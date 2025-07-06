@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Unit Tests" tests="24" failures="0" errors="0" time="3.526">
+  <testsuite name="ClerkWebhookController - Phase 2 Unit Tests" errors="0" failures="0" skipped="0" timestamp="2025-07-06T01:41:54" time="3.338" tests="24">
+    <testcase classname="ClerkWebhookController - Phase 2 Unit Tests handleClerkWebhook - Main Endpoint should process webhook successfully with valid signature" name="ClerkWebhookController - Phase 2 Unit Tests handleClerkWebhook - Main Endpoint should process webhook successfully with valid signature" time="0.009">
+    </testcase>
+    <testcase classname="ClerkWebhookController - Phase 2 Unit Tests handleClerkWebhook - Main Endpoint should return 500 when webhook secret is not configured" name="ClerkWebhookController - Phase 2 Unit Tests handleClerkWebhook - Main Endpoint should return 500 when webhook secret is not configured" time="0.002">
+    </testcase>
+    <testcase classname="ClerkWebhookController - Phase 2 Unit Tests handleClerkWebhook - Main Endpoint should return 400 when webhook signature verification fails" name="ClerkWebhookController - Phase 2 Unit Tests handleClerkWebhook - Main Endpoint should return 400 when webhook signature verification fails" time="0.015">
+    </testcase>
+    <testcase classname="ClerkWebhookController - Phase 2 Unit Tests handleClerkWebhook - Main Endpoint should handle unhandled webhook event types gracefully" name="ClerkWebhookController - Phase 2 Unit Tests handleClerkWebhook - Main Endpoint should handle unhandled webhook event types gracefully" time="0.002">
+    </testcase>
+    <testcase classname="ClerkWebhookController - Phase 2 Unit Tests Event Handlers - User Events should handle user.created event successfully" name="ClerkWebhookController - Phase 2 Unit Tests Event Handlers - User Events should handle user.created event successfully" time="0.002">
+    </testcase>
+    <testcase classname="ClerkWebhookController - Phase 2 Unit Tests Event Handlers - User Events should handle user.updated event successfully" name="ClerkWebhookController - Phase 2 Unit Tests Event Handlers - User Events should handle user.updated event successfully" time="0.001">
+    </testcase>
+    <testcase classname="ClerkWebhookController - Phase 2 Unit Tests Event Handlers - User Events should handle user.deleted event successfully" name="ClerkWebhookController - Phase 2 Unit Tests Event Handlers - User Events should handle user.deleted event successfully" time="0.002">
+    </testcase>
+    <testcase classname="ClerkWebhookController - Phase 2 Unit Tests Event Handlers - User Events should propagate errors from user event handlers" name="ClerkWebhookController - Phase 2 Unit Tests Event Handlers - User Events should propagate errors from user event handlers" time="0.001">
+    </testcase>
+    <testcase classname="ClerkWebhookController - Phase 2 Unit Tests Event Handlers - Session Events should handle session.created event successfully" name="ClerkWebhookController - Phase 2 Unit Tests Event Handlers - Session Events should handle session.created event successfully" time="0.002">
+    </testcase>
+    <testcase classname="ClerkWebhookController - Phase 2 Unit Tests Event Handlers - Session Events should handle session.ended event successfully" name="ClerkWebhookController - Phase 2 Unit Tests Event Handlers - Session Events should handle session.ended event successfully" time="0.002">
+    </testcase>
+    <testcase classname="UsersService - Webhook Methods Unit Tests findByClerkId should find user by Clerk ID successfully" name="UsersService - Webhook Methods Unit Tests findByClerkId should find user by Clerk ID successfully" time="0.001">
+    </testcase>
+    <testcase classname="UsersService - Webhook Methods Unit Tests findByClerkId should return null when user not found" name="UsersService - Webhook Methods Unit Tests findByClerkId should return null when user not found" time="0.001">
+    </testcase>
+    <testcase classname="UsersService - Webhook Methods Unit Tests syncUserFromClerk should create new user when user does not exist" name="UsersService - Webhook Methods Unit Tests syncUserFromClerk should create new user when user does not exist" time="0.001">
+    </testcase>
+    <testcase classname="UsersService - Webhook Methods Unit Tests syncUserFromClerk should update existing user when user already exists" name="UsersService - Webhook Methods Unit Tests syncUserFromClerk should update existing user when user already exists" time="0.001">
+    </testcase>
+    <testcase classname="UsersService - Webhook Methods Unit Tests syncUserFromClerk should handle errors and rethrow them" name="UsersService - Webhook Methods Unit Tests syncUserFromClerk should handle errors and rethrow them" time="0.001">
+    </testcase>
+    <testcase classname="UsersService - Webhook Methods Unit Tests updateUserFromClerk should update existing user successfully" name="UsersService - Webhook Methods Unit Tests updateUserFromClerk should update existing user successfully" time="0.001">
+    </testcase>
+    <testcase classname="UsersService - Webhook Methods Unit Tests updateUserFromClerk should create user when user does not exist" name="UsersService - Webhook Methods Unit Tests updateUserFromClerk should create user when user does not exist" time="0.001">
+    </testcase>
+    <testcase classname="UsersService - Webhook Methods Unit Tests updateUserFromClerk should handle errors and rethrow them" name="UsersService - Webhook Methods Unit Tests updateUserFromClerk should handle errors and rethrow them" time="0.001">
+    </testcase>
+    <testcase classname="UsersService - Webhook Methods Unit Tests deleteUser should delete existing user successfully" name="UsersService - Webhook Methods Unit Tests deleteUser should delete existing user successfully" time="0.001">
+    </testcase>
+    <testcase classname="UsersService - Webhook Methods Unit Tests deleteUser should handle gracefully when user does not exist" name="UsersService - Webhook Methods Unit Tests deleteUser should handle gracefully when user does not exist" time="0">
+    </testcase>
+    <testcase classname="UsersService - Webhook Methods Unit Tests deleteUser should handle errors and rethrow them" name="UsersService - Webhook Methods Unit Tests deleteUser should handle errors and rethrow them" time="0.001">
+    </testcase>
+    <testcase classname="UsersService - Webhook Methods Unit Tests Error Handling and Edge Cases should handle malformed Clerk user data gracefully" name="UsersService - Webhook Methods Unit Tests Error Handling and Edge Cases should handle malformed Clerk user data gracefully" time="0.001">
+    </testcase>
+    <testcase classname="UsersService - Webhook Methods Unit Tests Error Handling and Edge Cases should handle null/undefined Clerk user data" name="UsersService - Webhook Methods Unit Tests Error Handling and Edge Cases should handle null/undefined Clerk user data" time="0.001">
+    </testcase>
+    <testcase classname="UsersService - Webhook Methods Unit Tests Error Handling and Edge Cases should handle empty string Clerk ID in deleteUser" name="UsersService - Webhook Methods Unit Tests Error Handling and Edge Cases should handle empty string Clerk ID in deleteUser" time="0.001">
+    </testcase>
+  </testsuite>
+</testsuites>
