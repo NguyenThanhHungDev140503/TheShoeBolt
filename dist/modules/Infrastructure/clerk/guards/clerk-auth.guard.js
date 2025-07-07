@@ -32,6 +32,7 @@ let ClerkAuthGuard = ClerkAuthGuard_1 = class ClerkAuthGuard {
                 secretKey: this.configService.get('CLERK_SECRET_KEY'),
             });
             if (!authState.isAuthenticated) {
+                this.logger.error('User not authenticated');
                 throw new common_1.UnauthorizedException('User not authenticated');
             }
             const authObject = authState.toAuth();
@@ -41,6 +42,7 @@ let ClerkAuthGuard = ClerkAuthGuard_1 = class ClerkAuthGuard {
                 orgId: authObject.orgId,
                 claims: authObject.sessionClaims
             };
+            this.logger.debug(`User ${authObject.userId} authenticated`);
             return true;
         }
         catch (error) {

@@ -21,28 +21,33 @@ let ClerkModule = ClerkModule_1 = class ClerkModule {
             controllers: [clerk_controller_1.ClerkController],
             providers: [
                 {
-                    provide: 'CLERK_OPTIONS',
+                    provide: "CLERK_OPTIONS",
                     useValue: options,
                 },
                 clerk_client_provider_1.ClerkClientProvider,
                 clerk_session_service_1.ClerkSessionService,
                 clerk_auth_guard_1.ClerkAuthGuard,
             ],
-            exports: [clerk_session_service_1.ClerkSessionService, clerk_auth_guard_1.ClerkAuthGuard, 'CLERK_OPTIONS', clerk_client_provider_1.CLERK_CLIENT],
+            exports: [
+                clerk_session_service_1.ClerkSessionService,
+                clerk_auth_guard_1.ClerkAuthGuard,
+                "CLERK_OPTIONS",
+                clerk_client_provider_1.CLERK_CLIENT,
+            ],
             global: true,
         };
     }
-    static forRootAsync() {
+    static forRootAsync(options) {
         return {
             module: ClerkModule_1,
             imports: [config_1.ConfigModule],
             controllers: [clerk_controller_1.ClerkController],
             providers: [
                 {
-                    provide: 'CLERK_OPTIONS',
+                    provide: "CLERK_OPTIONS",
                     useFactory: (configService) => ({
-                        secretKey: configService.get('CLERK_SECRET_KEY'),
-                        publishableKey: configService.get('CLERK_PUBLISHABLE_KEY'),
+                        secretKey: configService.get("CLERK_SECRET_KEY"),
+                        publishableKey: configService.get("CLERK_PUBLISHABLE_KEY"),
                     }),
                     inject: [config_1.ConfigService],
                 },
@@ -50,7 +55,12 @@ let ClerkModule = ClerkModule_1 = class ClerkModule {
                 clerk_session_service_1.ClerkSessionService,
                 clerk_auth_guard_1.ClerkAuthGuard,
             ],
-            exports: [clerk_session_service_1.ClerkSessionService, clerk_auth_guard_1.ClerkAuthGuard, 'CLERK_OPTIONS', clerk_client_provider_1.CLERK_CLIENT],
+            exports: [
+                clerk_session_service_1.ClerkSessionService,
+                clerk_auth_guard_1.ClerkAuthGuard,
+                "CLERK_OPTIONS",
+                clerk_client_provider_1.CLERK_CLIENT,
+            ],
             global: true,
         };
     }

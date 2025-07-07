@@ -3,6 +3,7 @@ import { ClerkModuleOptions } from './clerk.module';
 export declare class ClerkSessionService {
     private readonly clerkClient;
     private readonly options;
+    private readonly logger;
     constructor(clerkClient: ClerkClient, options: ClerkModuleOptions);
     getSessionList(userId: string): Promise<import("@clerk/backend/dist/api/resources/Deserializer").PaginatedResourceResponse<import("@clerk/backend").Session[]>>;
     revokeSession(sessionId: string): Promise<import("@clerk/backend").Session>;

@@ -22,7 +22,7 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ nullable: true })
   password: string;
 
   @Column()
@@ -41,8 +41,17 @@ export class User {
   @Column({ default: true })
   isActive: boolean;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, unique: true })
   clerkId: string;
+
+  @Column({ nullable: true })
+  profileImageUrl: string;
+
+  @Column({ type: 'jsonb', nullable: true })
+  publicMetadata: any;
+
+  @Column({ type: 'jsonb', nullable: true })
+  privateMetadata: any;
 
   @OneToMany(() => Payment, (payment) => payment.user)
   payments: Payment[];

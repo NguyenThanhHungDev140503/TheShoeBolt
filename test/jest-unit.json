@@ -10,6 +10,28 @@
     "^src/(.*)$": "<rootDir>/src/$1"
   },
   "setupFilesAfterEnv": ["<rootDir>/test/jest.setup.ts"],
-  "silent": true,
-  "verbose": false
+  "displayName": {
+    "name": "🔬 Unit Tests",
+    "color": "blue"
+  },
+  "verbose": true,
+  "silent": false,
+  "reporters": [
+    "<rootDir>/test/reporters/enhanced-reporter.js",
+    "<rootDir>/test/reporters/progress-reporter.js",
+    "<rootDir>/test/reporters/coverage-reporter.js",
+    ["jest-junit", {
+      "outputDirectory": "./coverage",
+      "outputName": "unit-test-results.xml",
+      "suiteName": "Unit Tests"
+    }]
+  ],
+  "collectCoverageFrom": [
+    "src/**/*.ts",
+    "!src/**/*.spec.ts",
+    "!src/**/*.e2e-spec.ts",
+    "!src/main.ts"
+  ],
+  "coverageDirectory": "./coverage/unit",
+  "coverageReporters": ["text", "lcov", "html"]
 }

@@ -9,6 +9,29 @@
   "moduleNameMapper": {
     "^src/(.*)$": "<rootDir>/src/$1"
   },
-  "displayName": "Component Tests",
-  "testTimeout": 30000
+  "displayName": {
+    "name": "🧩 Component Tests",
+    "color": "green"
+  },
+  "testTimeout": 30000,
+  "verbose": true,
+  "silent": false,
+  "reporters": [
+    "<rootDir>/test/reporters/enhanced-reporter.js",
+    "<rootDir>/test/reporters/progress-reporter.js",
+    ["jest-junit", {
+      "outputDirectory": "./coverage",
+      "outputName": "component-test-results.xml",
+      "suiteName": "Component Tests"
+    }]
+  ],
+  "collectCoverageFrom": [
+    "src/**/*.ts",
+    "!src/**/*.spec.ts",
+    "!src/**/*.e2e-spec.ts",
+    "!src/main.ts"
+  ],
+  "coverageDirectory": "./coverage/component",
+  "coverageReporters": ["text", "lcov", "html"],
+  "setupFilesAfterEnv": ["<rootDir>/test/jest.setup.ts"]
 }

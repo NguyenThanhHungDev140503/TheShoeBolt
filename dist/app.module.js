@@ -14,6 +14,7 @@ const cache_manager_1 = require("@nestjs/cache-manager");
 const nest_winston_1 = require("nest-winston");
 const winston = require("winston");
 const cache_manager_redis_yet_1 = require("cache-manager-redis-yet");
+const core_1 = require("@nestjs/core");
 const database_module_1 = require("./database/database.module");
 const auth_module_1 = require("./modules/auth/auth.module");
 const users_module_1 = require("./modules/users/users.module");
@@ -24,12 +25,15 @@ const health_module_1 = require("./modules/health/health.module");
 const elasticsearch_module_1 = require("./modules/elasticsearch/elasticsearch.module");
 const chat_module_1 = require("./modules/chat/chat.module");
 const clerk_module_1 = require("./modules/Infrastructure/clerk/clerk.module");
+const webhooks_module_1 = require("./modules/webhooks/webhooks.module");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const database_config_1 = require("./config/database.config");
 const redis_config_1 = require("./config/redis.config");
 const elasticsearch_config_1 = require("./config/elasticsearch.config");
 const mongodb_config_1 = require("./config/mongodb.config");
+const env_validation_1 = require("./config/env.validation");
+const env_config_1 = require("./config/env.config");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -40,6 +44,11 @@ exports.AppModule = AppModule = __decorate([
                 isGlobal: true,
                 envFilePath: ['.env.local', '.env'],
                 load: [database_config_1.databaseConfig, redis_config_1.redisConfig, elasticsearch_config_1.elasticsearchConfig, mongodb_config_1.mongodbConfig],
+                validate: env_validation_1.validateEnvironment,
+                validationOptions: {
+                    allowUnknown: false,
+                    abortEarly: false,
+                },
             }),
             nest_winston_1.WinstonModule.forRoot({
                 transports: [
@@ -57,20 +66,24 @@ exports.AppModule = AppModule = __decorate([
                     }),
                 ],
             }),
-            throttler_1.ThrottlerModule.forRoot([
-                {
-                    ttl: 60000,
-                    limit: 100,
-                },
-            ]),
+            throttler_1.ThrottlerModule.forRootAsync({
+                inject: [env_config_1.EnvConfigService],
+                useFactory: (envConfig) => [
+                    {
+                        ttl: envConfig.throttle.ttl,
+                        limit: envConfig.throttle.limit,
+                    },
+                ],
+            }),
             cache_manager_1.CacheModule.registerAsync({
                 isGlobal: true,
-                useFactory: async () => ({
+                inject: [env_config_1.EnvConfigService],
+                useFactory: async (envConfig) => ({
                     store: cache_manager_redis_yet_1.redisStore,
-                    host: process.env.REDIS_HOST || 'localhost',
-                    port: parseInt(process.env.REDIS_PORT) || 6379,
-                    password: process.env.REDIS_PASSWORD,
-                    ttl: 300,
+                    host: envConfig.redis.host,
+                    port: envConfig.redis.port,
+                    password: envConfig.redis.password,
+                    ttl: envConfig.cache.ttl,
                 }),
             }),
             database_module_1.DatabaseModule,
@@ -83,9 +96,18 @@ exports.AppModule = AppModule = __decorate([
             elasticsearch_module_1.ElasticsearchModule,
             chat_module_1.ChatModule,
             clerk_module_1.ClerkModule.forRootAsync(),
+            webhooks_module_1.WebhooksModule,
         ],
         controllers: [app_controller_1.AppController],
-        providers: [app_service_1.AppService],
+        providers: [
+            app_service_1.AppService,
+            env_config_1.EnvConfigService,
+            {
+                provide: core_1.APP_GUARD,
+                useClass: throttler_1.ThrottlerGuard,
+            },
+        ],
+        exports: [env_config_1.EnvConfigService],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

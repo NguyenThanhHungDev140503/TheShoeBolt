@@ -64,10 +64,7 @@ describe('RolesGuard', () => {
 
       expect(() => {
         guard.canActivate(mockExecutionContext as ExecutionContext);
-      }).toThrow(ForbiddenException);
-      expect(() => {
-        guard.canActivate(mockExecutionContext as ExecutionContext);
-      }).toThrow('Access denied: No role requirements specified for this endpoint.');
+      }).toThrow(new ForbiddenException('Access denied: No role requirements specified for this endpoint.'));
     });
 
     it('should throw ForbiddenException when empty roles array is provided', () => {
@@ -75,7 +72,7 @@ describe('RolesGuard', () => {
 
       expect(() => {
         guard.canActivate(mockExecutionContext as ExecutionContext);
-      }).toThrow(ForbiddenException);
+      }).toThrow(new ForbiddenException('Access denied: No role requirements specified for this endpoint.'));
     });
 
     it('should call reflector with correct parameters', () => {
@@ -110,10 +107,7 @@ describe('RolesGuard', () => {
 
       expect(() => {
         guard.canActivate(mockExecutionContext as ExecutionContext);
-      }).toThrow(InternalServerErrorException);
-      expect(() => {
-        guard.canActivate(mockExecutionContext as ExecutionContext);
-      }).toThrow('User authentication data is not available.');
+      }).toThrow(new InternalServerErrorException('User authentication data is not available.'));
     });
 
     it('should throw InternalServerErrorException when user is null', () => {
@@ -131,7 +125,7 @@ describe('RolesGuard', () => {
 
       expect(() => {
         guard.canActivate(mockNullUserContext as ExecutionContext);
-      }).toThrow(InternalServerErrorException);
+      }).toThrow(new InternalServerErrorException('User authentication data is not available.'));
     });
   });
 
@@ -247,10 +241,7 @@ describe('RolesGuard', () => {
 
       expect(() => {
         guard.canActivate(mockExecutionContext as ExecutionContext);
-      }).toThrow(ForbiddenException);
-      expect(() => {
-        guard.canActivate(mockExecutionContext as ExecutionContext);
-      }).toThrow('You have not been assigned any roles.');
+      }).toThrow(new ForbiddenException('You have not been assigned any roles.'));
     });
 
     it('should throw ForbiddenException when user has publicMetadata but no role or roles', () => {
@@ -279,10 +270,7 @@ describe('RolesGuard', () => {
 
       expect(() => {
         guard.canActivate(mockExecutionContext as ExecutionContext);
-      }).toThrow(ForbiddenException);
-      expect(() => {
-        guard.canActivate(mockExecutionContext as ExecutionContext);
-      }).toThrow('You have not been assigned any roles.');
+      }).toThrow(new ForbiddenException('You have not been assigned any roles.'));
     });
 
     it('should return empty array when extractUserRoles is called with publicMetadata but no role/roles', () => {
@@ -355,7 +343,7 @@ describe('RolesGuard', () => {
 
       expect(() => {
         guard.canActivate(mockExecutionContext as ExecutionContext);
-      }).toThrow(ForbiddenException);
+      }).toThrow(new ForbiddenException('You do not have the required permissions to access this resource.'));
     });
   });
 
@@ -409,7 +397,7 @@ describe('RolesGuard', () => {
 
       expect(() => {
         guard.canActivate(mockExecutionContext as ExecutionContext);
-      }).toThrow(ForbiddenException);
+      }).toThrow(new ForbiddenException('You do not have the required permissions to access this resource.'));
     });
   });
 
@@ -451,7 +439,7 @@ describe('RolesGuard', () => {
 
       expect(() => {
         guard.canActivate(mockExecutionContext as ExecutionContext);
-      }).toThrow(ForbiddenException);
+      }).toThrow(new ForbiddenException('You do not have the required permissions to access this resource.'));
     });
 
     it('should allow access when user has all roles required by legacy decorator', () => {

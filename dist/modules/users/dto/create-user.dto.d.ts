@@ -1,8 +1,14 @@
 import { UserRole } from '../entities/user.entity';
 export declare class CreateUserDto {
     email: string;
-    password: string;
+    password?: string;
     firstName: string;
     lastName: string;
     role?: UserRole;
+    clerkId?: string;
+    profileImageUrl?: string;
+    publicMetadata?: any;
+    privateMetadata?: any;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
