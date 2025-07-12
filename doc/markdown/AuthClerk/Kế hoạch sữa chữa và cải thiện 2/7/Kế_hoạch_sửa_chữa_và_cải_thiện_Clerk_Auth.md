@@ -999,366 +999,210 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
 
 ### **Giai đoạn 3: Nâng cao Chất lượng và Kiểm thử (MEDIUM)**
 
-#### **Vấn đề 3.1: (Vấn đề #11) Độ bao phủ Kiểm thử Thấp**
-
-*   **Tóm tắt:** Dự án thiếu một bộ kiểm thử toàn diện, đặc biệt là các unit test cho logic nghiệp vụ phức tạp và integration test cho các luồng xác thực và phân quyền quan trọng. Điều này làm tăng nguy cơ lỗi hồi quy và giảm sự tự tin khi triển khai.
-*   **Phân tích Nguyên nhân Gốc rễ:**
-    *   Tập trung vào việc phát triển tính năng nhanh đã dẫn đến việc bỏ qua việc viết kiểm thử.
-    *   Thiếu thiết lập và quy ước rõ ràng cho việc kiểm thử trong dự án.
-*   **Giải pháp Kỹ thuật:**
-    1.  **Thiết lập và Cấu hình Jest:** Đảm bảo Jest được cấu hình để thu thập thông tin về độ bao phủ mã nguồn và tạo báo cáo.
-        ```json
-        // package.json
-        "scripts": {
-          // ...
-          "test": "jest",
-          "test:watch": "jest --watch",
-          "test:cov": "jest --coverage",
-          "test:e2e": "jest --config ./test/jest-e2e.json"
-        },
-        "jest": {
-          // ...
-          "collectCoverageFrom": [
-            "**/*.(t|j)s"
-          ],
-          "coverageDirectory": "../coverage",
-          // ...
-        }
-        ```
-    2.  **Viết Unit Test cho Services và Guards:**
-        
-        ```typescript
-        // test/unit/clerk-auth.guard.spec.ts
-        describe('ClerkAuthGuard', () => {
-          let guard: ClerkAuthGuard;
-          let configService: ConfigService;
-        
-          beforeEach(async () => {
-            const module = await Test.createTestingModule({
-              providers: [
-                ClerkAuthGuard,
-                {
-                  provide: ConfigService,
-                  useValue: {
-                    get: jest.fn((key: string) => {
-                      const config = {
-                        CLERK_JWT_KEY: 'test-jwt-key',
-                        CLERK_SECRET_KEY: 'test-secret-key',
-                        CLERK_FRONTEND_API_URL: 'https://test.clerk.accounts.dev',
-                      };
-                      return config[key];
-                    }),
-                  },
-                },
-              ],
-            }).compile();
-        
-            guard = module.get<ClerkAuthGuard>(ClerkAuthGuard);
-            configService = module.get<ConfigService>(ConfigService);
-          });
-        
-          describe('canActivate', () => {
-            it('should return true for valid authentication', async () => {
-              const mockContext = createMockExecutionContext({
-                headers: { authorization: 'Bearer valid_token' },
-                cookies: { __session: 'valid_session' },
-              });
-        
-              jest.spyOn(require('@clerk/backend'), 'authenticateRequest')
-                .mockResolvedValue({
-                  sessionId: 'sess_123',
-                  userId: 'user_456',
-                  orgId: null,
-                  claims: { sub: 'user_456' },
-                });
-        
-              const result = await guard.canActivate(mockContext);
-              expect(result).toBe(true);
-              expect(mockContext.switchToHttp().getRequest()['clerkUser']).toBeDefined();
-            });
-        
-            it('should throw UnauthorizedException for invalid token', async () => {
-              const mockContext = createMockExecutionContext({
-                headers: { authorization: 'Bearer invalid_token' },
-              });
-        
-              jest.spyOn(require('@clerk/backend'), 'authenticateRequest')
-                .mockRejectedValue(new Error('Invalid token'));
-        
-              await expect(guard.canActivate(mockContext)).rejects.toThrow(UnauthorizedException);
-            });
-        
-            it('should throw UnauthorizedException when no userId returned', async () => {
-              const mockContext = createMockExecutionContext({
-                headers: { authorization: 'Bearer token_without_user' },
-              });
-        
-              jest.spyOn(require('@clerk/backend'), 'authenticateRequest')
-                .mockResolvedValue({
-                  sessionId: null,
-                  userId: null,
-                  orgId: null,
-                  claims: {},
-                });
-        
-              await expect(guard.canActivate(mockContext)).rejects.toThrow(UnauthorizedException);
-            });
-          });
-        });
-        ```
-        
-    3.  **Viết Integration Test cho Controllers:**
-        
-        ```typescript
-        // test/integration/auth-flow.integration.spec.ts
-        describe('Authentication Flow Integration', () => {
-          let app: INestApplication;
-          let clerkClient: ClerkClient;
-        
-          beforeAll(async () => {
-            const moduleFixture = await Test.createTestingModule({
-              imports: [AppModule],
-            })
-            .overrideProvider('ClerkClient')
-            .useValue(createMockClerkClient())
-            .compile();
-        
-            app = moduleFixture.createNestApplication();
-            app.useGlobalFilters(new GlobalExceptionFilter());
-            app.useGlobalPipes(new ValidationPipe());
-            await app.init();
-        
-            clerkClient = app.get('ClerkClient');
-          });
-        
-          describe('Protected Endpoints', () => {
-            it('should allow access with valid authentication', async () => {
-              const mockUser = {
-                sessionId: 'sess_123',
-                userId: 'user_456',
-                claims: { sub: 'user_456' },
-              };
-        
-              jest.spyOn(require('@clerk/backend'), 'authenticateRequest')
-                .mockResolvedValue(mockUser);
-        
-              const response = await request(app.getHttpServer())
-                .get('/clerk/sessions')
-                .set('Authorization', 'Bearer valid_token')
-                .expect(200);
-        
-              expect(response.body.success).toBe(true);
-              expect(response.body.data).toBeDefined();
-            });
-        
-            it('should reject requests without authentication', async () => {
-              await request(app.getHttpServer())
-                .get('/clerk/sessions')
-                .expect(401)
-                .expect((res) => {
-                  expect(res.body.errorCode).toBe('AUTH_REQUIRED');
-                  expect(res.body.success).toBe(false);
-                });
-            });
-        
-            it('should handle Clerk API errors gracefully', async () => {
-              jest.spyOn(require('@clerk/backend'), 'authenticateRequest')
-                .mockRejectedValue({ status: 429, message: 'Rate limit exceeded' });
-        
-              await request(app.getHttpServer())
-                .get('/clerk/sessions')
-                .set('Authorization', 'Bearer rate_limited_token')
-                .expect(429)
-                .expect((res) => {
-                  expect(res.body.errorCode).toBe('RATE_LIMIT_EXCEEDED');
-                });
-            });
-          });
-        
-          describe('Role-based Authorization', () => {
-            it('should allow admin access to admin endpoints', async () => {
-              const mockAdminUser = {
-                sessionId: 'sess_admin',
-                userId: 'user_admin',
-                claims: {
-                  sub: 'user_admin',
-                  public_metadata: { role: 'ADMIN' }
-                },
-              };
-        
-              jest.spyOn(require('@clerk/backend'), 'authenticateRequest')
-                .mockResolvedValue(mockAdminUser);
-        
-              await request(app.getHttpServer())
-                .get('/clerk/admin/users/user_123/sessions')
-                .set('Authorization', 'Bearer admin_token')
-                .expect(200);
-            });
-        
-            it('should deny regular user access to admin endpoints', async () => {
-              const mockRegularUser = {
-                sessionId: 'sess_user',
-                userId: 'user_regular',
-                claims: {
-                  sub: 'user_regular',
-                  public_metadata: { role: 'USER' }
-                },
-              };
-        
-              jest.spyOn(require('@clerk/backend'), 'authenticateRequest')
-                .mockResolvedValue(mockRegularUser);
-        
-              await request(app.getHttpServer())
-                .get('/clerk/admin/users/user_123/sessions')
-                .set('Authorization', 'Bearer user_token')
-                .expect(403)
-                .expect((res) => {
-                  expect(res.body.errorCode).toBe('INSUFFICIENT_PERMISSIONS');
-                });
-            });
-          });
-        });
-        ```
-        
-    4.  **Thiết lập ngưỡng Code Coverage:** Đặt mục tiêu độ bao phủ mã nguồn tối thiểu (ví dụ: 80%) và tích hợp vào quy trình CI/CD để đảm bảo chất lượng.
-*   **Kế hoạch Kiểm thử:**
-    *   Bản thân nhiệm vụ này là về việc viết kiểm thử.
-    *   **Definition of Done:**
-        *   Hoàn thành unit tests cho `ClerkSessionService` và `RolesGuard`, bao phủ tất cả các nhánh logic chính.
-        *   Hoàn thành integration tests cho các endpoint chính trong `ClerkController`.
-        *   Chạy `npm run test:cov` và đạt được độ bao phủ mã nguồn trên 80% cho các module đã được sửa đổi.
+#### **✅ TRẠNG THÁI CẬP NHẬT: 2/3 vấn đề đã HOÀN THÀNH, 1 vấn đề cần cải thiện**
 
 ---
 
-#### **Vấn đề 3.2: (Vấn đề #12) Thiếu Xác thực Cấu hình Môi trường**
+#### **Vấn đề 3.1: (Vấn đề #11) Cải thiện Độ bao phủ Kiểm thử** *(Cập nhật: ĐANG TIẾN TRIỂN)*
 
-*   **Tóm tắt:** Ứng dụng không xác thực các biến môi trường cần thiết khi khởi động, có thể dẫn đến lỗi runtime khó lường nếu một biến quan trọng bị thiếu hoặc sai định dạng.
-*   **Phân tích Nguyên nhân Gốc rễ:** Bỏ qua việc thiết lập một lớp cấu hình mạnh mẽ, thay vào đó dựa vào việc truy cập trực tiếp `ConfigService` mà không có kiểm tra.
-*   **Giải pháp Kỹ thuật:**
-    1.  **Sử dụng `@nestjs/config` kết hợp `class-validator`:** Tạo một class để định nghĩa schema cho các biến môi trường và xác thực chúng khi ứng dụng khởi động.
-    2.  **Tạo `EnvironmentVariables` DTO:**
+*   **Trạng thái hiện tại:**
+    *   ✅ Jest configuration đã được thiết lập hoàn chỉnh
+    *   ✅ Test infrastructure đã sẵn sàng với multiple test types
+    *   ✅ 75/75 unit và component tests PASS
+    *   ✅ Code coverage hiện tại: 75.1% statements, 71.69% branches
+    *   ❌ E2E tests gặp compilation errors (TypeScript issues)
+    *   ❌ Một số modules có coverage thấp (clerk.session.service.ts: 13.46%)
+
+*   **Cập nhật Phân tích:** Dự án đã có test infrastructure vững chắc nhưng cần cải thiện coverage cho một số modules quan trọng và sửa E2E test issues.
+
+*   **Giải pháp Kỹ thuật đã triển khai:**
+    1.  **✅ Jest Configuration hoàn chỉnh:**
+        ```json
+        // package.json - ĐÃ CÓ
+        "scripts": {
+          "test:unit": "jest --config test/jest-unit.json",
+          "test:watch": "jest --watch --config test/jest-unit.json",
+          "test:cov": "jest --coverage --config test/jest-unit.json",
+          "test:e2e": "jest --config test/jest-e2e.json",
+          "test:component": "jest --config test/jest-component.json",
+          "test:all": "npm run test && npm run test:component && npm run test:e2e"
+        }
+        ```
+    2.  **✅ Unit Tests đã được triển khai:** Dự án đã có comprehensive unit tests cho Guards và Services:
+
+        **Hiện có:**
+        - `src/modules/Infrastructure/clerk/guards/clerk-auth.guard.spec.ts` - ✅ Đã có
+        - `src/modules/auth/guards/roles.guard.spec.ts` - ✅ Đã có
+        - `src/modules/Infrastructure/clerk/clerk.session.service.spec.ts` - ✅ Đã có
+        - Component tests trong `test/component/` - ✅ Đã có
+
+        **Cần cải thiện:**
         ```typescript
-        // src/config/env.validation.ts
-        import { plainToInstance } from 'class-transformer';
-        import { IsNotEmpty, IsString, validateSync } from 'class-validator';
-        
-        class EnvironmentVariables {
+        // Cần tăng coverage cho clerk.session.service.ts (hiện tại chỉ 13.46%)
+        // Đặc biệt các methods: getUser(), getSession(), verifyTokenAndGetAuthData()
+
+        // Ví dụ test case cần thêm:
+        describe('ClerkSessionService - Missing Coverage', () => {
+          it('should handle getUser with invalid userId', async () => {
+            // Test error handling cho invalid user ID
+          });
+
+          it('should handle network timeout in getSession', async () => {
+            // Test timeout scenarios
+          });
+
+          it('should validate JWT token format in verifyTokenAndGetAuthData', async () => {
+            // Test JWT validation edge cases
+          });
+        });
+        ```
+
+    3.  **❌ E2E Tests cần sửa chữa:** Hiện tại E2E tests gặp compilation errors:
+
+        **Vấn đề hiện tại:**
+        ```bash
+        # E2E test failures do TypeScript compilation errors:
+        # - amqplib type definitions issues trong queues.service.ts
+        # - Không liên quan trực tiếp đến Clerk/Auth modules
+        ```
+
+        **✅ Component Tests đã hoạt động tốt:**
+        ```typescript
+        // test/component/ - ĐÃ CÓ VÀ HOẠT ĐỘNG
+        // 35 component tests PASS covering:
+        // - Authentication flows
+        // - Authorization scenarios
+        // - Error handling
+        // - Role-based access control
+        ```
+
+        **Cần làm:**
+        ```typescript
+        // 1. Sửa E2E compilation errors (không liên quan Clerk)
+        // 2. Thêm E2E tests cho Clerk endpoints:
+
+        describe('Clerk E2E Tests', () => {
+          it('should handle full authentication flow', async () => {
+            // Test complete auth flow từ token validation đến response
+          });
+
+          it('should test admin endpoints with proper authorization', async () => {
+            // Test admin-only endpoints với real HTTP requests
+          });
+        });
+        ```
+
+    4.  **✅ Code Coverage Targets đã được thiết lập:**
+        - Hiện tại: 75.1% statements, 71.69% branches
+        - Mục tiêu: Nâng lên 85%+ cho Clerk/Auth modules
+        - CI/CD integration: Cần thiết lập coverage gates
+
+*   **Kế hoạch Kiểm thử cập nhật:**
+    *   **Ưu tiên cao:**
+        *   Tăng coverage cho `clerk.session.service.ts` từ 13.46% lên 85%+
+        *   Sửa E2E compilation errors (amqplib types)
+        *   Thêm missing test cases cho security-critical methods
+    *   **Definition of Done (cập nhật):**
+        *   ✅ Unit tests cho `RolesGuard` - ĐÃ HOÀN THÀNH
+        *   ❌ Cần hoàn thiện unit tests cho `ClerkSessionService` (coverage thấp)
+        *   ❌ Sửa E2E test compilation errors
+        *   ❌ Đạt 85%+ coverage cho tất cả Clerk/Auth modules
+
+---
+
+#### **✅ Vấn đề 3.2: (Vấn đề #12) Environment Validation - HOÀN THÀNH**
+
+*   **Trạng thái:** ✅ **ĐÃ TRIỂN KHAI THÀNH CÔNG** (03/07/2025)
+*   **Tóm tắt triển khai:** Hệ thống Environment Validation đã được triển khai hoàn chỉnh với comprehensive validation cho tất cả environment variables.
+
+*   **✅ Đã triển khai:**
+    1.  **Environment Validation System hoàn chỉnh:**
+        ```typescript
+        // src/config/env.validation.ts - ĐÃ CÓ
+        export class EnvironmentVariables {
           @IsString()
-          @IsNotEmpty()
+          @Length(32, 512)
+          @Matches(/^sk_/, { message: 'CLERK_SECRET_KEY must start with sk_' })
           CLERK_SECRET_KEY: string;
-        
-          @IsString()
-          @IsNotEmpty()
-          CLERK_JWT_KEY: string;
-            
+
           @IsString()
           @IsNotEmpty()
           CLERK_PUBLISHABLE_KEY: string;
-          
-          // Thêm các biến môi trường quan trọng khác ở đây
-        }
-        
-        export function validate(config: Record<string, unknown>) {
-          const validatedConfig = plainToInstance(
-            EnvironmentVariables,
-            config,
-            { enableImplicitConversion: true },
-          );
-          const errors = validateSync(validatedConfig, { skipMissingProperties: false });
-        
-          if (errors.length > 0) {
-            throw new Error(errors.toString());
-          }
-          return validatedConfig;
+
+          @IsString()
+          @IsNotEmpty()
+          CLERK_JWT_KEY: string;
+
+          // + 20+ other environment variables với comprehensive validation
         }
         ```
-    3.  **Áp dụng hàm `validate` trong `AppModule`:**
+
+    2.  **✅ Integrated vào AppModule:**
         ```typescript
-        // src/app.module.ts
-        import { ConfigModule } from '@nestjs/config';
-        import { validate } from './config/env.validation';
-        
-        @Module({
-          imports: [
-            ConfigModule.forRoot({
-              isGlobal: true,
-              validate, // Áp dụng hàm xác thực tại đây
-            }),
-            // ...
-          ],
+        // src/app.module.ts - ĐÃ ĐƯỢC ÁP DỤNG
+        ConfigModule.forRoot({
+          isGlobal: true,
+          validate: validateEnvironment, // ✅ Đã được áp dụng
         })
-        export class AppModule {}
         ```
-*   **Kế hoạch Kiểm thử:**
-    *   **Kiểm thử Thủ công (Manual Test):**
-        *   Tạm thời xóa hoặc đổi tên biến `CLERK_SECRET_KEY` trong file `.env`.
-        *   Chạy ứng dụng (`npm run start:dev`).
-        *   Xác minh rằng ứng dụng ném ra lỗi và không khởi động thành công, với thông báo lỗi rõ ràng về biến môi trường bị thiếu.
-        *   Khôi phục lại biến và xác minh ứng dụng khởi động bình thường.
+
+*   **✅ Kết quả kiểm thử đã hoàn thành:**
+    *   **27 test cases** với **100% coverage**
+    *   **Type-safe configuration** với EnvConfigService
+    *   **Comprehensive error handling** với detailed error messages
+    *   **Production-ready** với backward compatibility
+
+*   **✅ Tài liệu:** `doc/markdown/AuthClerk/Kế hoạch sữa chữa và cải thiện 2/7/Environment-Validation-Implementation-Report.md`
 
 ---
 
-#### **Vấn đề 3.3: (Vấn đề #9) Định dạng Phản hồi Không nhất quán**
+#### **✅ Vấn đề 3.3: (Vấn đề #9) API Response Format - HOÀN THÀNH**
 
-*   **Tóm tắt:** Các API endpoint trả về các cấu trúc dữ liệu khác nhau, gây khó khăn cho phía client trong việc xử lý phản hồi một cách nhất quán.
-*   **Phân tích Nguyên nhân Gốc rễ:** Thiếu một quy ước chung về cấu trúc phản hồi API cho toàn bộ dự án.
-*   **Giải pháp Kỹ thuật:**
-    1.  **Định nghĩa một DTO Phản hồi Chuẩn:** Tạo một DTO chung để bao bọc tất cả các phản hồi thành công.
+*   **Trạng thái:** ✅ **ĐÃ TRIỂN KHAI THÀNH CÔNG**
+*   **Tóm tắt triển khai:** Hệ thống chuẩn hóa API response đã được triển khai và áp dụng globally.
+
+*   **✅ Đã triển khai:**
+    1.  **✅ Transform Interceptor đã được tạo:**
         ```typescript
-        // src/common/dto/api-response.dto.ts
-        import { ApiProperty } from '@nestjs/swagger';
-        
-        export class ApiResponseDto<T> {
-          @ApiProperty()
-          public readonly success: boolean;
-        
-          @ApiProperty()
-          public readonly message: string;
-        
-          @ApiProperty()
-          public readonly data: T;
-        
-          constructor(data: T, message = 'Success') {
-            this.success = true;
-            this.message = message;
-            this.data = data;
-          }
+        // src/common/interceptors/transform.interceptor.ts - ĐÃ CÓ
+        export interface Response<T> {
+          data: T;
+          statusCode: number;
+          timestamp: string;
         }
-        ```
-    2.  **Tạo một Interceptor để Chuẩn hóa Phản hồi:** Interceptor này sẽ tự động bao bọc dữ liệu trả về từ các controller vào trong `ApiResponseDto`.
-        ```typescript
-        // src/common/interceptors/transform.interceptor.ts
-        import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
-        import { Observable } from 'rxjs';
-        import { map } from 'rxjs/operators';
-        import { ApiResponseDto } from '../dto/api-response.dto';
-        
+
         @Injectable()
-        export class TransformInterceptor<T> implements NestInterceptor<T, ApiResponseDto<T>> {
-          intercept(context: ExecutionContext, next: CallHandler): Observable<ApiResponseDto<T>> {
-            return next.handle().pipe(map(data => new ApiResponseDto(data)));
+        export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> {
+          intercept(context: ExecutionContext, next: CallHandler): Observable<Response<T>> {
+            const statusCode = context.switchToHttp().getResponse().statusCode;
+
+            return next.handle().pipe(
+              map(data => ({
+                data,
+                statusCode,
+                timestamp: new Date().toISOString(),
+              })),
+            );
           }
         }
         ```
-    3.  **Áp dụng Interceptor Toàn cục:** Đăng ký interceptor trong `main.ts` hoặc `app.module.ts`.
+
+    2.  **✅ Global Application đã được áp dụng:**
         ```typescript
-        // src/main.ts
-        import { TransformInterceptor } from './common/interceptors/transform.interceptor';
-        
-        async function bootstrap() {
-          const app = await NestFactory.create(AppModule);
-          // ...
-          app.useGlobalInterceptors(new TransformInterceptor());
-          // ...
-          await app.listen(3000);
-        }
+        // src/main.ts - ĐÃ ĐƯỢC ÁP DỤNG
+        app.useGlobalInterceptors(new TransformInterceptor()); // ✅ Line 49
         ```
-*   **Kế hoạch Kiểm thử:**
-    *   **E2E Test:**
-        *   Tạo một endpoint test trả về một object đơn giản, ví dụ: `{ id: 1, name: 'Test' }`.
-        *   Gọi API đến endpoint này.
-        *   Xác minh rằng cấu trúc phản hồi nhận được là `{ success: true, message: 'Success', data: { id: 1, name: 'Test' } }`.
-        *   Kiểm tra một vài endpoint hiện có để đảm bảo chúng cũng tuân theo định dạng mới.
+
+*   **✅ Response Format hiện tại:**
+    ```json
+    {
+      "data": { /* actual response data */ },
+      "statusCode": 200,
+      "timestamp": "2025-01-15T10:30:00.000Z"
+    }
+    ```
+
+*   **✅ Kết quả:** Tất cả API endpoints hiện tại đều trả về consistent response format, giúp client dễ dàng xử lý.
 
 ---
 *Ghi chú: Giai đoạn 4 sẽ được lên kế hoạch chi tiết sau khi hoàn tất Giai đoạn 3.*
@@ -1463,7 +1307,7 @@ Dựa trên phân tích báo cáo, các vấn đề được nhóm và sắp x�
         ```typescript
         // src/modules/Infrastructure/clerk/guards/clerk-auth.guard.ts
         // ...
-        import { MetricsService } from 'src/modules/metrics/metrics.service';
+        import { MetricsService } from '../../../metrics/metrics.service';
         
         export class ClerkAuthGuard implements CanActivate {
           constructor(
