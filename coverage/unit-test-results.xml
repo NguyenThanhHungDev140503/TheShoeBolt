@@ -1,49 +1,141 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="Unit Tests" tests="235" failures="0" errors="0" time="14.515">
-  <testsuite name="WebhookTransactionService Specifications" errors="0" failures="0" skipped="0" timestamp="2025-07-06T13:28:25" time="12.691" tests="18">
-    <testcase classname="WebhookTransactionService Specifications Transaction Processing should process webhooks within database transactions" name="WebhookTransactionService Specifications Transaction Processing should process webhooks within database transactions" time="0.013">
+<testsuites name="Unit Tests" tests="260" failures="5" errors="0" time="28.379">
+  <testsuite name="WebhookTransactionService Specifications" errors="0" failures="0" skipped="0" timestamp="2025-07-13T06:36:34" time="21.634" tests="18">
+    <testcase classname="WebhookTransactionService Specifications Transaction Processing should process webhooks within database transactions" name="WebhookTransactionService Specifications Transaction Processing should process webhooks within database transactions" time="0.018">
     </testcase>
-    <testcase classname="WebhookTransactionService Specifications Transaction Processing should handle user creation events with transaction rollback on failure" name="WebhookTransactionService Specifications Transaction Processing should handle user creation events with transaction rollback on failure" time="0">
+    <testcase classname="WebhookTransactionService Specifications Transaction Processing should handle user creation events with transaction rollback on failure" name="WebhookTransactionService Specifications Transaction Processing should handle user creation events with transaction rollback on failure" time="0.001">
     </testcase>
     <testcase classname="WebhookTransactionService Specifications Transaction Processing should handle session creation events with proper error handling" name="WebhookTransactionService Specifications Transaction Processing should handle session creation events with proper error handling" time="0.001">
     </testcase>
-    <testcase classname="WebhookTransactionService Specifications Transaction Processing should handle session deletion events with cleanup" name="WebhookTransactionService Specifications Transaction Processing should handle session deletion events with cleanup" time="0.007">
+    <testcase classname="WebhookTransactionService Specifications Transaction Processing should handle session deletion events with cleanup" name="WebhookTransactionService Specifications Transaction Processing should handle session deletion events with cleanup" time="0.001">
     </testcase>
-    <testcase classname="WebhookTransactionService Specifications Transaction Processing should maintain webhook event audit trail" name="WebhookTransactionService Specifications Transaction Processing should maintain webhook event audit trail" time="0">
+    <testcase classname="WebhookTransactionService Specifications Transaction Processing should maintain webhook event audit trail" name="WebhookTransactionService Specifications Transaction Processing should maintain webhook event audit trail" time="0.001">
     </testcase>
-    <testcase classname="WebhookTransactionService Specifications Error Handling should handle database transaction failures gracefully" name="WebhookTransactionService Specifications Error Handling should handle database transaction failures gracefully" time="0.001">
+    <testcase classname="WebhookTransactionService Specifications Error Handling should handle database transaction failures gracefully" name="WebhookTransactionService Specifications Error Handling should handle database transaction failures gracefully" time="0">
     </testcase>
-    <testcase classname="WebhookTransactionService Specifications Error Handling should provide detailed error information for debugging" name="WebhookTransactionService Specifications Error Handling should provide detailed error information for debugging" time="0">
+    <testcase classname="WebhookTransactionService Specifications Error Handling should provide detailed error information for debugging" name="WebhookTransactionService Specifications Error Handling should provide detailed error information for debugging" time="0.001">
     </testcase>
     <testcase classname="WebhookTransactionService Specifications Error Handling should implement proper retry logic for transient failures" name="WebhookTransactionService Specifications Error Handling should implement proper retry logic for transient failures" time="0.001">
     </testcase>
-    <testcase classname="WebhookTransactionService Specifications Performance and Monitoring should track webhook processing statistics" name="WebhookTransactionService Specifications Performance and Monitoring should track webhook processing statistics" time="0.004">
+    <testcase classname="WebhookTransactionService Specifications Performance and Monitoring should track webhook processing statistics" name="WebhookTransactionService Specifications Performance and Monitoring should track webhook processing statistics" time="0">
     </testcase>
     <testcase classname="WebhookTransactionService Specifications Performance and Monitoring should identify and report failed webhook events" name="WebhookTransactionService Specifications Performance and Monitoring should identify and report failed webhook events" time="0.001">
     </testcase>
-    <testcase classname="WebhookTransactionService Specifications Performance and Monitoring should provide webhook processing duration metrics" name="WebhookTransactionService Specifications Performance and Monitoring should provide webhook processing duration metrics" time="0">
+    <testcase classname="WebhookTransactionService Specifications Performance and Monitoring should provide webhook processing duration metrics" name="WebhookTransactionService Specifications Performance and Monitoring should provide webhook processing duration metrics" time="0.001">
     </testcase>
-    <testcase classname="WebhookTransactionService Specifications Performance and Monitoring should support webhook event replay functionality" name="WebhookTransactionService Specifications Performance and Monitoring should support webhook event replay functionality" time="0.001">
+    <testcase classname="WebhookTransactionService Specifications Performance and Monitoring should support webhook event replay functionality" name="WebhookTransactionService Specifications Performance and Monitoring should support webhook event replay functionality" time="0">
     </testcase>
-    <testcase classname="WebhookTransactionService Specifications Data Consistency should ensure ACID properties for all webhook operations" name="WebhookTransactionService Specifications Data Consistency should ensure ACID properties for all webhook operations" time="0.001">
+    <testcase classname="WebhookTransactionService Specifications Data Consistency should ensure ACID properties for all webhook operations" name="WebhookTransactionService Specifications Data Consistency should ensure ACID properties for all webhook operations" time="0.002">
     </testcase>
     <testcase classname="WebhookTransactionService Specifications Data Consistency should handle concurrent webhook processing safely" name="WebhookTransactionService Specifications Data Consistency should handle concurrent webhook processing safely" time="0">
     </testcase>
-    <testcase classname="WebhookTransactionService Specifications Data Consistency should maintain referential integrity across related entities" name="WebhookTransactionService Specifications Data Consistency should maintain referential integrity across related entities" time="0.001">
+    <testcase classname="WebhookTransactionService Specifications Data Consistency should maintain referential integrity across related entities" name="WebhookTransactionService Specifications Data Consistency should maintain referential integrity across related entities" time="0">
     </testcase>
-    <testcase classname="WebhookTransactionService Specifications Integration with Existing Services should integrate with SessionTrackingService for session events" name="WebhookTransactionService Specifications Integration with Existing Services should integrate with SessionTrackingService for session events" time="0">
+    <testcase classname="WebhookTransactionService Specifications Integration with Existing Services should integrate with SessionTrackingService for session events" name="WebhookTransactionService Specifications Integration with Existing Services should integrate with SessionTrackingService for session events" time="0.001">
     </testcase>
     <testcase classname="WebhookTransactionService Specifications Integration with Existing Services should integrate with UsersService for user events" name="WebhookTransactionService Specifications Integration with Existing Services should integrate with UsersService for user events" time="0.001">
     </testcase>
-    <testcase classname="WebhookTransactionService Specifications Integration with Existing Services should maintain compatibility with existing webhook processing" name="WebhookTransactionService Specifications Integration with Existing Services should maintain compatibility with existing webhook processing" time="0.022">
+    <testcase classname="WebhookTransactionService Specifications Integration with Existing Services should maintain compatibility with existing webhook processing" name="WebhookTransactionService Specifications Integration with Existing Services should maintain compatibility with existing webhook processing" time="0.001">
     </testcase>
   </testsuite>
-  <testsuite name="ClerkClientProvider" errors="0" failures="0" skipped="0" timestamp="2025-07-06T13:28:25" time="12.723" tests="11">
-    <testcase classname="ClerkClientProvider Provider Creation Success should create ClerkClient successfully with all required environment variables" name="ClerkClientProvider Provider Creation Success should create ClerkClient successfully with all required environment variables" time="0.031">
+  <testsuite name="Phase 2: Webhook Reliability &amp; Security Enhancement" errors="0" failures="0" skipped="0" timestamp="2025-07-13T06:36:34" time="21.958" tests="45">
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should implement exponential backoff retry logic" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should implement exponential backoff retry logic" time="0.02">
     </testcase>
-    <testcase classname="ClerkClientProvider Provider Creation Success should call createClerkClient with correct parameters including jwtKey" name="ClerkClientProvider Provider Creation Success should call createClerkClient with correct parameters including jwtKey" time="0.007">
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should send failed webhooks to dead letter queue after max retries" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should send failed webhooks to dead letter queue after max retries" time="0.001">
     </testcase>
-    <testcase classname="ClerkClientProvider Environment Variable Validation should throw error when CLERK_SECRET_KEY is missing" name="ClerkClientProvider Environment Variable Validation should throw error when CLERK_SECRET_KEY is missing" time="0.024">
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should track retry attempts and success rates" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should track retry attempts and success rates" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should handle different error types appropriately" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should handle different error types appropriately" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should implement circuit breaker pattern for persistent failures" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should implement circuit breaker pattern for persistent failures" time="0.001">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should store failed webhooks with metadata" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should store failed webhooks with metadata" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should provide DLQ processing and monitoring capabilities" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should provide DLQ processing and monitoring capabilities" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should implement DLQ cleanup and archival" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should implement DLQ cleanup and archival" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should support DLQ event replay functionality" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should support DLQ event replay functionality" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should generate DLQ analytics and reports" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should generate DLQ analytics and reports" time="0.001">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should log webhook failures with comprehensive details" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should log webhook failures with comprehensive details" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should track failure patterns and trends" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should track failure patterns and trends" time="0.001">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should provide failure analytics and insights" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should provide failure analytics and insights" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should implement alerting for critical failures" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should implement alerting for critical failures" time="0.001">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should support failure resolution tracking" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should support failure resolution tracking" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityGuard should validate IP whitelist for webhook requests" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityGuard should validate IP whitelist for webhook requests" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityGuard should validate timestamp to prevent replay attacks" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityGuard should validate timestamp to prevent replay attacks" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityGuard should implement comprehensive security logging" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityGuard should implement comprehensive security logging" time="0.001">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityGuard should block unauthorized access attempts" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityGuard should block unauthorized access attempts" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should enforce per-minute and per-hour rate limits" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should enforce per-minute and per-hour rate limits" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should implement burst protection" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should implement burst protection" time="0.001">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should support IP-based rate limiting" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should support IP-based rate limiting" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should provide rate limiting bypass for whitelisted IPs" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should provide rate limiting bypass for whitelisted IPs" time="0.001">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should implement exponential backoff for violators" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should implement exponential backoff for violators" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should validate IP addresses against whitelist" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should validate IP addresses against whitelist" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should validate timestamps within tolerance window" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should validate timestamps within tolerance window" time="0.001">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should implement replay attack prevention" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should implement replay attack prevention" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should handle IPv6 addresses correctly" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should handle IPv6 addresses correctly" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should provide security metrics and monitoring" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should provide security metrics and monitoring" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should handle organization CRUD operations" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should handle organization CRUD operations" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should manage organization memberships" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should manage organization memberships" time="0.001">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should implement role-based access control" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should implement role-based access control" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should handle organization deletion with cleanup" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should handle organization deletion with cleanup" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should support transaction-based operations" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should support transaction-based operations" time="0.001">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should validate organization business rules" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should validate organization business rules" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling Organization Entity should validate organization data integrity" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling Organization Entity should validate organization data integrity" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling Organization Entity should handle metadata management" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling Organization Entity should handle metadata management" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling Organization Entity should implement organization lifecycle methods" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling Organization Entity should implement organization lifecycle methods" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationMembership Entity should validate membership roles and permissions" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationMembership Entity should validate membership roles and permissions" time="0.001">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationMembership Entity should handle membership lifecycle" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationMembership Entity should handle membership lifecycle" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationMembership Entity should implement role transition validation" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationMembership Entity should implement role transition validation" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Integration Tests should handle end-to-end webhook processing with all Phase 2 features" name="Phase 2: Webhook Reliability &amp; Security Enhancement Integration Tests should handle end-to-end webhook processing with all Phase 2 features" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Integration Tests should maintain performance under load with Phase 2 enhancements" name="Phase 2: Webhook Reliability &amp; Security Enhancement Integration Tests should maintain performance under load with Phase 2 enhancements" time="0.001">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Integration Tests should provide comprehensive monitoring and alerting" name="Phase 2: Webhook Reliability &amp; Security Enhancement Integration Tests should provide comprehensive monitoring and alerting" time="0">
+    </testcase>
+    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Phase 2 Summary should implement all 37 test cases as specified in the plan" name="Phase 2: Webhook Reliability &amp; Security Enhancement Phase 2 Summary should implement all 37 test cases as specified in the plan" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="ClerkClientProvider" errors="0" failures="0" skipped="0" timestamp="2025-07-13T06:36:34" time="23.867" tests="11">
+    <testcase classname="ClerkClientProvider Provider Creation Success should create ClerkClient successfully with all required environment variables" name="ClerkClientProvider Provider Creation Success should create ClerkClient successfully with all required environment variables" time="0.053">
+    </testcase>
+    <testcase classname="ClerkClientProvider Provider Creation Success should call createClerkClient with correct parameters including jwtKey" name="ClerkClientProvider Provider Creation Success should call createClerkClient with correct parameters including jwtKey" time="0.006">
+    </testcase>
+    <testcase classname="ClerkClientProvider Environment Variable Validation should throw error when CLERK_SECRET_KEY is missing" name="ClerkClientProvider Environment Variable Validation should throw error when CLERK_SECRET_KEY is missing" time="0.025">
     </testcase>
     <testcase classname="ClerkClientProvider Environment Variable Validation should throw error when CLERK_PUBLISHABLE_KEY is missing" name="ClerkClientProvider Environment Variable Validation should throw error when CLERK_PUBLISHABLE_KEY is missing" time="0.004">
     </testcase>
@@ -51,169 +143,311 @@
     </testcase>
     <testcase classname="ClerkClientProvider Environment Variable Validation should throw error when all environment variables are missing" name="ClerkClientProvider Environment Variable Validation should throw error when all environment variables are missing" time="0.003">
     </testcase>
-    <testcase classname="ClerkClientProvider Environment Variable Validation should throw error when environment variables are empty strings" name="ClerkClientProvider Environment Variable Validation should throw error when environment variables are empty strings" time="0.005">
+    <testcase classname="ClerkClientProvider Environment Variable Validation should throw error when environment variables are empty strings" name="ClerkClientProvider Environment Variable Validation should throw error when environment variables are empty strings" time="0.004">
     </testcase>
     <testcase classname="ClerkClientProvider Provider Configuration should have correct provider configuration" name="ClerkClientProvider Provider Configuration should have correct provider configuration" time="0.001">
     </testcase>
-    <testcase classname="ClerkClientProvider Provider Configuration should inject ConfigService dependency" name="ClerkClientProvider Provider Configuration should inject ConfigService dependency" time="0.007">
+    <testcase classname="ClerkClientProvider Provider Configuration should inject ConfigService dependency" name="ClerkClientProvider Provider Configuration should inject ConfigService dependency" time="0.006">
     </testcase>
-    <testcase classname="ClerkClientProvider Error Handling Edge Cases should handle null values as missing environment variables" name="ClerkClientProvider Error Handling Edge Cases should handle null values as missing environment variables" time="0.005">
+    <testcase classname="ClerkClientProvider Error Handling Edge Cases should handle null values as missing environment variables" name="ClerkClientProvider Error Handling Edge Cases should handle null values as missing environment variables" time="0.004">
     </testcase>
-    <testcase classname="ClerkClientProvider Error Handling Edge Cases should accept whitespace-only values as valid environment variables" name="ClerkClientProvider Error Handling Edge Cases should accept whitespace-only values as valid environment variables" time="0.017">
-    </testcase>
-  </testsuite>
-  <testsuite name="Phase 2: Webhook Reliability &amp; Security Enhancement" errors="0" failures="0" skipped="0" timestamp="2025-07-06T13:28:25" time="12.815" tests="45">
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should implement exponential backoff retry logic" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should implement exponential backoff retry logic" time="0.008">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should send failed webhooks to dead letter queue after max retries" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should send failed webhooks to dead letter queue after max retries" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should track retry attempts and success rates" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should track retry attempts and success rates" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should handle different error types appropriately" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should handle different error types appropriately" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should implement circuit breaker pattern for persistent failures" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookRetryService should implement circuit breaker pattern for persistent failures" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should store failed webhooks with metadata" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should store failed webhooks with metadata" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should provide DLQ processing and monitoring capabilities" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should provide DLQ processing and monitoring capabilities" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should implement DLQ cleanup and archival" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should implement DLQ cleanup and archival" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should support DLQ event replay functionality" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should support DLQ event replay functionality" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should generate DLQ analytics and reports" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism DeadLetterQueueService should generate DLQ analytics and reports" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should log webhook failures with comprehensive details" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should log webhook failures with comprehensive details" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should track failure patterns and trends" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should track failure patterns and trends" time="0.02">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should provide failure analytics and insights" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should provide failure analytics and insights" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should implement alerting for critical failures" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should implement alerting for critical failures" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should support failure resolution tracking" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.1: Error Recovery &amp; Retry Mechanism WebhookFailureTrackingService should support failure resolution tracking" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityGuard should validate IP whitelist for webhook requests" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityGuard should validate IP whitelist for webhook requests" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityGuard should validate timestamp to prevent replay attacks" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityGuard should validate timestamp to prevent replay attacks" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityGuard should implement comprehensive security logging" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityGuard should implement comprehensive security logging" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityGuard should block unauthorized access attempts" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityGuard should block unauthorized access attempts" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should enforce per-minute and per-hour rate limits" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should enforce per-minute and per-hour rate limits" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should implement burst protection" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should implement burst protection" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should support IP-based rate limiting" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should support IP-based rate limiting" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should provide rate limiting bypass for whitelisted IPs" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should provide rate limiting bypass for whitelisted IPs" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should implement exponential backoff for violators" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookRateLimitingService should implement exponential backoff for violators" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should validate IP addresses against whitelist" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should validate IP addresses against whitelist" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should validate timestamps within tolerance window" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should validate timestamps within tolerance window" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should implement replay attack prevention" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should implement replay attack prevention" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should handle IPv6 addresses correctly" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should handle IPv6 addresses correctly" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should provide security metrics and monitoring" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.2: Security Enhancements WebhookSecurityValidationService should provide security metrics and monitoring" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should handle organization CRUD operations" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should handle organization CRUD operations" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should manage organization memberships" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should manage organization memberships" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should implement role-based access control" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should implement role-based access control" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should handle organization deletion with cleanup" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should handle organization deletion with cleanup" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should support transaction-based operations" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should support transaction-based operations" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should validate organization business rules" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationService should validate organization business rules" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling Organization Entity should validate organization data integrity" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling Organization Entity should validate organization data integrity" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling Organization Entity should handle metadata management" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling Organization Entity should handle metadata management" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling Organization Entity should implement organization lifecycle methods" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling Organization Entity should implement organization lifecycle methods" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationMembership Entity should validate membership roles and permissions" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationMembership Entity should validate membership roles and permissions" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationMembership Entity should handle membership lifecycle" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationMembership Entity should handle membership lifecycle" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationMembership Entity should implement role transition validation" name="Phase 2: Webhook Reliability &amp; Security Enhancement Task 2.3: Organization Events Handling OrganizationMembership Entity should implement role transition validation" time="0.004">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Integration Tests should handle end-to-end webhook processing with all Phase 2 features" name="Phase 2: Webhook Reliability &amp; Security Enhancement Integration Tests should handle end-to-end webhook processing with all Phase 2 features" time="0.001">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Integration Tests should maintain performance under load with Phase 2 enhancements" name="Phase 2: Webhook Reliability &amp; Security Enhancement Integration Tests should maintain performance under load with Phase 2 enhancements" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Integration Tests should provide comprehensive monitoring and alerting" name="Phase 2: Webhook Reliability &amp; Security Enhancement Integration Tests should provide comprehensive monitoring and alerting" time="0">
-    </testcase>
-    <testcase classname="Phase 2: Webhook Reliability &amp; Security Enhancement Phase 2 Summary should implement all 37 test cases as specified in the plan" name="Phase 2: Webhook Reliability &amp; Security Enhancement Phase 2 Summary should implement all 37 test cases as specified in the plan" time="0.001">
+    <testcase classname="ClerkClientProvider Error Handling Edge Cases should accept whitespace-only values as valid environment variables" name="ClerkClientProvider Error Handling Edge Cases should accept whitespace-only values as valid environment variables" time="0.005">
     </testcase>
   </testsuite>
-  <testsuite name="Simple Validation Test" errors="0" failures="0" skipped="0" timestamp="2025-07-06T13:28:25" time="12.764" tests="5">
-    <testcase classname="Simple Validation Test SessionIdParamDto Validation should pass validation for valid sessionId" name="Simple Validation Test SessionIdParamDto Validation should pass validation for valid sessionId" time="0.01">
+  <testsuite name="ClerkAuthGuard" errors="0" failures="0" skipped="0" timestamp="2025-07-13T06:36:34" time="24.353" tests="13">
+    <testcase classname="ClerkAuthGuard canActivate - Success Scenarios should return true when authentication is successful" name="ClerkAuthGuard canActivate - Success Scenarios should return true when authentication is successful" time="0.052">
+    </testcase>
+    <testcase classname="ClerkAuthGuard canActivate - Success Scenarios should attach clerkUser object to request when authentication succeeds" name="ClerkAuthGuard canActivate - Success Scenarios should attach clerkUser object to request when authentication succeeds" time="0.007">
+    </testcase>
+    <testcase classname="ClerkAuthGuard canActivate - Success Scenarios should call authenticateRequest with correct parameters" name="ClerkAuthGuard canActivate - Success Scenarios should call authenticateRequest with correct parameters" time="0.006">
+    </testcase>
+    <testcase classname="ClerkAuthGuard canActivate - Authentication Failure Scenarios should throw UnauthorizedException when isAuthenticated is false" name="ClerkAuthGuard canActivate - Authentication Failure Scenarios should throw UnauthorizedException when isAuthenticated is false" time="0.036">
+    </testcase>
+    <testcase classname="ClerkAuthGuard canActivate - Authentication Failure Scenarios should throw UnauthorizedException when authenticateRequest throws error" name="ClerkAuthGuard canActivate - Authentication Failure Scenarios should throw UnauthorizedException when authenticateRequest throws error" time="0.008">
+    </testcase>
+    <testcase classname="ClerkAuthGuard canActivate - Authentication Failure Scenarios should throw UnauthorizedException when toAuth throws error" name="ClerkAuthGuard canActivate - Authentication Failure Scenarios should throw UnauthorizedException when toAuth throws error" time="0.006">
+    </testcase>
+    <testcase classname="ClerkAuthGuard convertToWebRequest should convert Express Request to Web API Request correctly" name="ClerkAuthGuard convertToWebRequest should convert Express Request to Web API Request correctly" time="0.004">
+    </testcase>
+    <testcase classname="ClerkAuthGuard convertToWebRequest should handle headers conversion correctly" name="ClerkAuthGuard convertToWebRequest should handle headers conversion correctly" time="0.005">
+    </testcase>
+    <testcase classname="ClerkAuthGuard convertToWebRequest should handle cookies conversion correctly" name="ClerkAuthGuard convertToWebRequest should handle cookies conversion correctly" time="0.005">
+    </testcase>
+    <testcase classname="ClerkAuthGuard convertToWebRequest should handle empty cookies object" name="ClerkAuthGuard convertToWebRequest should handle empty cookies object" time="0.004">
+    </testcase>
+    <testcase classname="ClerkAuthGuard Error Handling and Logging should log error when authentication fails" name="ClerkAuthGuard Error Handling and Logging should log error when authentication fails" time="0.004">
+    </testcase>
+    <testcase classname="ClerkAuthGuard Error Handling and Logging should log error when user is not authenticated" name="ClerkAuthGuard Error Handling and Logging should log error when user is not authenticated" time="0.005">
+    </testcase>
+    <testcase classname="ClerkAuthGuard Error Handling and Logging should log debug message when user is authenticated successfully" name="ClerkAuthGuard Error Handling and Logging should log debug message when user is authenticated successfully" time="0.004">
+    </testcase>
+  </testsuite>
+  <testsuite name="ClerkSessionService" errors="0" failures="5" skipped="0" timestamp="2025-07-13T06:36:34" time="25.17" tests="55">
+    <testcase classname="ClerkSessionService Constructor and Initialization should be defined" name="ClerkSessionService Constructor and Initialization should be defined" time="0.027">
+    </testcase>
+    <testcase classname="ClerkSessionService Constructor and Initialization should inject ClerkClient and options correctly" name="ClerkSessionService Constructor and Initialization should inject ClerkClient and options correctly" time="0.004">
+    </testcase>
+    <testcase classname="ClerkSessionService getSessionList should return sessions list successfully" name="ClerkSessionService getSessionList should return sessions list successfully" time="0.004">
+    </testcase>
+    <testcase classname="ClerkSessionService getSessionList should throw UnauthorizedException when getSessionList fails with 401" name="ClerkSessionService getSessionList should throw UnauthorizedException when getSessionList fails with 401" time="0.035">
+    </testcase>
+    <testcase classname="ClerkSessionService revokeSession should revoke session successfully" name="ClerkSessionService revokeSession should revoke session successfully" time="0.003">
+    </testcase>
+    <testcase classname="ClerkSessionService revokeSession should throw UnauthorizedException when revokeSession fails with 401" name="ClerkSessionService revokeSession should throw UnauthorizedException when revokeSession fails with 401" time="0.004">
+    </testcase>
+    <testcase classname="ClerkSessionService verifySessionToken should verify session token successfully" name="ClerkSessionService verifySessionToken should verify session token successfully" time="0.004">
+    </testcase>
+    <testcase classname="ClerkSessionService verifySessionToken should throw UnauthorizedException when token is invalid" name="ClerkSessionService verifySessionToken should throw UnauthorizedException when token is invalid" time="0.003">
+    </testcase>
+    <testcase classname="ClerkSessionService verifySessionToken should throw UnauthorizedException when authenticateRequest fails" name="ClerkSessionService verifySessionToken should throw UnauthorizedException when authenticateRequest fails" time="0.004">
+    </testcase>
+    <testcase classname="ClerkSessionService getSession should get session successfully" name="ClerkSessionService getSession should get session successfully" time="0.002">
+    </testcase>
+    <testcase classname="ClerkSessionService getSession should throw UnauthorizedException when getSession fails with 401" name="ClerkSessionService getSession should throw UnauthorizedException when getSession fails with 401" time="0.006">
+    </testcase>
+    <testcase classname="ClerkSessionService getUser should get user successfully" name="ClerkSessionService getUser should get user successfully" time="0.004">
+    </testcase>
+    <testcase classname="ClerkSessionService getUser should throw UnauthorizedException when getUser fails with 401" name="ClerkSessionService getUser should throw UnauthorizedException when getUser fails with 401" time="0.004">
+    </testcase>
+    <testcase classname="ClerkSessionService verifyTokenAndGetAuthData should verify token and get complete auth data successfully" name="ClerkSessionService verifyTokenAndGetAuthData should verify token and get complete auth data successfully" time="0.005">
+    </testcase>
+    <testcase classname="ClerkSessionService verifyTokenAndGetAuthData should throw UnauthorizedException when token is invalid" name="ClerkSessionService verifyTokenAndGetAuthData should throw UnauthorizedException when token is invalid" time="0.004">
+    </testcase>
+    <testcase classname="ClerkSessionService verifyTokenAndGetAuthData should throw UnauthorizedException when session is inactive" name="ClerkSessionService verifyTokenAndGetAuthData should throw UnauthorizedException when session is inactive" time="0.005">
+    </testcase>
+    <testcase classname="ClerkSessionService verifyTokenAndGetAuthData should throw UnauthorizedException when session is null" name="ClerkSessionService verifyTokenAndGetAuthData should throw UnauthorizedException when session is null" time="0.004">
+    </testcase>
+    <testcase classname="ClerkSessionService verifyTokenAndGetAuthData should throw UnauthorizedException when authentication fails" name="ClerkSessionService verifyTokenAndGetAuthData should throw UnauthorizedException when authentication fails" time="0.005">
+    </testcase>
+    <testcase classname="ClerkSessionService verifyTokenAndGetAuthData should handle user with no email addresses" name="ClerkSessionService verifyTokenAndGetAuthData should handle user with no email addresses" time="0.004">
+    </testcase>
+    <testcase classname="ClerkSessionService revokeAllUserSessions should revoke all user sessions successfully" name="ClerkSessionService revokeAllUserSessions should revoke all user sessions successfully" time="0.011">
+    </testcase>
+    <testcase classname="ClerkSessionService revokeAllUserSessions should handle empty sessions list" name="ClerkSessionService revokeAllUserSessions should handle empty sessions list" time="0.005">
+    </testcase>
+    <testcase classname="ClerkSessionService revokeAllUserSessions should throw UnauthorizedException when getSessionList fails with 401" name="ClerkSessionService revokeAllUserSessions should throw UnauthorizedException when getSessionList fails with 401" time="0.006">
+    </testcase>
+    <testcase classname="ClerkSessionService revokeAllUserSessions should throw UnauthorizedException when revokeSession fails with 401" name="ClerkSessionService revokeAllUserSessions should throw UnauthorizedException when revokeSession fails with 401" time="0.006">
+    </testcase>
+    <testcase classname="ClerkSessionService Edge Cases and Error Handling should handle Request constructor properly in verifySessionToken" name="ClerkSessionService Edge Cases and Error Handling should handle Request constructor properly in verifySessionToken" time="0.006">
+    </testcase>
+    <testcase classname="ClerkSessionService Edge Cases and Error Handling should handle Request constructor properly in verifyTokenAndGetAuthData" name="ClerkSessionService Edge Cases and Error Handling should handle Request constructor properly in verifyTokenAndGetAuthData" time="0.006">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis CURRENT ISSUE: getSessionList only throws UnauthorizedException for all errors" name="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis CURRENT ISSUE: getSessionList only throws UnauthorizedException for all errors" time="0.008">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis CURRENT ISSUE: revokeSession only throws UnauthorizedException for all errors" name="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis CURRENT ISSUE: revokeSession only throws UnauthorizedException for all errors" time="0.006">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis CURRENT ISSUE: getUser only throws UnauthorizedException for all errors" name="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis CURRENT ISSUE: getUser only throws UnauthorizedException for all errors" time="0.007">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis MISSING FEATURE: No detailed error logging with Logger" name="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis MISSING FEATURE: No detailed error logging with Logger" time="0.007">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis VERIFIED FEATURE: Status code differentiation works correctly" name="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis VERIFIED FEATURE: Status code differentiation works correctly" time="0.014">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getUser() - Comprehensive Test Coverage should successfully get user details" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getUser() - Comprehensive Test Coverage should successfully get user details" time="0.005">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getUser() - Comprehensive Test Coverage should throw NotFoundException for 404 errors" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getUser() - Comprehensive Test Coverage should throw NotFoundException for 404 errors" time="0.006">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getUser() - Comprehensive Test Coverage should throw ForbiddenException for 403 errors" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getUser() - Comprehensive Test Coverage should throw ForbiddenException for 403 errors" time="0.008">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getUser() - Comprehensive Test Coverage should throw UnauthorizedException for 401 errors" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getUser() - Comprehensive Test Coverage should throw UnauthorizedException for 401 errors" time="0.008">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getUser() - Comprehensive Test Coverage should throw InternalServerErrorException for network timeout" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getUser() - Comprehensive Test Coverage should throw InternalServerErrorException for network timeout" time="0.035">
+      <failure>Error: expect(received).rejects.toThrow(expected)
+
+Expected substring: &quot;An unexpected error occurred while retrieving user details.&quot;
+Received message:   &quot;An unexpected error occurred while retrieving user.&quot;
+
+      211 |       });
+      212 |
+    &gt; 213 |       throw new InternalServerErrorException(&apos;An unexpected error occurred while retrieving user.&apos;);
+          |             ^
+      214 |     }
+      215 |   }
+      216 |
+
+      at ClerkSessionService.getUser (src/modules/Infrastructure/clerk/clerk.session.service.ts:213:13)
+      at Object.&lt;anonymous&gt; (test/unit/modules/Infracstructre/clerk/clerk.session.service.spec.ts:620:9)
+    at Object.toThrow (/home/nguyenthanhhung/Code/TheShoeBolt/node_modules/expect/build/index.js:218:22)
+    at Object.&lt;anonymous&gt; (/home/nguyenthanhhung/Code/TheShoeBolt/test/unit/modules/Infracstructre/clerk/clerk.session.service.spec.ts:620:55)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)</failure>
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getUser() - Comprehensive Test Coverage should handle error with response.status format" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getUser() - Comprehensive Test Coverage should handle error with response.status format" time="0.006">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getUser() - Comprehensive Test Coverage should handle error with statusCode format" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getUser() - Comprehensive Test Coverage should handle error with statusCode format" time="0.006">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getSession() - Comprehensive Test Coverage should successfully get session details" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getSession() - Comprehensive Test Coverage should successfully get session details" time="0.005">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getSession() - Comprehensive Test Coverage should throw NotFoundException for 404 errors" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getSession() - Comprehensive Test Coverage should throw NotFoundException for 404 errors" time="0.008">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getSession() - Comprehensive Test Coverage should throw ForbiddenException for 403 errors" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getSession() - Comprehensive Test Coverage should throw ForbiddenException for 403 errors" time="0.024">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getSession() - Comprehensive Test Coverage should throw UnauthorizedException for 401 errors" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getSession() - Comprehensive Test Coverage should throw UnauthorizedException for 401 errors" time="0.008">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getSession() - Comprehensive Test Coverage should throw InternalServerErrorException for unknown errors" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getSession() - Comprehensive Test Coverage should throw InternalServerErrorException for unknown errors" time="0.018">
+      <failure>Error: expect(received).rejects.toThrow(expected)
+
+Expected substring: &quot;An unexpected error occurred while retrieving session details.&quot;
+Received message:   &quot;An unexpected error occurred while retrieving session.&quot;
+
+      174 |       });
+      175 |
+    &gt; 176 |       throw new InternalServerErrorException(&apos;An unexpected error occurred while retrieving session.&apos;);
+          |             ^
+      177 |     }
+      178 |   }
+      179 |
+
+      at ClerkSessionService.getSession (src/modules/Infrastructure/clerk/clerk.session.service.ts:176:13)
+      at Object.&lt;anonymous&gt; (test/unit/modules/Infracstructre/clerk/clerk.session.service.spec.ts:714:9)
+    at Object.toThrow (/home/nguyenthanhhung/Code/TheShoeBolt/node_modules/expect/build/index.js:218:22)
+    at Object.&lt;anonymous&gt; (/home/nguyenthanhhung/Code/TheShoeBolt/test/unit/modules/Infracstructre/clerk/clerk.session.service.spec.ts:714:61)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)</failure>
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getSession() - Comprehensive Test Coverage should handle network connection errors" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage getSession() - Comprehensive Test Coverage should handle network connection errors" time="0.007">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should successfully verify token and return complete auth data" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should successfully verify token and return complete auth data" time="0.008">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should create proper Web API Request with Authorization header" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should create proper Web API Request with Authorization header" time="0.006">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should throw UnauthorizedException when token is not authenticated" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should throw UnauthorizedException when token is not authenticated" time="0.02">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should throw UnauthorizedException when session is inactive" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should throw UnauthorizedException when session is inactive" time="0.004">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should throw UnauthorizedException when session is null" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should throw UnauthorizedException when session is null" time="0.006">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should handle authenticateRequest errors" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should handle authenticateRequest errors" time="0.009">
+      <failure>Error: expect(received).rejects.toThrow(expected)
+
+Expected substring: &quot;Token verification failed: Invalid JWT format&quot;
+Received message:   &quot;Authentication failed: Invalid JWT format&quot;
+
+      289 |       });
+      290 |
+    &gt; 291 |       throw new UnauthorizedException(`Authentication failed: ${error.message}`);
+          |             ^
+      292 |     }
+      293 |   }
+      294 |
+
+      at ClerkSessionService.verifyTokenAndGetAuthData (src/modules/Infrastructure/clerk/clerk.session.service.ts:291:13)
+      at Object.&lt;anonymous&gt; (test/unit/modules/Infracstructre/clerk/clerk.session.service.spec.ts:853:9)
+    at Object.toThrow (/home/nguyenthanhhung/Code/TheShoeBolt/node_modules/expect/build/index.js:218:22)
+    at Object.&lt;anonymous&gt; (/home/nguyenthanhhung/Code/TheShoeBolt/test/unit/modules/Infracstructre/clerk/clerk.session.service.spec.ts:853:72)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)</failure>
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should handle getSession errors during verification" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should handle getSession errors during verification" time="0.006">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should handle getUser errors during verification" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should handle getUser errors during verification" time="0.007">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should handle empty token" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should handle empty token" time="0.005">
+      <failure>Error: expect(received).rejects.toThrow()
+
+Received promise resolved instead of rejected
+Resolved to value: {&quot;session&quot;: {&quot;createdAt&quot;: 1752388619512, &quot;id&quot;: &quot;sess_123&quot;, &quot;status&quot;: &quot;active&quot;, &quot;updatedAt&quot;: 1752388619512, &quot;userId&quot;: &quot;user_123&quot;}, &quot;sessionClaims&quot;: {&quot;exp&quot;: 1752392219, &quot;iat&quot;: 1752388619, &quot;sid&quot;: &quot;sess_123&quot;, &quot;sub&quot;: &quot;user_123&quot;}, &quot;user&quot;: {&quot;email&quot;: &quot;test@example.com&quot;, &quot;firstName&quot;: &quot;John&quot;, &quot;id&quot;: &quot;user_123&quot;, &quot;lastName&quot;: &quot;Doe&quot;, &quot;publicMetadata&quot;: {&quot;role&quot;: &quot;admin&quot;}}}
+    at expect (/home/nguyenthanhhung/Code/TheShoeBolt/node_modules/expect/build/index.js:113:15)
+    at Object.&lt;anonymous&gt; (/home/nguyenthanhhung/Code/TheShoeBolt/test/unit/modules/Infracstructre/clerk/clerk.session.service.spec.ts:883:15)
+    at Promise.then.completed (/home/nguyenthanhhung/Code/TheShoeBolt/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/home/nguyenthanhhung/Code/TheShoeBolt/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/home/nguyenthanhhung/Code/TheShoeBolt/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (/home/nguyenthanhhung/Code/TheShoeBolt/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/home/nguyenthanhhung/Code/TheShoeBolt/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/home/nguyenthanhhung/Code/TheShoeBolt/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/home/nguyenthanhhung/Code/TheShoeBolt/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/home/nguyenthanhhung/Code/TheShoeBolt/node_modules/jest-circus/build/run.js:121:9)
+    at run (/home/nguyenthanhhung/Code/TheShoeBolt/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/home/nguyenthanhhung/Code/TheShoeBolt/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/home/nguyenthanhhung/Code/TheShoeBolt/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/home/nguyenthanhhung/Code/TheShoeBolt/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/home/nguyenthanhhung/Code/TheShoeBolt/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/home/nguyenthanhhung/Code/TheShoeBolt/node_modules/jest-runner/build/testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should handle null sessionClaims" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should handle null sessionClaims" time="0.005">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should handle user with no email addresses" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should handle user with no email addresses" time="0.003">
+    </testcase>
+    <testcase classname="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should handle network timeout during token verification" name="ClerkSessionService PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage verifyTokenAndGetAuthData() - Comprehensive Test Coverage should handle network timeout during token verification" time="0.008">
+      <failure>Error: expect(received).rejects.toThrow(expected)
+
+Expected substring: &quot;Token verification failed: Request timeout&quot;
+Received message:   &quot;Authentication failed: Request timeout&quot;
+
+      289 |       });
+      290 |
+    &gt; 291 |       throw new UnauthorizedException(`Authentication failed: ${error.message}`);
+          |             ^
+      292 |     }
+      293 |   }
+      294 |
+
+      at ClerkSessionService.verifyTokenAndGetAuthData (src/modules/Infrastructure/clerk/clerk.session.service.ts:291:13)
+      at Object.&lt;anonymous&gt; (test/unit/modules/Infracstructre/clerk/clerk.session.service.spec.ts:923:9)
+    at Object.toThrow (/home/nguyenthanhhung/Code/TheShoeBolt/node_modules/expect/build/index.js:218:22)
+    at Object.&lt;anonymous&gt; (/home/nguyenthanhhung/Code/TheShoeBolt/test/unit/modules/Infracstructre/clerk/clerk.session.service.spec.ts:923:72)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="Simple Validation Test" errors="0" failures="0" skipped="0" timestamp="2025-07-13T06:36:34" time="25.175" tests="5">
+    <testcase classname="Simple Validation Test SessionIdParamDto Validation should pass validation for valid sessionId" name="Simple Validation Test SessionIdParamDto Validation should pass validation for valid sessionId" time="0.018">
     </testcase>
     <testcase classname="Simple Validation Test SessionIdParamDto Validation should fail validation for invalid sessionId format" name="Simple Validation Test SessionIdParamDto Validation should fail validation for invalid sessionId format" time="0.003">
     </testcase>
-    <testcase classname="Simple Validation Test SessionIdParamDto Validation should fail validation for empty sessionId" name="Simple Validation Test SessionIdParamDto Validation should fail validation for empty sessionId" time="0.001">
+    <testcase classname="Simple Validation Test SessionIdParamDto Validation should fail validation for empty sessionId" name="Simple Validation Test SessionIdParamDto Validation should fail validation for empty sessionId" time="0.002">
     </testcase>
-    <testcase classname="Simple Validation Test UserIdParamDto Validation should pass validation for valid userId" name="Simple Validation Test UserIdParamDto Validation should pass validation for valid userId" time="0.002">
+    <testcase classname="Simple Validation Test UserIdParamDto Validation should pass validation for valid userId" name="Simple Validation Test UserIdParamDto Validation should pass validation for valid userId" time="0.001">
     </testcase>
-    <testcase classname="Simple Validation Test UserIdParamDto Validation should fail validation for invalid userId format" name="Simple Validation Test UserIdParamDto Validation should fail validation for invalid userId format" time="0.002">
+    <testcase classname="Simple Validation Test UserIdParamDto Validation should fail validation for invalid userId format" name="Simple Validation Test UserIdParamDto Validation should fail validation for invalid userId format" time="0.001">
     </testcase>
   </testsuite>
-  <testsuite name="Roles Decorators" errors="0" failures="0" skipped="0" timestamp="2025-07-06T13:28:25" time="12.889" tests="16">
-    <testcase classname="Roles Decorators Constants Export should export correct metadata keys" name="Roles Decorators Constants Export should export correct metadata keys" time="0.005">
+  <testsuite name="Roles Decorators" errors="0" failures="0" skipped="0" timestamp="2025-07-13T06:36:34" time="25.185" tests="16">
+    <testcase classname="Roles Decorators Constants Export should export correct metadata keys" name="Roles Decorators Constants Export should export correct metadata keys" time="0.017">
     </testcase>
     <testcase classname="Roles Decorators @Roles Decorator (Legacy) should set metadata with ROLES_KEY" name="Roles Decorators @Roles Decorator (Legacy) should set metadata with ROLES_KEY" time="0.002">
     </testcase>
-    <testcase classname="Roles Decorators @Roles Decorator (Legacy) should work with single role" name="Roles Decorators @Roles Decorator (Legacy) should work with single role" time="0">
+    <testcase classname="Roles Decorators @Roles Decorator (Legacy) should work with single role" name="Roles Decorators @Roles Decorator (Legacy) should work with single role" time="0.001">
     </testcase>
     <testcase classname="Roles Decorators @Roles Decorator (Legacy) should work with empty roles array" name="Roles Decorators @Roles Decorator (Legacy) should work with empty roles array" time="0.001">
     </testcase>
-    <testcase classname="Roles Decorators @Roles Decorator (Legacy) should work on methods" name="Roles Decorators @Roles Decorator (Legacy) should work on methods" time="0">
+    <testcase classname="Roles Decorators @Roles Decorator (Legacy) should work on methods" name="Roles Decorators @Roles Decorator (Legacy) should work on methods" time="0.001">
     </testcase>
-    <testcase classname="Roles Decorators @RolesAny Decorator should set metadata with ROLES_ANY_KEY" name="Roles Decorators @RolesAny Decorator should set metadata with ROLES_ANY_KEY" time="0">
+    <testcase classname="Roles Decorators @RolesAny Decorator should set metadata with ROLES_ANY_KEY" name="Roles Decorators @RolesAny Decorator should set metadata with ROLES_ANY_KEY" time="0.001">
     </testcase>
-    <testcase classname="Roles Decorators @RolesAny Decorator should work with single role" name="Roles Decorators @RolesAny Decorator should work with single role" time="0.001">
+    <testcase classname="Roles Decorators @RolesAny Decorator should work with single role" name="Roles Decorators @RolesAny Decorator should work with single role" time="0">
     </testcase>
     <testcase classname="Roles Decorators @RolesAny Decorator should work on methods" name="Roles Decorators @RolesAny Decorator should work on methods" time="0">
     </testcase>
     <testcase classname="Roles Decorators @RolesAny Decorator should work with all available roles" name="Roles Decorators @RolesAny Decorator should work with all available roles" time="0.001">
     </testcase>
-    <testcase classname="Roles Decorators @RolesAll Decorator should set metadata with ROLES_ALL_KEY" name="Roles Decorators @RolesAll Decorator should set metadata with ROLES_ALL_KEY" time="0">
+    <testcase classname="Roles Decorators @RolesAll Decorator should set metadata with ROLES_ALL_KEY" name="Roles Decorators @RolesAll Decorator should set metadata with ROLES_ALL_KEY" time="0.002">
     </testcase>
-    <testcase classname="Roles Decorators @RolesAll Decorator should work with single role" name="Roles Decorators @RolesAll Decorator should work with single role" time="0">
+    <testcase classname="Roles Decorators @RolesAll Decorator should work with single role" name="Roles Decorators @RolesAll Decorator should work with single role" time="0.001">
     </testcase>
     <testcase classname="Roles Decorators @RolesAll Decorator should work on methods" name="Roles Decorators @RolesAll Decorator should work on methods" time="0.001">
     </testcase>
     <testcase classname="Roles Decorators @RolesAll Decorator should work with empty roles array" name="Roles Decorators @RolesAll Decorator should work with empty roles array" time="0">
     </testcase>
-    <testcase classname="Roles Decorators Decorator Combination Tests should allow multiple decorators on same class" name="Roles Decorators Decorator Combination Tests should allow multiple decorators on same class" time="0">
+    <testcase classname="Roles Decorators Decorator Combination Tests should allow multiple decorators on same class" name="Roles Decorators Decorator Combination Tests should allow multiple decorators on same class" time="0.001">
     </testcase>
-    <testcase classname="Roles Decorators Decorator Combination Tests should allow different decorators on class and method" name="Roles Decorators Decorator Combination Tests should allow different decorators on class and method" time="0">
+    <testcase classname="Roles Decorators Decorator Combination Tests should allow different decorators on class and method" name="Roles Decorators Decorator Combination Tests should allow different decorators on class and method" time="0.002">
     </testcase>
-    <testcase classname="Roles Decorators Type Safety Tests should only accept UserRole enum values" name="Roles Decorators Type Safety Tests should only accept UserRole enum values" time="0">
+    <testcase classname="Roles Decorators Type Safety Tests should only accept UserRole enum values" name="Roles Decorators Type Safety Tests should only accept UserRole enum values" time="0.001">
     </testcase>
   </testsuite>
-  <testsuite name="RolesGuard" errors="0" failures="0" skipped="0" timestamp="2025-07-06T13:28:25" time="12.897" tests="19">
-    <testcase classname="RolesGuard Guard Basic Functionality should be defined" name="RolesGuard Guard Basic Functionality should be defined" time="0.007">
+  <testsuite name="RolesGuard" errors="0" failures="0" skipped="0" timestamp="2025-07-13T06:36:34" time="25.445" tests="19">
+    <testcase classname="RolesGuard Guard Basic Functionality should be defined" name="RolesGuard Guard Basic Functionality should be defined" time="0.015">
     </testcase>
-    <testcase classname="RolesGuard Guard Basic Functionality should have reflector dependency" name="RolesGuard Guard Basic Functionality should have reflector dependency" time="0">
+    <testcase classname="RolesGuard Guard Basic Functionality should have reflector dependency" name="RolesGuard Guard Basic Functionality should have reflector dependency" time="0.001">
     </testcase>
-    <testcase classname="RolesGuard Role Requirement Validation should throw ForbiddenException when no roles are required (fail-safe)" name="RolesGuard Role Requirement Validation should throw ForbiddenException when no roles are required (fail-safe)" time="0.024">
+    <testcase classname="RolesGuard Role Requirement Validation should throw ForbiddenException when no roles are required (fail-safe)" name="RolesGuard Role Requirement Validation should throw ForbiddenException when no roles are required (fail-safe)" time="0.026">
     </testcase>
     <testcase classname="RolesGuard Role Requirement Validation should throw ForbiddenException when empty roles array is provided" name="RolesGuard Role Requirement Validation should throw ForbiddenException when empty roles array is provided" time="0.002">
     </testcase>
     <testcase classname="RolesGuard Role Requirement Validation should call reflector with correct parameters" name="RolesGuard Role Requirement Validation should call reflector with correct parameters" time="0.002">
     </testcase>
-    <testcase classname="RolesGuard User Authentication Validation should throw InternalServerErrorException when user is missing" name="RolesGuard User Authentication Validation should throw InternalServerErrorException when user is missing" time="0.048">
+    <testcase classname="RolesGuard User Authentication Validation should throw InternalServerErrorException when user is missing" name="RolesGuard User Authentication Validation should throw InternalServerErrorException when user is missing" time="0.071">
     </testcase>
-    <testcase classname="RolesGuard User Authentication Validation should throw InternalServerErrorException when user is null" name="RolesGuard User Authentication Validation should throw InternalServerErrorException when user is null" time="0.004">
+    <testcase classname="RolesGuard User Authentication Validation should throw InternalServerErrorException when user is null" name="RolesGuard User Authentication Validation should throw InternalServerErrorException when user is null" time="0.005">
     </testcase>
     <testcase classname="RolesGuard Role Extraction Logic should extract role from single role format (current format)" name="RolesGuard Role Extraction Logic should extract role from single role format (current format)" time="0.001">
     </testcase>
@@ -221,161 +455,71 @@
     </testcase>
     <testcase classname="RolesGuard Role Extraction Logic should prioritize roles array over single role when both exist" name="RolesGuard Role Extraction Logic should prioritize roles array over single role when both exist" time="0">
     </testcase>
-    <testcase classname="RolesGuard Role Extraction Logic should throw ForbiddenException when user has no publicMetadata" name="RolesGuard Role Extraction Logic should throw ForbiddenException when user has no publicMetadata" time="0.001">
+    <testcase classname="RolesGuard Role Extraction Logic should throw ForbiddenException when user has no publicMetadata" name="RolesGuard Role Extraction Logic should throw ForbiddenException when user has no publicMetadata" time="0.002">
     </testcase>
     <testcase classname="RolesGuard Role Extraction Logic should throw ForbiddenException when user has publicMetadata but no role or roles" name="RolesGuard Role Extraction Logic should throw ForbiddenException when user has publicMetadata but no role or roles" time="0.002">
     </testcase>
     <testcase classname="RolesGuard Role Extraction Logic should return empty array when extractUserRoles is called with publicMetadata but no role/roles" name="RolesGuard Role Extraction Logic should return empty array when extractUserRoles is called with publicMetadata but no role/roles" time="0">
     </testcase>
-    <testcase classname="RolesGuard RolesAny Decorator Tests should allow access when user has one of the required roles (RolesAny)" name="RolesGuard RolesAny Decorator Tests should allow access when user has one of the required roles (RolesAny)" time="0.002">
+    <testcase classname="RolesGuard RolesAny Decorator Tests should allow access when user has one of the required roles (RolesAny)" name="RolesGuard RolesAny Decorator Tests should allow access when user has one of the required roles (RolesAny)" time="0.001">
     </testcase>
     <testcase classname="RolesGuard RolesAny Decorator Tests should deny access when user does not have any of the required roles (RolesAny)" name="RolesGuard RolesAny Decorator Tests should deny access when user does not have any of the required roles (RolesAny)" time="0.001">
     </testcase>
-    <testcase classname="RolesGuard RolesAll Decorator Tests should allow access when user has all required roles (RolesAll)" name="RolesGuard RolesAll Decorator Tests should allow access when user has all required roles (RolesAll)" time="0.001">
+    <testcase classname="RolesGuard RolesAll Decorator Tests should allow access when user has all required roles (RolesAll)" name="RolesGuard RolesAll Decorator Tests should allow access when user has all required roles (RolesAll)" time="0">
     </testcase>
     <testcase classname="RolesGuard RolesAll Decorator Tests should deny access when user does not have all required roles (RolesAll)" name="RolesGuard RolesAll Decorator Tests should deny access when user does not have all required roles (RolesAll)" time="0.001">
     </testcase>
-    <testcase classname="RolesGuard Legacy Roles Decorator Tests should use ALL logic for legacy @Roles decorator" name="RolesGuard Legacy Roles Decorator Tests should use ALL logic for legacy @Roles decorator" time="0.001">
+    <testcase classname="RolesGuard Legacy Roles Decorator Tests should use ALL logic for legacy @Roles decorator" name="RolesGuard Legacy Roles Decorator Tests should use ALL logic for legacy @Roles decorator" time="0.002">
     </testcase>
     <testcase classname="RolesGuard Legacy Roles Decorator Tests should allow access when user has all roles required by legacy decorator" name="RolesGuard Legacy Roles Decorator Tests should allow access when user has all roles required by legacy decorator" time="0.001">
     </testcase>
   </testsuite>
-  <testsuite name="ClerkAuthGuard" errors="0" failures="0" skipped="0" timestamp="2025-07-06T13:28:25" time="13.014" tests="13">
-    <testcase classname="ClerkAuthGuard canActivate - Success Scenarios should return true when authentication is successful" name="ClerkAuthGuard canActivate - Success Scenarios should return true when authentication is successful" time="0.02">
+  <testsuite name="SessionTrackingService" errors="0" failures="0" skipped="0" timestamp="2025-07-13T06:36:34" time="25.666" tests="20">
+    <testcase classname="SessionTrackingService createSession should create a session successfully" name="SessionTrackingService createSession should create a session successfully" time="0.018">
     </testcase>
-    <testcase classname="ClerkAuthGuard canActivate - Success Scenarios should attach clerkUser object to request when authentication succeeds" name="ClerkAuthGuard canActivate - Success Scenarios should attach clerkUser object to request when authentication succeeds" time="0.005">
-    </testcase>
-    <testcase classname="ClerkAuthGuard canActivate - Success Scenarios should call authenticateRequest with correct parameters" name="ClerkAuthGuard canActivate - Success Scenarios should call authenticateRequest with correct parameters" time="0.004">
-    </testcase>
-    <testcase classname="ClerkAuthGuard canActivate - Authentication Failure Scenarios should throw UnauthorizedException when isAuthenticated is false" name="ClerkAuthGuard canActivate - Authentication Failure Scenarios should throw UnauthorizedException when isAuthenticated is false" time="0.021">
-    </testcase>
-    <testcase classname="ClerkAuthGuard canActivate - Authentication Failure Scenarios should throw UnauthorizedException when authenticateRequest throws error" name="ClerkAuthGuard canActivate - Authentication Failure Scenarios should throw UnauthorizedException when authenticateRequest throws error" time="0.006">
-    </testcase>
-    <testcase classname="ClerkAuthGuard canActivate - Authentication Failure Scenarios should throw UnauthorizedException when toAuth throws error" name="ClerkAuthGuard canActivate - Authentication Failure Scenarios should throw UnauthorizedException when toAuth throws error" time="0.006">
-    </testcase>
-    <testcase classname="ClerkAuthGuard convertToWebRequest should convert Express Request to Web API Request correctly" name="ClerkAuthGuard convertToWebRequest should convert Express Request to Web API Request correctly" time="0.004">
-    </testcase>
-    <testcase classname="ClerkAuthGuard convertToWebRequest should handle headers conversion correctly" name="ClerkAuthGuard convertToWebRequest should handle headers conversion correctly" time="0.01">
-    </testcase>
-    <testcase classname="ClerkAuthGuard convertToWebRequest should handle cookies conversion correctly" name="ClerkAuthGuard convertToWebRequest should handle cookies conversion correctly" time="0.004">
-    </testcase>
-    <testcase classname="ClerkAuthGuard convertToWebRequest should handle empty cookies object" name="ClerkAuthGuard convertToWebRequest should handle empty cookies object" time="0.006">
-    </testcase>
-    <testcase classname="ClerkAuthGuard Error Handling and Logging should log error when authentication fails" name="ClerkAuthGuard Error Handling and Logging should log error when authentication fails" time="0.004">
-    </testcase>
-    <testcase classname="ClerkAuthGuard Error Handling and Logging should log error when user is not authenticated" name="ClerkAuthGuard Error Handling and Logging should log error when user is not authenticated" time="0.002">
-    </testcase>
-    <testcase classname="ClerkAuthGuard Error Handling and Logging should log debug message when user is authenticated successfully" name="ClerkAuthGuard Error Handling and Logging should log debug message when user is authenticated successfully" time="0.003">
-    </testcase>
-  </testsuite>
-  <testsuite name="ClerkSessionService" errors="0" failures="0" skipped="0" timestamp="2025-07-06T13:28:25" time="13.026" tests="30">
-    <testcase classname="ClerkSessionService Constructor and Initialization should be defined" name="ClerkSessionService Constructor and Initialization should be defined" time="0.014">
-    </testcase>
-    <testcase classname="ClerkSessionService Constructor and Initialization should inject ClerkClient and options correctly" name="ClerkSessionService Constructor and Initialization should inject ClerkClient and options correctly" time="0.004">
-    </testcase>
-    <testcase classname="ClerkSessionService getSessionList should return sessions list successfully" name="ClerkSessionService getSessionList should return sessions list successfully" time="0.005">
-    </testcase>
-    <testcase classname="ClerkSessionService getSessionList should throw UnauthorizedException when getSessionList fails with 401" name="ClerkSessionService getSessionList should throw UnauthorizedException when getSessionList fails with 401" time="0.028">
-    </testcase>
-    <testcase classname="ClerkSessionService revokeSession should revoke session successfully" name="ClerkSessionService revokeSession should revoke session successfully" time="0.003">
-    </testcase>
-    <testcase classname="ClerkSessionService revokeSession should throw UnauthorizedException when revokeSession fails with 401" name="ClerkSessionService revokeSession should throw UnauthorizedException when revokeSession fails with 401" time="0.003">
-    </testcase>
-    <testcase classname="ClerkSessionService verifySessionToken should verify session token successfully" name="ClerkSessionService verifySessionToken should verify session token successfully" time="0.005">
-    </testcase>
-    <testcase classname="ClerkSessionService verifySessionToken should throw UnauthorizedException when token is invalid" name="ClerkSessionService verifySessionToken should throw UnauthorizedException when token is invalid" time="0.003">
-    </testcase>
-    <testcase classname="ClerkSessionService verifySessionToken should throw UnauthorizedException when authenticateRequest fails" name="ClerkSessionService verifySessionToken should throw UnauthorizedException when authenticateRequest fails" time="0.013">
-    </testcase>
-    <testcase classname="ClerkSessionService getSession should get session successfully" name="ClerkSessionService getSession should get session successfully" time="0.004">
-    </testcase>
-    <testcase classname="ClerkSessionService getSession should throw UnauthorizedException when getSession fails with 401" name="ClerkSessionService getSession should throw UnauthorizedException when getSession fails with 401" time="0.006">
-    </testcase>
-    <testcase classname="ClerkSessionService getUser should get user successfully" name="ClerkSessionService getUser should get user successfully" time="0.003">
-    </testcase>
-    <testcase classname="ClerkSessionService getUser should throw UnauthorizedException when getUser fails with 401" name="ClerkSessionService getUser should throw UnauthorizedException when getUser fails with 401" time="0.003">
-    </testcase>
-    <testcase classname="ClerkSessionService verifyTokenAndGetAuthData should verify token and get complete auth data successfully" name="ClerkSessionService verifyTokenAndGetAuthData should verify token and get complete auth data successfully" time="0.003">
-    </testcase>
-    <testcase classname="ClerkSessionService verifyTokenAndGetAuthData should throw UnauthorizedException when token is invalid" name="ClerkSessionService verifyTokenAndGetAuthData should throw UnauthorizedException when token is invalid" time="0.003">
-    </testcase>
-    <testcase classname="ClerkSessionService verifyTokenAndGetAuthData should throw UnauthorizedException when session is inactive" name="ClerkSessionService verifyTokenAndGetAuthData should throw UnauthorizedException when session is inactive" time="0.003">
-    </testcase>
-    <testcase classname="ClerkSessionService verifyTokenAndGetAuthData should throw UnauthorizedException when session is null" name="ClerkSessionService verifyTokenAndGetAuthData should throw UnauthorizedException when session is null" time="0.003">
-    </testcase>
-    <testcase classname="ClerkSessionService verifyTokenAndGetAuthData should throw UnauthorizedException when authentication fails" name="ClerkSessionService verifyTokenAndGetAuthData should throw UnauthorizedException when authentication fails" time="0.003">
-    </testcase>
-    <testcase classname="ClerkSessionService verifyTokenAndGetAuthData should handle user with no email addresses" name="ClerkSessionService verifyTokenAndGetAuthData should handle user with no email addresses" time="0.004">
-    </testcase>
-    <testcase classname="ClerkSessionService revokeAllUserSessions should revoke all user sessions successfully" name="ClerkSessionService revokeAllUserSessions should revoke all user sessions successfully" time="0.004">
-    </testcase>
-    <testcase classname="ClerkSessionService revokeAllUserSessions should handle empty sessions list" name="ClerkSessionService revokeAllUserSessions should handle empty sessions list" time="0.003">
-    </testcase>
-    <testcase classname="ClerkSessionService revokeAllUserSessions should throw UnauthorizedException when getSessionList fails with 401" name="ClerkSessionService revokeAllUserSessions should throw UnauthorizedException when getSessionList fails with 401" time="0.005">
-    </testcase>
-    <testcase classname="ClerkSessionService revokeAllUserSessions should throw UnauthorizedException when revokeSession fails with 401" name="ClerkSessionService revokeAllUserSessions should throw UnauthorizedException when revokeSession fails with 401" time="0.004">
-    </testcase>
-    <testcase classname="ClerkSessionService Edge Cases and Error Handling should handle Request constructor properly in verifySessionToken" name="ClerkSessionService Edge Cases and Error Handling should handle Request constructor properly in verifySessionToken" time="0.003">
-    </testcase>
-    <testcase classname="ClerkSessionService Edge Cases and Error Handling should handle Request constructor properly in verifyTokenAndGetAuthData" name="ClerkSessionService Edge Cases and Error Handling should handle Request constructor properly in verifyTokenAndGetAuthData" time="0.002">
-    </testcase>
-    <testcase classname="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis CURRENT ISSUE: getSessionList only throws UnauthorizedException for all errors" name="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis CURRENT ISSUE: getSessionList only throws UnauthorizedException for all errors" time="0.004">
-    </testcase>
-    <testcase classname="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis CURRENT ISSUE: revokeSession only throws UnauthorizedException for all errors" name="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis CURRENT ISSUE: revokeSession only throws UnauthorizedException for all errors" time="0.004">
-    </testcase>
-    <testcase classname="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis CURRENT ISSUE: getUser only throws UnauthorizedException for all errors" name="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis CURRENT ISSUE: getUser only throws UnauthorizedException for all errors" time="0.004">
-    </testcase>
-    <testcase classname="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis MISSING FEATURE: No detailed error logging with Logger" name="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis MISSING FEATURE: No detailed error logging with Logger" time="0.003">
-    </testcase>
-    <testcase classname="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis VERIFIED FEATURE: Status code differentiation works correctly" name="ClerkSessionService PHASE 2 - Vấn đề 2.1: Xử lý Lỗi Không Đầy đủ Detailed Error Handling Analysis VERIFIED FEATURE: Status code differentiation works correctly" time="0.004">
-    </testcase>
-  </testsuite>
-  <testsuite name="SessionTrackingService" errors="0" failures="0" skipped="0" timestamp="2025-07-06T13:28:25" time="13.219" tests="20">
-    <testcase classname="SessionTrackingService createSession should create a session successfully" name="SessionTrackingService createSession should create a session successfully" time="0.021">
-    </testcase>
-    <testcase classname="SessionTrackingService createSession should throw InternalServerErrorException when repository fails" name="SessionTrackingService createSession should throw InternalServerErrorException when repository fails" time="0.029">
+    <testcase classname="SessionTrackingService createSession should throw InternalServerErrorException when repository fails" name="SessionTrackingService createSession should throw InternalServerErrorException when repository fails" time="0.025">
     </testcase>
     <testcase classname="SessionTrackingService updateSession should update a session successfully" name="SessionTrackingService updateSession should update a session successfully" time="0.004">
     </testcase>
     <testcase classname="SessionTrackingService updateSession should throw NotFoundException when session not found" name="SessionTrackingService updateSession should throw NotFoundException when session not found" time="0.004">
     </testcase>
-    <testcase classname="SessionTrackingService updateSession should throw InternalServerErrorException when repository fails" name="SessionTrackingService updateSession should throw InternalServerErrorException when repository fails" time="0.004">
+    <testcase classname="SessionTrackingService updateSession should throw InternalServerErrorException when repository fails" name="SessionTrackingService updateSession should throw InternalServerErrorException when repository fails" time="0.003">
     </testcase>
     <testcase classname="SessionTrackingService endSession should end a session successfully" name="SessionTrackingService endSession should end a session successfully" time="0.004">
     </testcase>
-    <testcase classname="SessionTrackingService endSession should throw NotFoundException when session not found" name="SessionTrackingService endSession should throw NotFoundException when session not found" time="0.004">
+    <testcase classname="SessionTrackingService endSession should throw NotFoundException when session not found" name="SessionTrackingService endSession should throw NotFoundException when session not found" time="0.002">
     </testcase>
-    <testcase classname="SessionTrackingService endSession should throw InternalServerErrorException when repository fails" name="SessionTrackingService endSession should throw InternalServerErrorException when repository fails" time="0.005">
+    <testcase classname="SessionTrackingService endSession should throw InternalServerErrorException when repository fails" name="SessionTrackingService endSession should throw InternalServerErrorException when repository fails" time="0.002">
     </testcase>
-    <testcase classname="SessionTrackingService getActiveSessions should return active sessions for a user" name="SessionTrackingService getActiveSessions should return active sessions for a user" time="0.004">
+    <testcase classname="SessionTrackingService getActiveSessions should return active sessions for a user" name="SessionTrackingService getActiveSessions should return active sessions for a user" time="0.003">
     </testcase>
-    <testcase classname="SessionTrackingService getActiveSessions should throw InternalServerErrorException when repository fails" name="SessionTrackingService getActiveSessions should throw InternalServerErrorException when repository fails" time="0.005">
+    <testcase classname="SessionTrackingService getActiveSessions should throw InternalServerErrorException when repository fails" name="SessionTrackingService getActiveSessions should throw InternalServerErrorException when repository fails" time="0.002">
     </testcase>
-    <testcase classname="SessionTrackingService getSessionByClerkId should return session by Clerk ID" name="SessionTrackingService getSessionByClerkId should return session by Clerk ID" time="0.004">
+    <testcase classname="SessionTrackingService getSessionByClerkId should return session by Clerk ID" name="SessionTrackingService getSessionByClerkId should return session by Clerk ID" time="0.003">
     </testcase>
-    <testcase classname="SessionTrackingService getSessionByClerkId should return null when session not found" name="SessionTrackingService getSessionByClerkId should return null when session not found" time="0.003">
+    <testcase classname="SessionTrackingService getSessionByClerkId should return null when session not found" name="SessionTrackingService getSessionByClerkId should return null when session not found" time="0.001">
     </testcase>
-    <testcase classname="SessionTrackingService getSessionByClerkId should throw InternalServerErrorException when repository fails" name="SessionTrackingService getSessionByClerkId should throw InternalServerErrorException when repository fails" time="0.013">
+    <testcase classname="SessionTrackingService getSessionByClerkId should throw InternalServerErrorException when repository fails" name="SessionTrackingService getSessionByClerkId should throw InternalServerErrorException when repository fails" time="0.002">
     </testcase>
-    <testcase classname="SessionTrackingService updateLastActivity should update last activity successfully" name="SessionTrackingService updateLastActivity should update last activity successfully" time="0.003">
+    <testcase classname="SessionTrackingService updateLastActivity should update last activity successfully" name="SessionTrackingService updateLastActivity should update last activity successfully" time="0.002">
     </testcase>
-    <testcase classname="SessionTrackingService updateLastActivity should not throw error when session not found" name="SessionTrackingService updateLastActivity should not throw error when session not found" time="0.002">
+    <testcase classname="SessionTrackingService updateLastActivity should not throw error when session not found" name="SessionTrackingService updateLastActivity should not throw error when session not found" time="0.001">
     </testcase>
-    <testcase classname="SessionTrackingService updateLastActivity should not throw error when repository fails" name="SessionTrackingService updateLastActivity should not throw error when repository fails" time="0.004">
+    <testcase classname="SessionTrackingService updateLastActivity should not throw error when repository fails" name="SessionTrackingService updateLastActivity should not throw error when repository fails" time="0.002">
     </testcase>
-    <testcase classname="SessionTrackingService cleanupExpiredSessions should cleanup expired sessions successfully" name="SessionTrackingService cleanupExpiredSessions should cleanup expired sessions successfully" time="0.004">
+    <testcase classname="SessionTrackingService cleanupExpiredSessions should cleanup expired sessions successfully" name="SessionTrackingService cleanupExpiredSessions should cleanup expired sessions successfully" time="0.002">
     </testcase>
     <testcase classname="SessionTrackingService cleanupExpiredSessions should throw InternalServerErrorException when cleanup fails" name="SessionTrackingService cleanupExpiredSessions should throw InternalServerErrorException when cleanup fails" time="0.003">
     </testcase>
-    <testcase classname="SessionTrackingService getSessionStats should return session statistics" name="SessionTrackingService getSessionStats should return session statistics" time="0.004">
+    <testcase classname="SessionTrackingService getSessionStats should return session statistics" name="SessionTrackingService getSessionStats should return session statistics" time="0.001">
     </testcase>
-    <testcase classname="SessionTrackingService getSessionStats should throw InternalServerErrorException when stats calculation fails" name="SessionTrackingService getSessionStats should throw InternalServerErrorException when stats calculation fails" time="0.003">
+    <testcase classname="SessionTrackingService getSessionStats should throw InternalServerErrorException when stats calculation fails" name="SessionTrackingService getSessionStats should throw InternalServerErrorException when stats calculation fails" time="0.007">
     </testcase>
   </testsuite>
-  <testsuite name="ClerkModule" errors="0" failures="0" skipped="0" timestamp="2025-07-06T13:28:25" time="13.477" tests="10">
-    <testcase classname="ClerkModule Module Initialization and Providers should compile the module successfully" name="ClerkModule Module Initialization and Providers should compile the module successfully" time="0.017">
+  <testsuite name="ClerkModule" errors="0" failures="0" skipped="0" timestamp="2025-07-13T06:36:34" time="26.124" tests="10">
+    <testcase classname="ClerkModule Module Initialization and Providers should compile the module successfully" name="ClerkModule Module Initialization and Providers should compile the module successfully" time="0.033">
     </testcase>
-    <testcase classname="ClerkModule Module Initialization and Providers should provide ClerkSessionService" name="ClerkModule Module Initialization and Providers should provide ClerkSessionService" time="0.007">
+    <testcase classname="ClerkModule Module Initialization and Providers should provide ClerkSessionService" name="ClerkModule Module Initialization and Providers should provide ClerkSessionService" time="0.006">
     </testcase>
     <testcase classname="ClerkModule Module Initialization and Providers should provide ClerkAuthGuard" name="ClerkModule Module Initialization and Providers should provide ClerkAuthGuard" time="0.004">
     </testcase>
@@ -383,7 +527,7 @@
     </testcase>
     <testcase classname="ClerkModule Module Initialization and Providers should provide the mocked CLERK_CLIENT" name="ClerkModule Module Initialization and Providers should provide the mocked CLERK_CLIENT" time="0.004">
     </testcase>
-    <testcase classname="ClerkModule Configuration Error Handling should fail to compile if required configuration is missing" name="ClerkModule Configuration Error Handling should fail to compile if required configuration is missing" time="0.003">
+    <testcase classname="ClerkModule Configuration Error Handling should fail to compile if required configuration is missing" name="ClerkModule Configuration Error Handling should fail to compile if required configuration is missing" time="0.004">
     </testcase>
     <testcase classname="ClerkModule ClerkModule.forRoot() Static Method should create dynamic module with forRoot method" name="ClerkModule ClerkModule.forRoot() Static Method should create dynamic module with forRoot method" time="0.002">
     </testcase>
@@ -394,102 +538,102 @@
     <testcase classname="ClerkModule ClerkModule.forRoot() Static Method should include all required exports in forRoot" name="ClerkModule ClerkModule.forRoot() Static Method should include all required exports in forRoot" time="0.001">
     </testcase>
   </testsuite>
-  <testsuite name="ClerkController" errors="0" failures="0" skipped="0" timestamp="2025-07-06T13:28:25" time="13.687" tests="48">
-    <testcase classname="ClerkController should be defined" name="ClerkController should be defined" time="0.02">
+  <testsuite name="ClerkController" errors="0" failures="0" skipped="0" timestamp="2025-07-13T06:36:34" time="26.707" tests="48">
+    <testcase classname="ClerkController should be defined" name="ClerkController should be defined" time="0.019">
     </testcase>
-    <testcase classname="ClerkController User Session Endpoints getUserSessions should get sessions for current user" name="ClerkController User Session Endpoints getUserSessions should get sessions for current user" time="0.012">
+    <testcase classname="ClerkController User Session Endpoints getUserSessions should get sessions for current user" name="ClerkController User Session Endpoints getUserSessions should get sessions for current user" time="0.003">
     </testcase>
-    <testcase classname="ClerkController User Session Endpoints revokeSession should revoke specific session" name="ClerkController User Session Endpoints revokeSession should revoke specific session" time="0.004">
+    <testcase classname="ClerkController User Session Endpoints revokeSession should revoke specific session" name="ClerkController User Session Endpoints revokeSession should revoke specific session" time="0.002">
     </testcase>
-    <testcase classname="ClerkController User Session Endpoints revokeAllSessions should revoke all sessions for current user" name="ClerkController User Session Endpoints revokeAllSessions should revoke all sessions for current user" time="0.003">
+    <testcase classname="ClerkController User Session Endpoints revokeAllSessions should revoke all sessions for current user" name="ClerkController User Session Endpoints revokeAllSessions should revoke all sessions for current user" time="0.001">
     </testcase>
-    <testcase classname="ClerkController Admin Endpoints getAnyUserSessions should get sessions for any user" name="ClerkController Admin Endpoints getAnyUserSessions should get sessions for any user" time="0.004">
+    <testcase classname="ClerkController Admin Endpoints getAnyUserSessions should get sessions for any user" name="ClerkController Admin Endpoints getAnyUserSessions should get sessions for any user" time="0.002">
     </testcase>
-    <testcase classname="ClerkController Admin Endpoints revokeAllUserSessions (admin) should revoke all sessions for any user" name="ClerkController Admin Endpoints revokeAllUserSessions (admin) should revoke all sessions for any user" time="0.004">
+    <testcase classname="ClerkController Admin Endpoints revokeAllUserSessions (admin) should revoke all sessions for any user" name="ClerkController Admin Endpoints revokeAllUserSessions (admin) should revoke all sessions for any user" time="0.002">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeSession should call clerkSessionService.revokeSession with valid sessionId" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeSession should call clerkSessionService.revokeSession with valid sessionId" time="0.187">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeSession should call clerkSessionService.revokeSession with valid sessionId" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeSession should call clerkSessionService.revokeSession with valid sessionId" time="0.357">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeSession should handle service errors properly" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeSession should handle service errors properly" time="0.026">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeSession should handle service errors properly" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeSession should handle service errors properly" time="0.024">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeAllUserSessions should call clerkSessionService.revokeAllUserSessions with valid userId" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeAllUserSessions should call clerkSessionService.revokeAllUserSessions with valid userId" time="0.011">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeAllUserSessions should call clerkSessionService.revokeAllUserSessions with valid userId" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeAllUserSessions should call clerkSessionService.revokeAllUserSessions with valid userId" time="0.004">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeAllUserSessions should handle revokeAllUserSessions service errors" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeAllUserSessions should handle revokeAllUserSessions service errors" time="0.006">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeAllUserSessions should handle revokeAllUserSessions service errors" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeAllUserSessions should handle revokeAllUserSessions service errors" time="0.005">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input getUserSessions should get sessions for current user from request context" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input getUserSessions should get sessions for current user from request context" time="0.005">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input getUserSessions should get sessions for current user from request context" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input getUserSessions should get sessions for current user from request context" time="0.004">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input getUserSessions should handle getUserSessions service errors" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input getUserSessions should handle getUserSessions service errors" time="0.005">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input getUserSessions should handle getUserSessions service errors" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input getUserSessions should handle getUserSessions service errors" time="0.004">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeAllSessions should revoke all sessions for current user from request context" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeAllSessions should revoke all sessions for current user from request context" time="0.005">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeAllSessions should revoke all sessions for current user from request context" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeAllSessions should revoke all sessions for current user from request context" time="0.003">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeAllSessions should handle revokeAllSessions service errors" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeAllSessions should handle revokeAllSessions service errors" time="0.004">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeAllSessions should handle revokeAllSessions service errors" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input revokeAllSessions should handle revokeAllSessions service errors" time="0.006">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input getAnyUserSessions (Admin) should get sessions for any user with userId in response" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input getAnyUserSessions (Admin) should get sessions for any user with userId in response" time="0.004">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input getAnyUserSessions (Admin) should get sessions for any user with userId in response" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input getAnyUserSessions (Admin) should get sessions for any user with userId in response" time="0.006">
     </testcase>
     <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input getAnyUserSessions (Admin) should handle getAnyUserSessions service errors" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Controller Behavior Tests - Business Logic với Valid Input getAnyUserSessions (Admin) should handle getAnyUserSessions service errors" time="0.004">
     </testcase>
     <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Empty Data Handling should handle empty sessions list from getUserSessions" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Empty Data Handling should handle empty sessions list from getUserSessions" time="0.004">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Empty Data Handling should handle empty revoked sessions list from revokeAllSessions" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Empty Data Handling should handle empty revoked sessions list from revokeAllSessions" time="0.003">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Empty Data Handling should handle empty revoked sessions list from revokeAllSessions" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Empty Data Handling should handle empty revoked sessions list from revokeAllSessions" time="0.01">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Empty Data Handling should handle empty admin sessions list from getAnyUserSessions" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Empty Data Handling should handle empty admin sessions list from getAnyUserSessions" time="0.011">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Empty Data Handling should handle empty admin sessions list from getAnyUserSessions" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Empty Data Handling should handle empty admin sessions list from getAnyUserSessions" time="0.003">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Null/Undefined Response Handling should handle null service response from revokeSession" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Null/Undefined Response Handling should handle null service response from revokeSession" time="0.006">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Null/Undefined Response Handling should handle null service response from revokeSession" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Null/Undefined Response Handling should handle null service response from revokeSession" time="0.005">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Null/Undefined Response Handling should handle undefined service response from revokeSession" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Null/Undefined Response Handling should handle undefined service response from revokeSession" time="0.005">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Null/Undefined Response Handling should handle undefined service response from revokeSession" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Null/Undefined Response Handling should handle undefined service response from revokeSession" time="0.004">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Dynamic Message Generation should generate dynamic message with correct sessionId in revokeSession" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Dynamic Message Generation should generate dynamic message with correct sessionId in revokeSession" time="0.006">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Dynamic Message Generation should generate dynamic message with correct sessionId in revokeSession" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Dynamic Message Generation should generate dynamic message with correct sessionId in revokeSession" time="0.005">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Dynamic Message Generation should generate dynamic message with correct userId in revokeAllUserSessions" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Dynamic Message Generation should generate dynamic message with correct userId in revokeAllUserSessions" time="0.007">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Dynamic Message Generation should generate dynamic message with correct userId in revokeAllUserSessions" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Dynamic Message Generation should generate dynamic message with correct userId in revokeAllUserSessions" time="0.004">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Dynamic Message Generation should include userId in response for getAnyUserSessions" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Dynamic Message Generation should include userId in response for getAnyUserSessions" time="0.008">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Dynamic Message Generation should include userId in response for getAnyUserSessions" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Dynamic Message Generation should include userId in response for getAnyUserSessions" time="0.006">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Clerk API Specific Errors should handle session not found error (404)" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Clerk API Specific Errors should handle session not found error (404)" time="0.007">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Clerk API Specific Errors should handle session not found error (404)" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Clerk API Specific Errors should handle session not found error (404)" time="0.004">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Clerk API Specific Errors should handle rate limit error (429)" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Clerk API Specific Errors should handle rate limit error (429)" time="0.005">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Clerk API Specific Errors should handle rate limit error (429)" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Clerk API Specific Errors should handle rate limit error (429)" time="0.004">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Clerk API Specific Errors should handle unauthorized error (401)" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Clerk API Specific Errors should handle unauthorized error (401)" time="0.006">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Clerk API Specific Errors should handle unauthorized error (401)" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Clerk API Specific Errors should handle unauthorized error (401)" time="0.004">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Clerk API Specific Errors should handle forbidden error (403) for admin operations" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Clerk API Specific Errors should handle forbidden error (403) for admin operations" time="0.006">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Clerk API Specific Errors should handle forbidden error (403) for admin operations" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Clerk API Specific Errors should handle forbidden error (403) for admin operations" time="0.004">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Network &amp; Infrastructure Errors should handle network timeout errors" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Network &amp; Infrastructure Errors should handle network timeout errors" time="0.006">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Network &amp; Infrastructure Errors should handle network timeout errors" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Network &amp; Infrastructure Errors should handle network timeout errors" time="0.004">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Network &amp; Infrastructure Errors should handle connection reset errors" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Network &amp; Infrastructure Errors should handle connection reset errors" time="0.006">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Network &amp; Infrastructure Errors should handle connection reset errors" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Network &amp; Infrastructure Errors should handle connection reset errors" time="0.004">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Network &amp; Infrastructure Errors should handle DNS resolution errors" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Network &amp; Infrastructure Errors should handle DNS resolution errors" time="0.005">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Network &amp; Infrastructure Errors should handle DNS resolution errors" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Network &amp; Infrastructure Errors should handle DNS resolution errors" time="0.008">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Service Unavailable Scenarios should handle service unavailable error (503)" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Service Unavailable Scenarios should handle service unavailable error (503)" time="0.005">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Service Unavailable Scenarios should handle service unavailable error (503)" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Service Unavailable Scenarios should handle service unavailable error (503)" time="0.004">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Service Unavailable Scenarios should handle internal server error (500)" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Service Unavailable Scenarios should handle internal server error (500)" time="0.013">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Service Unavailable Scenarios should handle internal server error (500)" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Service Unavailable Scenarios should handle internal server error (500)" time="0.003">
     </testcase>
     <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Invalid Request Context Errors should handle missing clerkUser in request context" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Invalid Request Context Errors should handle missing clerkUser in request context" time="0.008">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Invalid Request Context Errors should handle missing userId in clerkUser context" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Invalid Request Context Errors should handle missing userId in clerkUser context" time="0.006">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Invalid Request Context Errors should handle missing userId in clerkUser context" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation Edge Cases &amp; Error Scenarios Comprehensive Error Scenarios Invalid Request Context Errors should handle missing userId in clerkUser context" time="0.004">
     </testcase>
     <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules SessionIdParamDto Validation should reject invalid sessionId format (missing sess_ prefix)" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules SessionIdParamDto Validation should reject invalid sessionId format (missing sess_ prefix)" time="0.007">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules SessionIdParamDto Validation should reject sessionId with invalid characters" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules SessionIdParamDto Validation should reject sessionId with invalid characters" time="0.014">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules SessionIdParamDto Validation should reject sessionId with invalid characters" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules SessionIdParamDto Validation should reject sessionId with invalid characters" time="0.005">
     </testcase>
     <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules SessionIdParamDto Validation should reject empty sessionId" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules SessionIdParamDto Validation should reject empty sessionId" time="0.004">
     </testcase>
     <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules SessionIdParamDto Validation should accept valid sessionId format (sess_xxx)" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules SessionIdParamDto Validation should accept valid sessionId format (sess_xxx)" time="0.004">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules UserIdParamDto Validation should reject invalid userId format (missing user_ prefix)" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules UserIdParamDto Validation should reject invalid userId format (missing user_ prefix)" time="0.004">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules UserIdParamDto Validation should reject invalid userId format (missing user_ prefix)" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules UserIdParamDto Validation should reject invalid userId format (missing user_ prefix)" time="0.003">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules UserIdParamDto Validation should reject userId with invalid characters" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules UserIdParamDto Validation should reject userId with invalid characters" time="0.005">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules UserIdParamDto Validation should reject userId with invalid characters" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules UserIdParamDto Validation should reject userId with invalid characters" time="0.004">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules UserIdParamDto Validation should accept valid userId format (user_xxx)" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules UserIdParamDto Validation should accept valid userId format (user_xxx)" time="0.005">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules UserIdParamDto Validation should accept valid userId format (user_xxx)" name="ClerkController Phase 2 - Input Validation Analysis Vấn đề 2.2: Kiểm tra Input Validation DTO Validation Tests - Validation Rules UserIdParamDto Validation should accept valid userId format (user_xxx)" time="0.004">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Kiểm tra DTO Classes Implementation should have SessionIdParamDto with proper validation rules" name="ClerkController Phase 2 - Input Validation Analysis Kiểm tra DTO Classes Implementation should have SessionIdParamDto with proper validation rules" time="0.004">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Kiểm tra DTO Classes Implementation should have SessionIdParamDto with proper validation rules" name="ClerkController Phase 2 - Input Validation Analysis Kiểm tra DTO Classes Implementation should have SessionIdParamDto with proper validation rules" time="0.003">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Kiểm tra DTO Classes Implementation should have UserIdParamDto with proper validation rules" name="ClerkController Phase 2 - Input Validation Analysis Kiểm tra DTO Classes Implementation should have UserIdParamDto with proper validation rules" time="0.005">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Kiểm tra DTO Classes Implementation should have UserIdParamDto with proper validation rules" name="ClerkController Phase 2 - Input Validation Analysis Kiểm tra DTO Classes Implementation should have UserIdParamDto with proper validation rules" time="0.003">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Kiểm tra ValidationPipe Configuration should have ValidationPipe configured globally in test environment" name="ClerkController Phase 2 - Input Validation Analysis Kiểm tra ValidationPipe Configuration should have ValidationPipe configured globally in test environment" time="0.004">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Kiểm tra ValidationPipe Configuration should have ValidationPipe configured globally in test environment" name="ClerkController Phase 2 - Input Validation Analysis Kiểm tra ValidationPipe Configuration should have ValidationPipe configured globally in test environment" time="0.003">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Security Risk Assessment - Validation Protection should reject SQL injection attempts in sessionId" name="ClerkController Phase 2 - Input Validation Analysis Security Risk Assessment - Validation Protection should reject SQL injection attempts in sessionId" time="0.004">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Security Risk Assessment - Validation Protection should reject SQL injection attempts in sessionId" name="ClerkController Phase 2 - Input Validation Analysis Security Risk Assessment - Validation Protection should reject SQL injection attempts in sessionId" time="0.007">
     </testcase>
     <testcase classname="ClerkController Phase 2 - Input Validation Analysis Security Risk Assessment - Validation Protection should reject XSS attempts in sessionId" name="ClerkController Phase 2 - Input Validation Analysis Security Risk Assessment - Validation Protection should reject XSS attempts in sessionId" time="0.004">
     </testcase>
-    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Security Risk Assessment - Validation Protection should reject path traversal attempts in sessionId" name="ClerkController Phase 2 - Input Validation Analysis Security Risk Assessment - Validation Protection should reject path traversal attempts in sessionId" time="0.004">
+    <testcase classname="ClerkController Phase 2 - Input Validation Analysis Security Risk Assessment - Validation Protection should reject path traversal attempts in sessionId" name="ClerkController Phase 2 - Input Validation Analysis Security Risk Assessment - Validation Protection should reject path traversal attempts in sessionId" time="0.002">
     </testcase>
   </testsuite>
 </testsuites>

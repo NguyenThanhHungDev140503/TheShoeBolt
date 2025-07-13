@@ -543,4 +543,385 @@ describe('ClerkSessionService', () => {
       });
     });
   });
+
+  // ===== PHASE 4 TEST CASES - Task 4.1.1 =====
+  describe('PHASE 4 - Task 4.1.1: Comprehensive Unit Tests for Missing Coverage', () => {
+
+    describe('getUser() - Comprehensive Test Coverage', () => {
+      const mockUser = {
+        id: 'user_123',
+        emailAddresses: [{ emailAddress: 'test@example.com' }],
+        firstName: 'John',
+        lastName: 'Doe',
+        publicMetadata: { role: 'admin' },
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+
+      it('should successfully get user details', async () => {
+        // Arrange
+        const userId = 'user_123';
+        mockClerkClient.users.getUser.mockResolvedValue(mockUser);
+
+        // Act
+        const result = await service.getUser(userId);
+
+        // Assert
+        expect(result).toEqual(mockUser);
+        expect(mockClerkClient.users.getUser).toHaveBeenCalledWith(userId);
+        expect(mockClerkClient.users.getUser).toHaveBeenCalledTimes(1);
+      });
+
+      it('should throw NotFoundException for 404 errors', async () => {
+        // Arrange
+        const userId = 'user_nonexistent';
+        const error404 = new Error('User not found');
+        (error404 as any).status = 404;
+        mockClerkClient.users.getUser.mockRejectedValue(error404);
+
+        // Act & Assert
+        await expect(service.getUser(userId)).rejects.toThrow(NotFoundException);
+        await expect(service.getUser(userId)).rejects.toThrow(`User with ID ${userId} not found.`);
+      });
+
+      it('should throw ForbiddenException for 403 errors', async () => {
+        // Arrange
+        const userId = 'user_123';
+        const error403 = new Error('Access denied');
+        (error403 as any).status = 403;
+        mockClerkClient.users.getUser.mockRejectedValue(error403);
+
+        // Act & Assert
+        await expect(service.getUser(userId)).rejects.toThrow(ForbiddenException);
+        await expect(service.getUser(userId)).rejects.toThrow(`Access denied to retrieve user ${userId}.`);
+      });
+
+      it('should throw UnauthorizedException for 401 errors', async () => {
+        // Arrange
+        const userId = 'user_123';
+        const error401 = new Error('Unauthorized');
+        (error401 as any).status = 401;
+        mockClerkClient.users.getUser.mockRejectedValue(error401);
+
+        // Act & Assert
+        await expect(service.getUser(userId)).rejects.toThrow(UnauthorizedException);
+        await expect(service.getUser(userId)).rejects.toThrow(`Authentication failed for user ${userId}.`);
+      });
+
+      it('should throw InternalServerErrorException for network timeout', async () => {
+        // Arrange
+        const userId = 'user_123';
+        const timeoutError = new Error('Network timeout');
+        (timeoutError as any).code = 'ETIMEDOUT';
+        mockClerkClient.users.getUser.mockRejectedValue(timeoutError);
+
+        // Act & Assert
+        await expect(service.getUser(userId)).rejects.toThrow(InternalServerErrorException);
+        await expect(service.getUser(userId)).rejects.toThrow('An unexpected error occurred while retrieving user details.');
+      });
+
+      it('should handle error with response.status format', async () => {
+        // Arrange
+        const userId = 'user_123';
+        const errorWithResponse = new Error('API Error');
+        (errorWithResponse as any).response = { status: 404, data: { message: 'Not found' } };
+        mockClerkClient.users.getUser.mockRejectedValue(errorWithResponse);
+
+        // Act & Assert
+        await expect(service.getUser(userId)).rejects.toThrow(NotFoundException);
+      });
+
+      it('should handle error with statusCode format', async () => {
+        // Arrange
+        const userId = 'user_123';
+        const errorWithStatusCode = new Error('API Error');
+        (errorWithStatusCode as any).statusCode = 403;
+        mockClerkClient.users.getUser.mockRejectedValue(errorWithStatusCode);
+
+        // Act & Assert
+        await expect(service.getUser(userId)).rejects.toThrow(ForbiddenException);
+      });
+    });
+
+    describe('getSession() - Comprehensive Test Coverage', () => {
+      const mockSession = {
+        id: 'sess_123',
+        userId: 'user_123',
+        status: 'active',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        expireAt: Date.now() + 3600000, // 1 hour from now
+      };
+
+      it('should successfully get session details', async () => {
+        // Arrange
+        const sessionId = 'sess_123';
+        mockClerkClient.sessions.getSession.mockResolvedValue(mockSession);
+
+        // Act
+        const result = await service.getSession(sessionId);
+
+        // Assert
+        expect(result).toEqual(mockSession);
+        expect(mockClerkClient.sessions.getSession).toHaveBeenCalledWith(sessionId);
+        expect(mockClerkClient.sessions.getSession).toHaveBeenCalledTimes(1);
+      });
+
+      it('should throw NotFoundException for 404 errors', async () => {
+        // Arrange
+        const sessionId = 'sess_nonexistent';
+        const error404 = new Error('Session not found');
+        (error404 as any).status = 404;
+        mockClerkClient.sessions.getSession.mockRejectedValue(error404);
+
+        // Act & Assert
+        await expect(service.getSession(sessionId)).rejects.toThrow(NotFoundException);
+        await expect(service.getSession(sessionId)).rejects.toThrow(`Session with ID ${sessionId} not found.`);
+      });
+
+      it('should throw ForbiddenException for 403 errors', async () => {
+        // Arrange
+        const sessionId = 'sess_123';
+        const error403 = new Error('Access denied');
+        (error403 as any).status = 403;
+        mockClerkClient.sessions.getSession.mockRejectedValue(error403);
+
+        // Act & Assert
+        await expect(service.getSession(sessionId)).rejects.toThrow(ForbiddenException);
+        await expect(service.getSession(sessionId)).rejects.toThrow(`Access denied to retrieve session ${sessionId}.`);
+      });
+
+      it('should throw UnauthorizedException for 401 errors', async () => {
+        // Arrange
+        const sessionId = 'sess_123';
+        const error401 = new Error('Unauthorized');
+        (error401 as any).status = 401;
+        mockClerkClient.sessions.getSession.mockRejectedValue(error401);
+
+        // Act & Assert
+        await expect(service.getSession(sessionId)).rejects.toThrow(UnauthorizedException);
+        await expect(service.getSession(sessionId)).rejects.toThrow(`Authentication failed for session ${sessionId}.`);
+      });
+
+      it('should throw InternalServerErrorException for unknown errors', async () => {
+        // Arrange
+        const sessionId = 'sess_123';
+        const unknownError = new Error('Unknown error');
+        mockClerkClient.sessions.getSession.mockRejectedValue(unknownError);
+
+        // Act & Assert
+        await expect(service.getSession(sessionId)).rejects.toThrow(InternalServerErrorException);
+        await expect(service.getSession(sessionId)).rejects.toThrow('An unexpected error occurred while retrieving session details.');
+      });
+
+      it('should handle network connection errors', async () => {
+        // Arrange
+        const sessionId = 'sess_123';
+        const networkError = new Error('ECONNREFUSED');
+        (networkError as any).code = 'ECONNREFUSED';
+        mockClerkClient.sessions.getSession.mockRejectedValue(networkError);
+
+        // Act & Assert
+        await expect(service.getSession(sessionId)).rejects.toThrow(InternalServerErrorException);
+      });
+    });
+
+    describe('verifyTokenAndGetAuthData() - Comprehensive Test Coverage', () => {
+      const mockUser = {
+        id: 'user_123',
+        emailAddresses: [{ emailAddress: 'test@example.com' }],
+        firstName: 'John',
+        lastName: 'Doe',
+        publicMetadata: { role: 'admin' },
+      };
+
+      const mockSession = {
+        id: 'sess_123',
+        userId: 'user_123',
+        status: 'active',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+
+      const mockSessionClaims = {
+        sid: 'sess_123',
+        sub: 'user_123',
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      };
+
+      const mockAuthState = {
+        isAuthenticated: true,
+        toAuth: jest.fn().mockReturnValue({
+          sessionClaims: mockSessionClaims,
+        }),
+      };
+
+      beforeEach(() => {
+        // Reset mocks for each test
+        mockClerkClient.authenticateRequest.mockResolvedValue(mockAuthState);
+        mockClerkClient.sessions.getSession.mockResolvedValue(mockSession);
+        mockClerkClient.users.getUser.mockResolvedValue(mockUser);
+      });
+
+      it('should successfully verify token and return complete auth data', async () => {
+        // Arrange
+        const token = 'valid_jwt_token';
+
+        // Act
+        const result = await service.verifyTokenAndGetAuthData(token);
+
+        // Assert
+        expect(result).toEqual({
+          user: {
+            id: mockUser.id,
+            email: mockUser.emailAddresses[0].emailAddress,
+            firstName: mockUser.firstName,
+            lastName: mockUser.lastName,
+            publicMetadata: mockUser.publicMetadata,
+          },
+          session: mockSession,
+          sessionClaims: mockSessionClaims,
+        });
+
+        expect(mockClerkClient.authenticateRequest).toHaveBeenCalledTimes(1);
+        expect(mockClerkClient.sessions.getSession).toHaveBeenCalledWith(mockSessionClaims.sid);
+        expect(mockClerkClient.users.getUser).toHaveBeenCalledWith(mockSessionClaims.sub);
+      });
+
+      it('should create proper Web API Request with Authorization header', async () => {
+        // Arrange
+        const token = 'test_token_123';
+
+        // Act
+        await service.verifyTokenAndGetAuthData(token);
+
+        // Assert
+        const requestCall = mockClerkClient.authenticateRequest.mock.calls[0][0];
+        expect(requestCall).toBeInstanceOf(Request);
+        expect(requestCall.url).toBe('https://api.clerk.dev/');
+        expect(requestCall.method).toBe('GET');
+
+        // Check headers
+        expect(requestCall.headers.get('Authorization')).toBe(`Bearer ${token}`);
+        expect(requestCall.headers.get('Cookie')).toBe(`__session=${token}`);
+      });
+
+      it('should throw UnauthorizedException when token is not authenticated', async () => {
+        // Arrange
+        const token = 'invalid_token';
+        const unauthenticatedState = {
+          isAuthenticated: false,
+          toAuth: jest.fn(),
+        };
+        mockClerkClient.authenticateRequest.mockResolvedValue(unauthenticatedState);
+
+        // Act & Assert
+        await expect(service.verifyTokenAndGetAuthData(token)).rejects.toThrow(UnauthorizedException);
+        await expect(service.verifyTokenAndGetAuthData(token)).rejects.toThrow('Token is not valid or expired');
+      });
+
+      it('should throw UnauthorizedException when session is inactive', async () => {
+        // Arrange
+        const token = 'valid_token';
+        const inactiveSession = { ...mockSession, status: 'ended' };
+        mockClerkClient.sessions.getSession.mockResolvedValue(inactiveSession);
+
+        // Act & Assert
+        await expect(service.verifyTokenAndGetAuthData(token)).rejects.toThrow(UnauthorizedException);
+        await expect(service.verifyTokenAndGetAuthData(token)).rejects.toThrow('Invalid or inactive session');
+      });
+
+      it('should throw UnauthorizedException when session is null', async () => {
+        // Arrange
+        const token = 'valid_token';
+        mockClerkClient.sessions.getSession.mockResolvedValue(null);
+
+        // Act & Assert
+        await expect(service.verifyTokenAndGetAuthData(token)).rejects.toThrow(UnauthorizedException);
+        await expect(service.verifyTokenAndGetAuthData(token)).rejects.toThrow('Invalid or inactive session');
+      });
+
+      it('should handle authenticateRequest errors', async () => {
+        // Arrange
+        const token = 'malformed_token';
+        const authError = new Error('Invalid JWT format');
+        mockClerkClient.authenticateRequest.mockRejectedValue(authError);
+
+        // Act & Assert
+        await expect(service.verifyTokenAndGetAuthData(token)).rejects.toThrow(UnauthorizedException);
+        await expect(service.verifyTokenAndGetAuthData(token)).rejects.toThrow('Token verification failed: Invalid JWT format');
+      });
+
+      it('should handle getSession errors during verification', async () => {
+        // Arrange
+        const token = 'valid_token';
+        const sessionError = new Error('Session not found');
+        (sessionError as any).status = 404;
+        mockClerkClient.sessions.getSession.mockRejectedValue(sessionError);
+
+        // Act & Assert
+        await expect(service.verifyTokenAndGetAuthData(token)).rejects.toThrow(NotFoundException);
+      });
+
+      it('should handle getUser errors during verification', async () => {
+        // Arrange
+        const token = 'valid_token';
+        const userError = new Error('User not found');
+        (userError as any).status = 404;
+        mockClerkClient.users.getUser.mockRejectedValue(userError);
+
+        // Act & Assert
+        await expect(service.verifyTokenAndGetAuthData(token)).rejects.toThrow(NotFoundException);
+      });
+
+      it('should handle empty token', async () => {
+        // Arrange
+        const token = '';
+
+        // Act & Assert
+        await expect(service.verifyTokenAndGetAuthData(token)).rejects.toThrow(UnauthorizedException);
+      });
+
+      it('should handle null sessionClaims', async () => {
+        // Arrange
+        const token = 'valid_token';
+        const authStateWithNullClaims = {
+          isAuthenticated: true,
+          toAuth: jest.fn().mockReturnValue({
+            sessionClaims: null,
+          }),
+        };
+        mockClerkClient.authenticateRequest.mockResolvedValue(authStateWithNullClaims);
+
+        // Act & Assert
+        await expect(service.verifyTokenAndGetAuthData(token)).rejects.toThrow(UnauthorizedException);
+      });
+
+      it('should handle user with no email addresses', async () => {
+        // Arrange
+        const token = 'valid_token';
+        const userWithoutEmail = { ...mockUser, emailAddresses: [] };
+        mockClerkClient.users.getUser.mockResolvedValue(userWithoutEmail);
+
+        // Act
+        const result = await service.verifyTokenAndGetAuthData(token);
+
+        // Assert
+        expect(result.user.email).toBeUndefined();
+      });
+
+      it('should handle network timeout during token verification', async () => {
+        // Arrange
+        const token = 'valid_token';
+        const timeoutError = new Error('Request timeout');
+        (timeoutError as any).code = 'ETIMEDOUT';
+        mockClerkClient.authenticateRequest.mockRejectedValue(timeoutError);
+
+        // Act & Assert
+        await expect(service.verifyTokenAndGetAuthData(token)).rejects.toThrow(UnauthorizedException);
+        await expect(service.verifyTokenAndGetAuthData(token)).rejects.toThrow('Token verification failed: Request timeout');
+      });
+    });
+  });
 });
