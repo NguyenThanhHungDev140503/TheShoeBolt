@@ -19,10 +19,16 @@ const svix_1 = require("svix");
 const swagger_1 = require("@nestjs/swagger");
 const env_config_1 = require("../../config/env.config");
 const users_service_1 = require("../users/users.service");
+const session_tracking_service_1 = require("./services/session-tracking.service");
+const webhook_transaction_service_1 = require("./services/webhook-transaction.service");
+const webhook_validation_pipe_1 = require("./pipes/webhook-validation.pipe");
+const webhook_exception_filter_1 = require("./filters/webhook-exception.filter");
 let ClerkWebhookController = ClerkWebhookController_1 = class ClerkWebhookController {
-    constructor(envConfig, usersService) {
+    constructor(envConfig, usersService, sessionTrackingService, webhookTransactionService) {
         this.envConfig = envConfig;
         this.usersService = usersService;
+        this.sessionTrackingService = sessionTrackingService;
+        this.webhookTransactionService = webhookTransactionService;
         this.logger = new common_1.Logger(ClerkWebhookController_1.name);
     }
     async handleClerkWebhook(headers, req, res) {
@@ -43,26 +49,18 @@ let ClerkWebhookController = ClerkWebhookController_1 = class ClerkWebhookContro
             };
             const wh = new svix_1.Webhook(webhookSecret);
             const evt = wh.verify(payloadString, svixHeaders);
-            this.logger.log(`Webhook event received: ${evt.type} for ${evt.data?.id || 'unknown'}`);
-            switch (evt.type) {
-                case 'user.created':
-                    await this.handleUserCreated(evt.data);
-                    break;
-                case 'user.updated':
-                    await this.handleUserUpdated(evt.data);
-                    break;
-                case 'user.deleted':
-                    await this.handleUserDeleted(evt.data);
-                    break;
-                case 'session.created':
-                    await this.handleSessionCreated(evt.data);
-                    break;
-                case 'session.ended':
-                    await this.handleSessionEnded(evt.data);
-                    break;
-                default:
-                    this.logger.warn(`Unhandled webhook event type: ${evt.type}`);
-            }
+            this.logger.log(`Webhook event received: ${evt.type} for ${evt.data?.id ?? 'unknown'}`);
+            const validationPipe = new webhook_validation_pipe_1.WebhookValidationPipe();
+            const validatedEvent = await validationPipe.transform(evt);
+            this.logger.debug(`Webhook event validated successfully: ${evt.type}`);
+            const context = {
+                eventType: validatedEvent.type,
+                clerkId: validatedEvent.data?.id || evt.data?.id,
+                payload: validatedEvent.data,
+                webhookId: svixHeaders['svix-id'],
+                webhookTimestamp: new Date(parseInt(svixHeaders['svix-timestamp']) * 1000),
+            };
+            await this.webhookTransactionService.processWebhookWithTransaction(context);
             return res.status(common_1.HttpStatus.OK).json({
                 success: true,
                 message: 'Webhook processed successfully',
@@ -117,28 +115,51 @@ let ClerkWebhookController = ClerkWebhookController_1 = class ClerkWebhookContro
     async handleSessionCreated(sessionData) {
         try {
             this.logger.debug(`Processing session.created for session: ${sessionData.id}`);
-            this.logger.log(`Session created: ${sessionData.id} for user: ${sessionData.user_id}`);
+            const user = await this.usersService.findByClerkId(sessionData.user_id);
+            if (!user) {
+                this.logger.warn(`User not found for session creation: ${sessionData.user_id}`);
+                return;
+            }
+            await this.sessionTrackingService.createSession({
+                clerkSessionId: sessionData.id,
+                userId: user.id,
+                createdAt: new Date(sessionData.created_at * 1000),
+                lastActivity: sessionData.last_active_at ? new Date(sessionData.last_active_at.timestamp * 1000) : new Date(),
+                ipAddress: sessionData.last_active_at?.ip_address,
+                userAgent: sessionData.last_active_at?.user_agent,
+                sessionMetadata: {
+                    clerkUserId: sessionData.user_id,
+                    status: sessionData.status,
+                    lastActiveAt: sessionData.last_active_at
+                }
+            });
+            this.logger.log(`Session tracking created: ${sessionData.id} for user: ${sessionData.user_id}`);
         }
         catch (error) {
             this.logger.error(`Failed to process session.created for ${sessionData.id}:`, error);
+            throw error;
         }
     }
     async handleSessionEnded(sessionData) {
         try {
             this.logger.debug(`Processing session.ended for session: ${sessionData.id}`);
-            this.logger.log(`Session ended: ${sessionData.id} for user: ${sessionData.user_id}`);
+            await this.sessionTrackingService.endSession(sessionData.id);
+            this.logger.log(`Session tracking ended: ${sessionData.id} for user: ${sessionData.user_id}`);
         }
         catch (error) {
             this.logger.error(`Failed to process session.ended for ${sessionData.id}:`, error);
+            throw error;
         }
     }
 };
 exports.ClerkWebhookController = ClerkWebhookController;
 __decorate([
     (0, common_1.Post)('clerk'),
+    (0, common_1.UseFilters)(webhook_exception_filter_1.WebhookExceptionFilter),
     (0, swagger_1.ApiOperation)({ summary: 'Handle Clerk webhook events' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Webhook processed successfully' }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid webhook signature' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid webhook signature or payload' }),
+    (0, swagger_1.ApiResponse)({ status: 422, description: 'Unknown event type' }),
     __param(0, (0, common_1.Headers)()),
     __param(1, (0, common_1.Req)()),
     __param(2, (0, common_1.Res)()),
@@ -150,6 +171,8 @@ exports.ClerkWebhookController = ClerkWebhookController = ClerkWebhookController
     (0, swagger_1.ApiTags)('Webhooks'),
     (0, common_1.Controller)('webhooks'),
     __metadata("design:paramtypes", [env_config_1.EnvConfigService,
-        users_service_1.UsersService])
+        users_service_1.UsersService,
+        session_tracking_service_1.SessionTrackingService,
+        webhook_transaction_service_1.WebhookTransactionService])
 ], ClerkWebhookController);
 //# sourceMappingURL=clerk-webhook.controller.js.map

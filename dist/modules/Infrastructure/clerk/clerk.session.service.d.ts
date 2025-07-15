@@ -1,6 +1,7 @@
 import { ClerkClient } from '@clerk/backend';
 import { ClerkModuleOptions } from './clerk.module';
-export declare class ClerkSessionService {
+import { IAuthenticationService } from '../../auth/interfaces/i-authentication-service.interface';
+export declare class ClerkSessionService implements IAuthenticationService {
     private readonly clerkClient;
     private readonly options;
     private readonly logger;

@@ -1,6 +1,5 @@
 import {
   Injectable,
-  CanActivate,
   ExecutionContext,
   UnauthorizedException,
   Inject,
@@ -10,9 +9,10 @@ import { Request } from 'express';
 import { ClerkClient } from '@clerk/backend';
 import { CLERK_CLIENT } from '../providers/clerk-client.provider';
 import { ConfigService } from '@nestjs/config';
+import { IAuthGuard } from '../../../auth/interfaces/i-auth-guard.interface';
 
 @Injectable()
-export class ClerkAuthGuard implements CanActivate {
+export class ClerkAuthGuard implements IAuthGuard {
   private readonly logger = new Logger(ClerkAuthGuard.name);
 
   constructor(
@@ -59,7 +59,7 @@ export class ClerkAuthGuard implements CanActivate {
   /**
    * Convert Express Request to Web API Request for Clerk
    */
-  private convertToWebRequest(expressRequest: Request): globalThis.Request {
+  convertToWebRequest(expressRequest: Request): globalThis.Request {
     const url = `${expressRequest.protocol}://${expressRequest.get('host')}${expressRequest.originalUrl}`;
 
     // Create headers object

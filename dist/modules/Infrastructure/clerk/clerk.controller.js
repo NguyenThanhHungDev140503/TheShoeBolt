@@ -27,6 +27,12 @@ let ClerkController = class ClerkController {
         this.clerkSessionService = clerkSessionService;
     }
     async getUserSessions(req) {
+        if (!req.clerkUser) {
+            throw new common_1.BadRequestException('Missing user context in request');
+        }
+        if (!req.clerkUser.userId) {
+            throw new common_1.BadRequestException('Missing userId in user context');
+        }
         const sessions = await this.clerkSessionService.getSessionList(req.clerkUser.userId);
         return {
             message: 'Sessions retrieved successfully',
@@ -41,6 +47,12 @@ let ClerkController = class ClerkController {
         };
     }
     async revokeAllSessions(req) {
+        if (!req.clerkUser) {
+            throw new common_1.BadRequestException('Missing user context in request');
+        }
+        if (!req.clerkUser.userId) {
+            throw new common_1.BadRequestException('Missing userId in user context');
+        }
         const revokedInfo = await this.clerkSessionService.revokeAllUserSessions(req.clerkUser.userId);
         return {
             message: 'All sessions revoked successfully',
