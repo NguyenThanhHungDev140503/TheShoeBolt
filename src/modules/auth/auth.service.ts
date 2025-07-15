@@ -1,11 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, Optional } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
+import { IAuthenticationService } from './interfaces/i-authentication-service.interface';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
+    private readonly usersService: UsersService,
+    @Optional() @Inject('IAuthenticationService')
+    private readonly authService?: IAuthenticationService,
   ) {}
 
   /**
@@ -46,5 +49,17 @@ export class AuthService {
    */
   async getUserProfile(userId: string) {
     return this.usersService.findOne(userId);
+  }
+
+  /**
+   * Validate user session using authentication service
+   * @param token - Session token to verify
+   * @returns Authentication data if valid
+   */
+  async validateUserSession(token: string) {
+    if (this.authService) {
+      return await this.authService.verifyTokenAndGetAuthData(token);
+    }
+    throw new Error('Authentication service not available');
   }
 }

@@ -20,6 +20,12 @@ import { ChatModule } from './modules/chat/chat.module';
 import { ClerkModule } from './modules/Infrastructure/clerk/clerk.module';
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
 
+// Interface imports for Dependency Inversion
+import { IAuthenticationService } from './modules/auth/interfaces/i-authentication-service.interface';
+import { IAuthGuard } from './modules/auth/interfaces/i-auth-guard.interface';
+import { ClerkSessionService } from './modules/Infrastructure/clerk/clerk.session.service';
+import { ClerkAuthGuard } from './modules/Infrastructure/clerk/guards/clerk-auth.guard';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { databaseConfig } from './config/database.config';
@@ -110,6 +116,15 @@ import { EnvConfigService } from './config/env.config';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    // Interface implementations for Dependency Inversion
+    {
+      provide: 'IAuthenticationService',
+      useExisting: ClerkSessionService,
+    },
+    {
+      provide: 'IAuthGuard',
+      useExisting: ClerkAuthGuard,
     },
   ],
   exports: [EnvConfigService],

@@ -12,7 +12,6 @@ const users_module_1 = require("../users/users.module");
 const auth_service_1 = require("./auth.service");
 const auth_controller_1 = require("./auth.controller");
 const roles_guard_1 = require("./guards/roles.guard");
-const clerk_module_1 = require("../Infrastructure/clerk/clerk.module");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -20,7 +19,6 @@ exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Module)({
         imports: [
             users_module_1.UsersModule,
-            clerk_module_1.ClerkModule,
         ],
         controllers: [auth_controller_1.AuthController],
         providers: [

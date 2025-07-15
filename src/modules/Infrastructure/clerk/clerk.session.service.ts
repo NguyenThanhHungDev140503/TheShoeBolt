@@ -2,9 +2,10 @@ import { Injectable, Inject, UnauthorizedException, Logger, NotFoundException, F
 import { ClerkClient } from '@clerk/backend';
 import { ClerkModuleOptions } from './clerk.module';
 import { CLERK_CLIENT } from './providers/clerk-client.provider';
+import { IAuthenticationService } from '../../auth/interfaces/i-authentication-service.interface';
 
 @Injectable()
-export class ClerkSessionService {
+export class ClerkSessionService implements IAuthenticationService {
   private readonly logger = new Logger(ClerkSessionService.name);
 
   constructor(

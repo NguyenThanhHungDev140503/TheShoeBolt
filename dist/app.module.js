@@ -26,6 +26,8 @@ const elasticsearch_module_1 = require("./modules/elasticsearch/elasticsearch.mo
 const chat_module_1 = require("./modules/chat/chat.module");
 const clerk_module_1 = require("./modules/Infrastructure/clerk/clerk.module");
 const webhooks_module_1 = require("./modules/webhooks/webhooks.module");
+const clerk_session_service_1 = require("./modules/Infrastructure/clerk/clerk.session.service");
+const clerk_auth_guard_1 = require("./modules/Infrastructure/clerk/guards/clerk-auth.guard");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const database_config_1 = require("./config/database.config");
@@ -105,6 +107,14 @@ exports.AppModule = AppModule = __decorate([
             {
                 provide: core_1.APP_GUARD,
                 useClass: throttler_1.ThrottlerGuard,
+            },
+            {
+                provide: 'IAuthenticationService',
+                useExisting: clerk_session_service_1.ClerkSessionService,
+            },
+            {
+                provide: 'IAuthGuard',
+                useExisting: clerk_auth_guard_1.ClerkAuthGuard,
             },
         ],
         exports: [env_config_1.EnvConfigService],

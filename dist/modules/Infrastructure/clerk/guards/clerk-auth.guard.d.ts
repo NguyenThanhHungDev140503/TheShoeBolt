@@ -1,11 +1,13 @@
-import { CanActivate, ExecutionContext } from '@nestjs/common';
+import { ExecutionContext } from '@nestjs/common';
+import { Request } from 'express';
 import { ClerkClient } from '@clerk/backend';
 import { ConfigService } from '@nestjs/config';
-export declare class ClerkAuthGuard implements CanActivate {
+import { IAuthGuard } from '../../../auth/interfaces/i-auth-guard.interface';
+export declare class ClerkAuthGuard implements IAuthGuard {
     private readonly clerkClient;
     private readonly configService;
     private readonly logger;
     constructor(clerkClient: ClerkClient, configService: ConfigService);
     canActivate(context: ExecutionContext): Promise<boolean>;
-    private convertToWebRequest;
+    convertToWebRequest(expressRequest: Request): globalThis.Request;
 }
