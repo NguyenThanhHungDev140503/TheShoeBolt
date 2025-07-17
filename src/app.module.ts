@@ -119,7 +119,16 @@ import { EnvConfigService } from './config/env.config';
     },
     // Interface implementations for Dependency Inversion
     {
-      provide: 'IAuthenticationService',
+      /* 
+      
+      
+      Có thể có nhiều implementation:  ClerkSessionService, Auth0Service, FirebaseAuthService
+      Switch giữa các provider chỉ cần thay đổi DI configuration
+      Code business logic không cần thay đổi
+      
+      
+      */
+      provide: 'IAuthenticationService', 
       useExisting: ClerkSessionService,
     },
     {

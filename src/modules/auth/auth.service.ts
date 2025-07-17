@@ -7,6 +7,14 @@ import { IAuthenticationService } from './interfaces/i-authentication-service.in
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
+    /* 
+    
+    
+    Tiêm implement vào trong interface (đảo ngược phụ thuộc)
+    Khi có nhiều implement có thể thay đổi hoặc thêm mới trong provider (AppModule) 
+    Khi đó chỉ cần thay đổi tên token tiêm vào là có thể chuyển implement sang một implement khác
+    
+    */
     @Optional() @Inject('IAuthenticationService')
     private readonly authService?: IAuthenticationService,
   ) {}
