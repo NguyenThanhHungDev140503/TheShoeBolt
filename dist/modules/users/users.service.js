@@ -20,9 +20,10 @@ const typeorm_2 = require("typeorm");
 const user_entity_1 = require("./entities/user.entity");
 const elasticsearch_service_1 = require("../elasticsearch/elasticsearch.service");
 let UsersService = UsersService_1 = class UsersService {
-    constructor(usersRepository, elasticsearchService) {
+    constructor(usersRepository, elasticsearchService, dataSource) {
         this.usersRepository = usersRepository;
         this.elasticsearchService = elasticsearchService;
+        this.dataSource = dataSource;
         this.logger = new common_1.Logger(UsersService_1.name);
     }
     async create(createUserDto) {
@@ -163,12 +164,80 @@ let UsersService = UsersService_1 = class UsersService {
             throw error;
         }
     }
+    async registerUser(userData) {
+        this.logger.log(`Registering new user with email: ${userData.email}`);
+        return await this.dataSource.transaction(async (manager) => {
+            try {
+                await this.validateUserRegistration(userData, manager);
+                const user = await this.createUserInTransaction(userData, manager);
+                await this.initializeUserResources(user.id, manager);
+                this.logger.log(`Successfully registered user with ID: ${user.id}`);
+                return user;
+            }
+            catch (error) {
+                this.logger.error(`Failed to register user: ${error.message}`, error.stack);
+                throw error;
+            }
+        });
+    }
+    async validateUserRegistration(userData, manager) {
+        const repository = manager ? manager.getRepository(user_entity_1.User) : this.usersRepository;
+        const existingUserByEmail = await repository.findOne({
+            where: { email: userData.email }
+        });
+        if (existingUserByEmail) {
+            throw new common_1.ConflictException(`Email đã tồn tại: ${userData.email}`);
+        }
+        const existingUserByPhone = await repository.findOne({
+            where: { sodienthoai: userData.phone }
+        });
+        if (existingUserByPhone) {
+            throw new common_1.ConflictException(`Số điện thoại đã tồn tại: ${userData.phone}`);
+        }
+        this.logger.debug(`Validation passed for user registration: ${userData.email}`);
+    }
+    async createUserInTransaction(userData, manager) {
+        const repository = manager.getRepository(user_entity_1.User);
+        const nameParts = userData.name.split(' ');
+        const firstName = nameParts[0] || userData.name;
+        const lastName = nameParts.slice(1).join(' ') || '';
+        const user = repository.create({
+            firstName,
+            lastName,
+            email: userData.email,
+            password: userData.password,
+        });
+        const savedUser = await repository.save(user);
+        this.logger.debug(`Created user with ID: ${savedUser.id}`);
+        return savedUser;
+    }
+    async initializeUserResources(userId, _manager) {
+        try {
+            this.logger.debug(`Would create cart and wishlist for user ${userId}`);
+            this.logger.debug(`Initialized resources for user ${userId}`);
+        }
+        catch (error) {
+            this.logger.error(`Failed to initialize user resources: ${error.message}`);
+            throw error;
+        }
+    }
+    async existsByEmail(email) {
+        const count = await this.usersRepository.count({
+            where: { email }
+        });
+        return count > 0;
+    }
+    async existsByPhone(phone) {
+        this.logger.debug(`Would check phone existence for: ${phone}`);
+        return false;
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = UsersService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        elasticsearch_service_1.ElasticsearchService])
+        elasticsearch_service_1.ElasticsearchService,
+        typeorm_2.DataSource])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

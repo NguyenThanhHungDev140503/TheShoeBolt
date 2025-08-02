@@ -1,12 +1,14 @@
 import { ConfigService } from '@nestjs/config';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Payment } from './entities/payment.entity';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 export declare class PaymentsService {
     private paymentsRepository;
     private configService;
+    private readonly dataSource;
     private stripe;
-    constructor(paymentsRepository: Repository<Payment>, configService: ConfigService);
+    private readonly logger;
+    constructor(paymentsRepository: Repository<Payment>, configService: ConfigService, dataSource: DataSource);
     createPaymentIntent(createPaymentDto: CreatePaymentDto, userId: string): Promise<{
         clientSecret: string;
         paymentId: string;
@@ -18,4 +20,10 @@ export declare class PaymentsService {
         received: boolean;
     }>;
     private handleFailedPayment;
+    processRefund(paymentId: string, refundAmount: number, reason?: string): Promise<void>;
+    private validateRefundRequest;
+    private findPaymentById;
+    private processExternalRefund;
+    private updateRefundStatus;
+    updateRefundStatusSimple(paymentId: string, refundAmount: number, reason?: string): Promise<void>;
 }

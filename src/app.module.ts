@@ -34,6 +34,7 @@ import { elasticsearchConfig } from './config/elasticsearch.config';
 import { mongodbConfig } from './config/mongodb.config';
 import { validateEnvironment } from './config/env.validation';
 import { EnvConfigService } from './config/env.config';
+import { ShippingModule } from './modules/shipping/shipping.module';
 
 @Module({
   imports: [
@@ -108,6 +109,7 @@ import { EnvConfigService } from './config/env.config';
     ChatModule,
     ClerkModule.forRootAsync(),
     WebhooksModule,
+    ShippingModule,
   ],
   controllers: [AppController],
   providers: [
