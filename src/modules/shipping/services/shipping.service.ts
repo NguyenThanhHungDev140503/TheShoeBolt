@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, EntityManager } from 'typeorm';
+import { Repository, EntityManager, DataSource } from 'typeorm';
 import { UsersService } from '../../users/users.service';
 
 @Injectable()
@@ -11,6 +11,7 @@ export class ShippingService {
     // @InjectRepository(Shipping)
     // private readonly shippingRepository: Repository<Shipping>,
     private readonly usersService: UsersService,
+    private readonly dataSource: DataSource,
   ) {}
 
   /**
@@ -59,29 +60,25 @@ export class ShippingService {
 
   /**
    * Update shipping record with shipper assignment
-   * Simple data operation that replaces stored procedure
+   * Uses simplified stored procedure (sp_assign_shipper_simple)
    */
   private async updateShippingRecord(orderId: string, shipperId: string): Promise<void> {
     try {
-      // TODO: Implement when Shipping entity is available
-      // await this.shippingRepository.update(
-      //   { orderId },
-      //   {
-      //     shipperId,
-      //     updatedAt: new Date()
-      //   }
-      // );
+      // Use simplified stored procedure that only handles data operations
+      await this.dataSource.query(
+        'CALL sp_assign_shipper_simple($1, $2)',
+        [orderId, shipperId]
+      );
 
-      // For now, just log the operation
-      this.logger.debug(`Would update shipping record for order ${orderId} with shipper ${shipperId}`);
-
-      // Simulate the database operation
-      // In real implementation, this would throw NotFoundException if order not found
-      // if (result.affected === 0) {
-      //   throw new NotFoundException(`Không tìm thấy shipping record cho order: ${orderId}`);
-      // }
+      this.logger.debug(`Updated shipping record for order ${orderId} with shipper ${shipperId}`);
     } catch (error) {
       this.logger.error(`Error updating shipping record: ${error.message}`);
+
+      // Handle specific database errors
+      if (error.message.includes('Không tìm thấy shipping record')) {
+        throw new NotFoundException(`Không tìm thấy shipping record cho order: ${orderId}`);
+      }
+
       throw error;
     }
   }

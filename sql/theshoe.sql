@@ -400,6 +400,30 @@ END;
 $$;
 
 
+-- REFACTORED: Business logic moved to ShippingService
+-- This simplified procedure only handles data operations
+CREATE OR REPLACE PROCEDURE sp_assign_shipper_simple(
+    p_order_id UUID,
+    p_shipper_id UUID
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- Simple data operation - business validation handled in application layer
+    UPDATE "Shipping"
+    SET shipper_id = p_shipper_id,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE order_id = p_order_id;
+
+    -- Basic data validation only
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Không tìm thấy shipping record cho order: %', p_order_id;
+    END IF;
+END;
+$$;
+
+-- Keep original procedure for backward compatibility during transition
+-- TODO: Remove after all code migrated to use ShippingService
 CREATE OR REPLACE PROCEDURE sp_assign_shipper(
     p_order_id UUID,
     p_shipper_id UUID
@@ -445,6 +469,49 @@ BEGIN
 END;
 $$;
 
+-- REFACTORED: Business logic moved to UserRegistrationService
+-- This simplified procedure only handles user creation
+CREATE OR REPLACE PROCEDURE sp_create_user_simple(
+    p_name VARCHAR(100),
+    p_email VARCHAR(255),
+    p_sodienthoai VARCHAR(20),
+    p_hashed_password VARCHAR(255),
+    OUT p_user_id UUID
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- Simple user creation - validation handled in application layer
+    INSERT INTO "User" (name, email, sodienthoai, password)
+    VALUES (p_name, p_email, p_sodienthoai, p_hashed_password)
+    RETURNING id INTO p_user_id;
+END;
+$$;
+
+-- Simplified procedure for cart creation
+CREATE OR REPLACE PROCEDURE sp_create_cart_simple(
+    p_user_id UUID
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    INSERT INTO "Cart" (user_id) VALUES (p_user_id);
+END;
+$$;
+
+-- Simplified procedure for wishlist creation
+CREATE OR REPLACE PROCEDURE sp_create_wishlist_simple(
+    p_user_id UUID
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    INSERT INTO "Wishlist" (user_id) VALUES (p_user_id);
+END;
+$$;
+
+-- Keep original procedure for backward compatibility during transition
+-- TODO: Remove after all code migrated to use UserRegistrationService
 CREATE OR REPLACE PROCEDURE sp_register_user(
     p_name VARCHAR(100),
     p_email VARCHAR(255),
@@ -1056,7 +1123,33 @@ PREPARE get_payments_by_provider (VARCHAR, DATE, DATE) AS
 
 
 
--- Procedure xử lý refund
+-- REFACTORED: Business logic moved to PaymentRefundService
+-- This simplified procedure only handles status update
+CREATE OR REPLACE PROCEDURE sp_update_refund_status(
+    p_payment_id UUID,
+    p_refund_amount DECIMAL(10,2),
+    p_reason TEXT DEFAULT NULL
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- Simple status update - business validation handled in application layer
+    -- Note: Using description field since metadata doesn't exist in current Payment entity
+    UPDATE "Payment"
+    SET status = 'cancelled', -- Using cancelled to indicate refunded
+        description = CONCAT('REFUNDED: ', p_refund_amount, ' - ', COALESCE(p_reason, 'No reason provided'), ' - ', CURRENT_TIMESTAMP),
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = p_payment_id;
+
+    -- Basic data validation only
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Không tìm thấy payment với ID: %', p_payment_id;
+    END IF;
+END;
+$$;
+
+-- Keep original procedure for backward compatibility during transition
+-- TODO: Remove after all code migrated to use PaymentRefundService
 CREATE OR REPLACE PROCEDURE sp_process_refund(
     p_payment_id UUID,
     p_refund_amount DECIMAL(10,2),
@@ -1072,27 +1165,27 @@ BEGIN
     SELECT amount, status INTO v_payment_amount, v_payment_status
     FROM "Payment"
     WHERE id = p_payment_id;
-    
+
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Không tìm thấy thanh toán với ID: %', p_payment_id;
     END IF;
-    
+
     IF v_payment_status != 'success' THEN
         RAISE EXCEPTION 'Chỉ có thể refund payment có trạng thái success';
     END IF;
-    
+
     IF p_refund_amount > v_payment_amount THEN
         RAISE EXCEPTION 'Số tiền refund không thể lớn hơn số tiền thanh toán';
     END IF;
-    
+
     -- Cập nhật trạng thái payment
     UPDATE "Payment"
     SET status = 'refunded',
-        metadata = COALESCE(metadata, '{}'::jsonb) || 
+        metadata = COALESCE(metadata, '{}'::jsonb) ||
                   jsonb_build_object('refund_amount', p_refund_amount, 'refund_reason', p_reason, 'refunded_at', CURRENT_TIMESTAMP),
         updated_at = CURRENT_TIMESTAMP
     WHERE id = p_payment_id;
-    
+
     RAISE NOTICE 'Đã xử lý refund % cho payment %', p_refund_amount, p_payment_id;
 END;
 $$;

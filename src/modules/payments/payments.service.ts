@@ -222,7 +222,7 @@ export class PaymentsService {
 
   /**
    * Update payment record with refund status
-   * Simple data operation that replaces stored procedure
+   * Uses simplified stored procedure (sp_update_refund_status)
    */
   private async updateRefundStatus(
     paymentId: string,
@@ -230,28 +230,29 @@ export class PaymentsService {
     reason: string | undefined,
     manager: EntityManager
   ): Promise<void> {
-    const repository = manager.getRepository(Payment);
+    try {
+      // Use simplified stored procedure for status update
+      await manager.query(
+        'CALL sp_update_refund_status($1, $2, $3)',
+        [paymentId, refundAmount, reason]
+      );
 
-    // Since Payment entity doesn't have metadata field and REFUNDED status,
-    // we'll update status to CANCELLED and add a note in description
-    const updateData: Partial<Payment> = {
-      status: PaymentStatus.CANCELLED, // Using CANCELLED to indicate refunded
-      description: `REFUNDED: ${refundAmount} - ${reason || 'No reason provided'} - ${new Date().toISOString()}`,
-      updatedAt: new Date(),
-    };
+      this.logger.debug(`Updated refund status for payment ${paymentId}`);
+    } catch (error) {
+      this.logger.error(`Error updating refund status: ${error.message}`);
 
-    const result = await repository.update({ id: paymentId }, updateData);
+      // Handle specific database errors
+      if (error.message.includes('Không tìm thấy payment')) {
+        throw new NotFoundException(`Không tìm thấy payment với ID: ${paymentId}`);
+      }
 
-    if (result.affected === 0) {
-      throw new NotFoundException(`Không tìm thấy payment với ID: ${paymentId}`);
+      throw error;
     }
-
-    this.logger.debug(`Updated refund status for payment ${paymentId}`);
   }
 
   /**
-   * Simple refund status update (for simplified stored procedure)
-   * This would be called by the simplified sp_update_refund_status
+   * Simple refund status update using simplified stored procedure
+   * Direct call to sp_update_refund_status
    */
   async updateRefundStatusSimple(
     paymentId: string,
@@ -260,20 +261,23 @@ export class PaymentsService {
   ): Promise<void> {
     this.logger.log(`Updating refund status for payment ${paymentId}`);
 
-    // Since Payment entity doesn't have metadata field and REFUNDED status,
-    // we'll update status to CANCELLED and add a note in description
-    const updateData: Partial<Payment> = {
-      status: PaymentStatus.CANCELLED, // Using CANCELLED to indicate refunded
-      description: `REFUNDED: ${refundAmount} - ${reason || 'No reason provided'} - ${new Date().toISOString()}`,
-      updatedAt: new Date(),
-    };
+    try {
+      // Use simplified stored procedure directly
+      await this.dataSource.query(
+        'CALL sp_update_refund_status($1, $2, $3)',
+        [paymentId, refundAmount, reason]
+      );
 
-    const result = await this.paymentsRepository.update({ id: paymentId }, updateData);
+      this.logger.log(`Successfully updated refund status for payment ${paymentId}`);
+    } catch (error) {
+      this.logger.error(`Error updating refund status: ${error.message}`);
 
-    if (result.affected === 0) {
-      throw new NotFoundException(`Không tìm thấy payment với ID: ${paymentId}`);
+      // Handle specific database errors
+      if (error.message.includes('Không tìm thấy payment')) {
+        throw new NotFoundException(`Không tìm thấy payment với ID: ${paymentId}`);
+      }
+
+      throw error;
     }
-
-    this.logger.log(`Successfully updated refund status for payment ${paymentId}`);
   }
 }

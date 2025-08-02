@@ -270,59 +270,57 @@ export class UsersService {
 
   /**
    * Create user record within transaction
-   * Simple data operation that replaces part of stored procedure
+   * Uses simplified stored procedure (sp_create_user_simple)
    */
   private async createUserInTransaction(
     userData: { name: string; email: string; phone: string; password: string },
     manager: EntityManager
   ): Promise<User> {
-    const repository = manager.getRepository(User);
+    try {
+      // Use simplified stored procedure for user creation
+      const result = await manager.query(
+        'CALL sp_create_user_simple($1, $2, $3, $4)',
+        [userData.name, userData.email, userData.phone, userData.password]
+      );
 
-    // Split name into firstName and lastName
-    const nameParts = userData.name.split(' ');
-    const firstName = nameParts[0] || userData.name;
-    const lastName = nameParts.slice(1).join(' ') || '';
+      // Get the created user ID from the procedure output
+      const userId = result[0]?.p_user_id;
+      if (!userId) {
+        throw new Error('Failed to get user ID from stored procedure');
+      }
 
-    const user = repository.create({
-      firstName,
-      lastName,
-      email: userData.email,
-      password: userData.password,
-      // Note: phone field doesn't exist in current User entity
-      // Will need to add sodienthoai field or use metadata
-    });
+      // Fetch the created user
+      const repository = manager.getRepository(User);
+      const user = await repository.findOne({ where: { id: userId } });
 
-    const savedUser = await repository.save(user);
-    this.logger.debug(`Created user with ID: ${savedUser.id}`);
+      if (!user) {
+        throw new Error(`User not found after creation: ${userId}`);
+      }
 
-    return savedUser;
+      this.logger.debug(`Created user with ID: ${user.id}`);
+      return user;
+    } catch (error) {
+      this.logger.error(`Error creating user: ${error.message}`);
+      throw error;
+    }
   }
 
   /**
    * Initialize user resources (cart and wishlist)
-   * Workflow logic that was previously in database layer
+   * Uses simplified stored procedures
    */
   private async initializeUserResources(
     userId: string,
-    _manager: EntityManager
+    manager: EntityManager
   ): Promise<void> {
     try {
-      // TODO: Implement when Cart and Wishlist entities are available
-      // await Promise.all([
-      //   this.createCartForUser(userId, manager),
-      //   this.createWishlistForUser(userId, manager)
-      // ]);
+      // Use simplified stored procedures for resource creation
+      await Promise.all([
+        manager.query('CALL sp_create_cart_simple($1)', [userId]),
+        manager.query('CALL sp_create_wishlist_simple($1)', [userId])
+      ]);
 
-      // For now, simulate the operations
-      this.logger.debug(`Would create cart and wishlist for user ${userId}`);
-
-      // Placeholder for cart creation
-      // await manager.query('INSERT INTO "Cart" (user_id) VALUES ($1)', [userId]);
-
-      // Placeholder for wishlist creation
-      // await manager.query('INSERT INTO "Wishlist" (user_id) VALUES ($1)', [userId]);
-
-      this.logger.debug(`Initialized resources for user ${userId}`);
+      this.logger.debug(`Initialized cart and wishlist for user ${userId}`);
     } catch (error) {
       this.logger.error(`Failed to initialize user resources: ${error.message}`);
       throw error;
