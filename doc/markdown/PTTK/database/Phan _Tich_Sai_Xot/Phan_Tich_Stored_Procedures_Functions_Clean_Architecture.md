@@ -1,8 +1,8 @@
 # Báo cáo Phân tích Stored Procedures và Functions - Tuân thủ Clean Architecture
 
-**Người thực hiện:** Augment Agent  
-**Ngày thực hiện:** 18/01/2025  
-**Người giám sát:** default_user  
+**Người thực hiện:** Nguyễn Thành Hưng  
+**Ngày thực hiện:** 31/07/2025  
+**Người giám sát:** Nguyễn Thành Hưng
 
 ## Tóm tắt Báo cáo
 

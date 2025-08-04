@@ -36,6 +36,8 @@ const elasticsearch_config_1 = require("./config/elasticsearch.config");
 const mongodb_config_1 = require("./config/mongodb.config");
 const env_validation_1 = require("./config/env.validation");
 const env_config_1 = require("./config/env.config");
+const shipping_module_1 = require("./modules/shipping/shipping.module");
+const test_module_1 = require("./modules/test/test.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -99,6 +101,8 @@ exports.AppModule = AppModule = __decorate([
             chat_module_1.ChatModule,
             clerk_module_1.ClerkModule.forRootAsync(),
             webhooks_module_1.WebhooksModule,
+            shipping_module_1.ShippingModule,
+            test_module_1.TestModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [
