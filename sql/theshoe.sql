@@ -98,15 +98,51 @@ CREATE TABLE "Address" (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tạo bảng Payment
-CREATE TABLE "Payment" (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_id UUID REFERENCES "Order"(id) NOT NULL,
-    amount DECIMAL(10,2) NOT NULL,
-    method VARCHAR(50) CHECK (method IN ('credit_card', 'ewallet', 'cash')),
-    status VARCHAR(20) CHECK (status IN ('success', 'failed')),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+
+-- Bảng master: PaymentMethod
+CREATE TABLE "PaymentMethod" (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code        VARCHAR(30) UNIQUE NOT NULL,  -- stripe, vnpay, cod, momo...
+    name        VARCHAR(100) NOT NULL,
+    provider    VARCHAR(50),                  -- Stripe, VNPay, MoMo...
+    fee_percent NUMERIC(5,2) DEFAULT 0,
+    is_active   BOOLEAN DEFAULT TRUE,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Thêm comment cho bảng
+COMMENT ON TABLE "PaymentMethod" IS 'Bảng master quản lý các phương thức thanh toán';
+COMMENT ON COLUMN "PaymentMethod".code IS 'Mã định danh duy nhất cho phương thức (stripe, vnpay, cod, momo)';
+COMMENT ON COLUMN "PaymentMethod".name IS 'Tên hiển thị của phương thức thanh toán';
+COMMENT ON COLUMN "PaymentMethod".provider IS 'Nhà cung cấp dịch vụ thanh toán (Stripe, VNPay, MoMo...)';
+COMMENT ON COLUMN "PaymentMethod".fee_percent IS 'Phần trăm phí giao dịch của provider';
+COMMENT ON COLUMN "PaymentMethod".is_active IS 'Trạng thái kích hoạt của phương thức thanh toán';
+
+-- Tạo bảng Payment 
+CREATE TABLE "Payment" (
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id            UUID REFERENCES "Order"(id) NOT NULL,
+    payment_method_id   UUID REFERENCES "PaymentMethod"(id) NOT NULL,
+    amount              DECIMAL(10,2) NOT NULL,
+    status              VARCHAR(20) CHECK (status IN ('pending', 'processing', 'success', 'failed', 'cancelled', 'refunded')) DEFAULT 'pending',
+    provider_txn_id     VARCHAR(255),                    -- ID giao dịch từ provider
+    provider_fee        DECIMAL(10,2) DEFAULT 0,         -- Phí thực tế từ provider
+    metadata            JSONB,                           -- Dữ liệu JSON từ provider
+    paid_at             TIMESTAMP,                       -- Thời điểm thanh toán thành công
+    idempotency_key     UUID UNIQUE,                     -- Key đảm bảo tính idempotent
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Thêm comments cho bảng Payment 
+COMMENT ON TABLE "Payment" IS 'Bảng detail lưu trữ thông tin thanh toán chi tiết';
+COMMENT ON COLUMN "Payment".provider_txn_id IS 'ID giao dịch từ provider (stripe_payment_intent_id, vnp_txn_ref, etc.)';
+COMMENT ON COLUMN "Payment".provider_fee IS 'Phí giao dịch thực tế từ provider';
+COMMENT ON COLUMN "Payment".metadata IS 'Dữ liệu JSON lưu thông tin bổ sung của provider';
+COMMENT ON COLUMN "Payment".paid_at IS 'Thời điểm thanh toán được xác nhận thành công';
+COMMENT ON COLUMN "Payment".idempotency_key IS 'Key đảm bảo tính idempotent cho API calls';
+
 
 -- Tạo bảng Shipping
 CREATE TABLE "Shipping" (
@@ -286,41 +322,75 @@ $$;
 
 CREATE OR REPLACE PROCEDURE sp_create_payment(
     p_order_id UUID,
+    p_payment_method_code VARCHAR(30),
     p_amount DECIMAL(10,2),
-    p_method VARCHAR(50),
-    p_status VARCHAR(20)
+    p_status VARCHAR(20) DEFAULT 'pending',
+    p_provider_txn_id VARCHAR(255) DEFAULT NULL,
+    p_metadata JSONB DEFAULT NULL,
+    p_idempotency_key UUID DEFAULT NULL
 )
 LANGUAGE plpgsql
 AS $$
+DECLARE
+    v_payment_method_id UUID;
 BEGIN
-    -- Kiểm tra giá trị hợp lệ cho method và status (tùy chọn, có thể thêm kiểm tra dựa trên CHECK constraint)
-    IF p_method NOT IN ('credit_card', 'ewallet', 'cash') THEN
-        RAISE EXCEPTION 'Phương thức thanh toán không hợp lệ: %', p_method;
-    END IF;
-    IF p_status NOT IN ('success', 'failed') THEN
+    -- Kiểm tra giá trị hợp lệ cho status
+    IF p_status NOT IN ('pending', 'processing', 'success', 'failed', 'cancelled', 'refunded') THEN
         RAISE EXCEPTION 'Trạng thái thanh toán không hợp lệ: %', p_status;
     END IF;
 
-    INSERT INTO "Payment" (order_id, amount, method, status)
-    VALUES (p_order_id, p_amount, p_method, p_status);
+    -- Lấy payment_method_id từ code
+    SELECT id INTO v_payment_method_id 
+    FROM "PaymentMethod" 
+    WHERE code = p_payment_method_code AND is_active = true;
+    
+    IF v_payment_method_id IS NULL THEN
+        RAISE EXCEPTION 'Không tìm thấy phương thức thanh toán với code: %', p_payment_method_code;
+    END IF;
+
+    -- Tạo payment mới
+    INSERT INTO "Payment" (
+        order_id, 
+        payment_method_id, 
+        amount, 
+        status, 
+        provider_txn_id, 
+        metadata, 
+        idempotency_key
+    )
+    VALUES (
+        p_order_id, 
+        v_payment_method_id, 
+        p_amount, 
+        p_status, 
+        p_provider_txn_id, 
+        p_metadata, 
+        p_idempotency_key
+    );
 END;
 $$;
 
 CREATE OR REPLACE PROCEDURE sp_update_payment_status(
     p_payment_id UUID,
-    p_new_status VARCHAR(20)
+    p_new_status VARCHAR(20),
+    p_paid_at TIMESTAMP DEFAULT NULL,
+    p_provider_txn_id VARCHAR(255) DEFAULT NULL,
+    p_provider_fee DECIMAL(10,2) DEFAULT NULL
 )
 LANGUAGE plpgsql
 AS $$
 BEGIN
-    -- Kiểm tra giá trị hợp lệ cho status (tùy chọn)
-    IF p_new_status NOT IN ('success', 'failed') THEN
+    -- Kiểm tra giá trị hợp lệ cho status
+    IF p_new_status NOT IN ('pending', 'processing', 'success', 'failed', 'cancelled', 'refunded') THEN
         RAISE EXCEPTION 'Trạng thái thanh toán không hợp lệ: %', p_new_status;
     END IF;
 
     UPDATE "Payment"
-    SET status = p_new_status
-    -- Không cập nhật updated_at vì bảng Payment không có trường này, chỉ có created_at
+    SET status = p_new_status,
+        paid_at = COALESCE(p_paid_at, CASE WHEN p_new_status = 'success' THEN CURRENT_TIMESTAMP ELSE paid_at END),
+        provider_txn_id = COALESCE(p_provider_txn_id, provider_txn_id),
+        provider_fee = COALESCE(p_provider_fee, provider_fee),
+        updated_at = CURRENT_TIMESTAMP
     WHERE id = p_payment_id;
 
     IF NOT FOUND THEN
@@ -329,6 +399,31 @@ BEGIN
 END;
 $$;
 
+
+-- REFACTORED: Business logic moved to ShippingService
+-- This simplified procedure only handles data operations
+CREATE OR REPLACE PROCEDURE sp_assign_shipper_simple(
+    p_order_id UUID,
+    p_shipper_id UUID
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- Simple data operation - business validation handled in application layer
+    UPDATE "Shipping"
+    SET shipper_id = p_shipper_id,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE order_id = p_order_id;
+
+    -- Basic data validation only
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Không tìm thấy shipping record cho order: %', p_order_id;
+    END IF;
+END;
+$$;
+
+-- Keep original procedure for backward compatibility during transition
+-- TODO: Remove after all code migrated to use ShippingService
 CREATE OR REPLACE PROCEDURE sp_assign_shipper(
     p_order_id UUID,
     p_shipper_id UUID
@@ -374,6 +469,49 @@ BEGIN
 END;
 $$;
 
+-- REFACTORED: Business logic moved to UserRegistrationService
+-- This simplified procedure only handles user creation
+CREATE OR REPLACE PROCEDURE sp_create_user_simple(
+    p_name VARCHAR(100),
+    p_email VARCHAR(255),
+    p_sodienthoai VARCHAR(20),
+    p_hashed_password VARCHAR(255),
+    OUT p_user_id UUID
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- Simple user creation - validation handled in application layer
+    INSERT INTO "User" (name, email, sodienthoai, password)
+    VALUES (p_name, p_email, p_sodienthoai, p_hashed_password)
+    RETURNING id INTO p_user_id;
+END;
+$$;
+
+-- Simplified procedure for cart creation
+CREATE OR REPLACE PROCEDURE sp_create_cart_simple(
+    p_user_id UUID
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    INSERT INTO "Cart" (user_id) VALUES (p_user_id);
+END;
+$$;
+
+-- Simplified procedure for wishlist creation
+CREATE OR REPLACE PROCEDURE sp_create_wishlist_simple(
+    p_user_id UUID
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    INSERT INTO "Wishlist" (user_id) VALUES (p_user_id);
+END;
+$$;
+
+-- Keep original procedure for backward compatibility during transition
+-- TODO: Remove after all code migrated to use UserRegistrationService
 CREATE OR REPLACE PROCEDURE sp_register_user(
     p_name VARCHAR(100),
     p_email VARCHAR(255),
@@ -498,11 +636,29 @@ CREATE INDEX idx_address_user ON "Address" (user_id);
 
 -- Bảng Payment
 CREATE INDEX idx_payment_order ON "Payment" (order_id);
+CREATE INDEX idx_payment_status ON "Payment" (status);
+
 
 -- Bảng Shipping
 CREATE INDEX idx_shipping_order ON "Shipping" (order_id);
 CREATE INDEX idx_shipping_address ON "Shipping" (address_id);
 CREATE INDEX idx_shipping_shipper ON "Shipping" (shipper_id);
+CREATE INDEX idx_payment_method       ON "Payment"(payment_method_id);
+CREATE INDEX idx_payment_status       ON "Payment"(status);
+CREATE INDEX idx_payment_provider_txn ON "Payment"(provider_txn_id);
+CREATE INDEX idx_payment_paid_at       ON "Payment"(paid_at);
+CREATE INDEX idx_payment_idempotency   ON "Payment"(idempotency_key)
+    WHERE idempotency_key IS NOT NULL;
+CREATE INDEX idx_payment_metadata ON "Payment"
+    USING GIN (metadata);
+
+-- Index cho bảng PaymentMethod
+CREATE INDEX idx_payment_method_code ON "PaymentMethod"(code);
+CREATE INDEX idx_payment_method_active ON "PaymentMethod"(is_active);
+
+-- Composite indexes cho reporting
+CREATE INDEX idx_payment_status_paid_at ON "Payment"(status, paid_at);
+CREATE INDEX idx_payment_method_status ON "Payment"(payment_method_id, status);
 
 -- Bảng Review
 CREATE INDEX idx_review_product ON "Review" (product_id);
@@ -529,8 +685,6 @@ CREATE INDEX idx_promotionproduct_product ON "PromotionProduct" (product_id);
 -- Address
 CREATE INDEX idx_address_user_default ON "Address" (user_id, is_default);
 
--- Payment
-CREATE INDEX idx_payment_status ON "Payment" (status);
 
 -- Shipping
 CREATE INDEX idx_shipping_status ON "Shipping" (status);
@@ -914,7 +1068,214 @@ PREPARE register_user_basic (VARCHAR, VARCHAR, VARCHAR, VARCHAR) AS
 -- Sau khi EXECUTE cái này, cần gọi logic khác (hoặc trigger) để tạo Cart/Wishlist.
 
 
--- Đừng quên giải phóng các prepared statement khi không cần thiết (ví dụ khi đóng kết nối session)
--- DEALLOCATE get_user_by_id;
--- DEALLOCATE ALL;
 
+-- Cập nhật prepared statement cho payment với JOIN
+PREPARE get_payment_details (UUID) AS
+    SELECT 
+        p.id,
+        p.order_id,
+        p.amount,
+        p.status,
+        p.provider_txn_id,
+        p.provider_fee,
+        p.paid_at,
+        p.created_at,
+        pm.code as payment_method_code,
+        pm.name as payment_method_name,
+        pm.provider,
+        pm.fee_percent
+    FROM "Payment" p
+    JOIN "PaymentMethod" pm ON p.payment_method_id = pm.id
+    WHERE p.id = $1;
+
+-- Prepared statement cho payment theo order
+PREPARE get_order_payments (UUID) AS
+    SELECT 
+        p.id,
+        p.amount,
+        p.status,
+        p.provider_txn_id,
+        p.paid_at,
+        pm.code as payment_method_code,
+        pm.name as payment_method_name,
+        pm.provider
+    FROM "Payment" p
+    JOIN "PaymentMethod" pm ON p.payment_method_id = pm.id
+    WHERE p.order_id = $1
+    ORDER BY p.created_at DESC;
+
+-- Prepared statement cho báo cáo payment theo provider
+PREPARE get_payments_by_provider (VARCHAR, DATE, DATE) AS
+    SELECT 
+        pm.provider,
+        pm.name as payment_method_name,
+        COUNT(p.id) as transaction_count,
+        SUM(p.amount) as total_amount,
+        SUM(p.provider_fee) as total_fees,
+        AVG(p.amount) as avg_amount
+    FROM "Payment" p
+    JOIN "PaymentMethod" pm ON p.payment_method_id = pm.id
+    WHERE pm.provider = $1
+    AND p.status = 'success'
+    AND DATE(p.paid_at) BETWEEN $2 AND $3
+    GROUP BY pm.provider, pm.name
+    ORDER BY total_amount DESC;
+
+
+
+-- REFACTORED: Business logic moved to PaymentRefundService
+-- This simplified procedure only handles status update
+CREATE OR REPLACE PROCEDURE sp_update_refund_status(
+    p_payment_id UUID,
+    p_refund_amount DECIMAL(10,2),
+    p_reason TEXT DEFAULT NULL
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- Simple status update - business validation handled in application layer
+    -- Note: Using description field since metadata doesn't exist in current Payment entity
+    UPDATE "Payment"
+    SET status = 'cancelled', -- Using cancelled to indicate refunded
+        description = CONCAT('REFUNDED: ', p_refund_amount, ' - ', COALESCE(p_reason, 'No reason provided'), ' - ', CURRENT_TIMESTAMP),
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = p_payment_id;
+
+    -- Basic data validation only
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Không tìm thấy payment với ID: %', p_payment_id;
+    END IF;
+END;
+$$;
+
+-- Keep original procedure for backward compatibility during transition
+-- TODO: Remove after all code migrated to use PaymentRefundService
+CREATE OR REPLACE PROCEDURE sp_process_refund(
+    p_payment_id UUID,
+    p_refund_amount DECIMAL(10,2),
+    p_reason TEXT DEFAULT NULL
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_payment_amount DECIMAL(10,2);
+    v_payment_status VARCHAR(20);
+BEGIN
+    -- Kiểm tra payment tồn tại và trạng thái
+    SELECT amount, status INTO v_payment_amount, v_payment_status
+    FROM "Payment"
+    WHERE id = p_payment_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Không tìm thấy thanh toán với ID: %', p_payment_id;
+    END IF;
+
+    IF v_payment_status != 'success' THEN
+        RAISE EXCEPTION 'Chỉ có thể refund payment có trạng thái success';
+    END IF;
+
+    IF p_refund_amount > v_payment_amount THEN
+        RAISE EXCEPTION 'Số tiền refund không thể lớn hơn số tiền thanh toán';
+    END IF;
+
+    -- Cập nhật trạng thái payment
+    UPDATE "Payment"
+    SET status = 'refunded',
+        metadata = COALESCE(metadata, '{}'::jsonb) ||
+                  jsonb_build_object('refund_amount', p_refund_amount, 'refund_reason', p_reason, 'refunded_at', CURRENT_TIMESTAMP),
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = p_payment_id;
+
+    RAISE NOTICE 'Đã xử lý refund % cho payment %', p_refund_amount, p_payment_id;
+END;
+$$;
+
+-- Function thống kê payment
+CREATE OR REPLACE FUNCTION fn_get_payment_stats(
+    p_start_date DATE DEFAULT NULL,
+    p_end_date DATE DEFAULT NULL
+)
+RETURNS TABLE(
+    provider VARCHAR(50),
+    payment_method_name VARCHAR(100),
+    total_transactions BIGINT,
+    total_amount DECIMAL(10,2),
+    total_fees DECIMAL(10,2),
+    success_rate DECIMAL(5,2)
+)
+LANGUAGE plpgsql STABLE
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        pm.provider,
+        pm.name as payment_method_name,
+        COUNT(p.id) as total_transactions,
+        SUM(CASE WHEN p.status = 'success' THEN p.amount ELSE 0 END) as total_amount,
+        SUM(CASE WHEN p.status = 'success' THEN p.provider_fee ELSE 0 END) as total_fees,
+        ROUND(
+            (COUNT(CASE WHEN p.status = 'success' THEN 1 END) * 100.0 / NULLIF(COUNT(p.id), 0)), 
+            2
+        ) as success_rate
+    FROM "Payment" p
+    JOIN "PaymentMethod" pm ON p.payment_method_id = pm.id
+    WHERE (p_start_date IS NULL OR DATE(p.created_at) >= p_start_date)
+    AND (p_end_date IS NULL OR DATE(p.created_at) <= p_end_date)
+    GROUP BY pm.provider, pm.name
+    ORDER BY total_amount DESC;
+END;
+$$;
+
+-- Function báo cáo doanh thu theo provider
+CREATE OR REPLACE FUNCTION fn_get_provider_revenue(
+    p_provider VARCHAR(50),
+    p_start_date DATE,
+    p_end_date DATE
+)
+RETURNS TABLE(
+    payment_date DATE,
+    transaction_count BIGINT,
+    gross_revenue DECIMAL(10,2),
+    provider_fees DECIMAL(10,2),
+    net_revenue DECIMAL(10,2)
+)
+LANGUAGE plpgsql STABLE
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        DATE(p.paid_at) as payment_date,
+        COUNT(p.id) as transaction_count,
+        SUM(p.amount) as gross_revenue,
+        SUM(p.provider_fee) as provider_fees,
+        SUM(p.amount - COALESCE(p.provider_fee, 0)) as net_revenue
+    FROM "Payment" p
+    JOIN "PaymentMethod" pm ON p.payment_method_id = pm.id
+    WHERE pm.provider = p_provider
+    AND p.status = 'success'
+    AND DATE(p.paid_at) BETWEEN p_start_date AND p_end_date
+    GROUP BY DATE(p.paid_at)
+    ORDER BY payment_date;
+END;
+$$;
+
+-- Procedure toggle payment method
+CREATE OR REPLACE PROCEDURE sp_toggle_payment_method(
+    p_method_code VARCHAR(30),
+    p_is_active BOOLEAN
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE "PaymentMethod"
+    SET is_active = p_is_active,
+        created_at = CURRENT_TIMESTAMP  -- Update timestamp for audit
+    WHERE code = p_method_code;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Không tìm thấy phương thức thanh toán với code: %', p_method_code;
+    END IF;
+    
+    RAISE NOTICE 'Payment method % set to active: %', p_method_code, p_is_active;
+END;
+$$;
