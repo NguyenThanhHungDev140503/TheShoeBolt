@@ -48,7 +48,7 @@ Báo cáo này thực hiện phân tích so sánh chi tiết giữa tài liệu 
 
 #### 1.2. Mức Độ Ưu Tiên HIGH
 
-**5. Bảng PaymentMethod**
+**5. Bảng PaymentMethod** (Đã thực hiện xong)
 
 - **Lý do thiếu:** ERD chỉ có Payment.method là string, không linh hoạt cho Stripe/VNPay
 - **Yêu cầu SRS:** FR-014 - Thanh toán với Stripe, VNPay
@@ -59,21 +59,6 @@ Báo cáo này thực hiện phân tích so sánh chi tiết giữa tài liệu 
     name: VARCHAR(100)
     type: ENUM('credit_card', 'e_wallet', 'cash', 'bank_transfer')
     provider: VARCHAR(50) -- 'stripe', 'vnpay'
-    is_active: BOOLEAN DEFAULT true
-    created_at: TIMESTAMP
-  }
-  ```
-
-**6. Bảng ShippingMethod**
-- **Lý do thiếu:** SRS đề cập giao hàng nhưng ERD thiếu quản lý phương thức vận chuyển
-- **Yêu cầu SRS:** FR-022 - Xác nhận giao hàng
-- **Cấu trúc đề xuất:**
-  ```sql
-  ShippingMethod {
-    id: UUID/INT PRIMARY KEY
-    name: VARCHAR(100)
-    cost: DECIMAL(10,2)
-    estimated_days: INT
     is_active: BOOLEAN DEFAULT true
     created_at: TIMESTAMP
   }

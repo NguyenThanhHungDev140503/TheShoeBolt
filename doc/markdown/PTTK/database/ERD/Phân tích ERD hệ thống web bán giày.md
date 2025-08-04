@@ -17,15 +17,16 @@ Tập thực thể đầy đủ của hệ thống bao gồm:
 5.  **Order (Đơn hàng)**: Thông tin về đơn hàng của người dùng.
 6.  **Cart (Giỏ hàng)**: Giỏ hàng của người dùng.
 7.  **Address (Địa chỉ)**: Địa chỉ giao hàng hoặc thông tin liên hệ của người dùng.
-8.  **Checkout (Thanh toán)**: Thông tin thanh toán của đơn hàng.
-9.  **Shipping (Giao hàng)**: Thông tin vận chuyển liên quan đến đơn hàng.
-10. **Promotion (Khuyến mãi)**: Các chương trình khuyến mãi.
-11. **DiscountCode (Mã giảm giá)**: Mã giảm giá áp dụng cho đơn hàng.
-12. **Review (Đánh giá)**: Đánh giá của người dùng về sản phẩm.
-13. **Wishlist (Danh sách mong muốn)**: Danh sách sản phẩm người dùng muốn nhận thông báo.
-14. **ProductImage (Hình ảnh sản phẩm)**: Lưu trữ hình ảnh của sản phẩm.
-15. **Collection (Bộ sưu tập)**: Đại diện cho các bộ sưu tập sản phẩm (VD: mùa hè, mùa đông).
-16. **Favourite (Yêu thích)**: Danh sách sản phẩm yêu thích của người dùng.
+8.  **Payment (Thanh toán)**: Thông tin thanh toán của đơn hàng.
+9.  **PaymentMethod (Phương thức thanh toán)**: Các phương thức thanh toán được hỗ trợ.
+10. **Shipping (Giao hàng)**: Thông tin vận chuyển liên quan đến đơn hàng.
+11. **Promotion (Khuyến mãi)**: Các chương trình khuyến mãi.
+12. **DiscountCode (Mã giảm giá)**: Mã giảm giá áp dụng cho đơn hàng.
+13. **Review (Đánh giá)**: Đánh giá của người dùng về sản phẩm.
+14. **Wishlist (Danh sách mong muốn)**: Danh sách sản phẩm người dùng muốn nhận thông báo.
+15. **ProductImage (Hình ảnh sản phẩm)**: Lưu trữ hình ảnh của sản phẩm.
+16. **Collection (Bộ sưu tập)**: Đại diện cho các bộ sưu tập sản phẩm (VD: mùa hè, mùa đông).
+17. **Favourite (Yêu thích)**: Danh sách sản phẩm yêu thích của người dùng.
 
 ### 2.2. Bước 2: Xác định mối quan hệ
 
@@ -44,6 +45,8 @@ Tập thực thể đầy đủ của hệ thống bao gồm:
 *   **Order - Product**: Một đơn hàng có thể chứa nhiều sản phẩm, một sản phẩm có thể xuất hiện trong nhiều đơn hàng (N:M). Cần bảng trung gian **OrderDetail**.
 *   **Order - DiscountCode**: Một đơn hàng có thể sử dụng một hoặc nhiều mã giảm giá, một mã giảm giá có thể được sử dụng cho nhiều đơn hàng (N:M). Cần bảng trung gian **DiscountCodeUses**.
 *   **Order - Address**: Một đơn hàng có thể có một địa chỉ giao hàng, một địa chỉ có thể được sử dụng cho nhiều đơn hàng (1:N).
+*   **Order - Payment**: Một đơn hàng có thể có nhiều thanh toán (trong trường hợp thanh toán thất bại và thử lại), một thanh toán thuộc về một đơn hàng (1:N).
+*   **Payment - PaymentMethod**: Một thanh toán sử dụng một phương thức thanh toán, một phương thức thanh toán có thể được sử dụng cho nhiều thanh toán (N:1).
 *   **Wishlist - Product**: Một danh sách mong muốn có thể chứa nhiều sản phẩm, một sản phẩm có thể nằm trong nhiều danh sách mong muốn (N:M). Cần bảng trung gian **WishlistItem**.
 
 Ghi chú về Review: - Để đảm bảo rằng chỉ những người dùng đã mua sản phẩm mới có thể đánh giá, logic kiểm tra sẽ được thực hiện trong ứng dụng bằng cách kiểm tra lịch sử mua hàng của người dùng (qua Order và OrderDetail) trước khi cho phép viết đánh giá. Không cần thêm mối quan hệ trực tiếp giữa Review và Order trong ERD.
@@ -97,12 +100,25 @@ Ghi chú về Review: - Để đảm bảo rằng chỉ những người dùng �
     *   `is_default`: Địa chỉ mặc định (true/false).
     *   `created_at`: Thời gian tạo.
     *   `updated_at`: Thời gian cập nhật.
-*   **Checkout**:
+*   **PaymentMethod**:
+    *   `id` (PK): Mã phương thức thanh toán.
+    *   `code` (UK): Mã định danh duy nhất (stripe, vnpay, cod, momo).
+    *   `name`: Tên hiển thị của phương thức thanh toán.
+    *   `provider`: Nhà cung cấp dịch vụ thanh toán (Stripe, VNPay, MoMo).
+    *   `fee_percent`: Phần trăm phí giao dịch của provider.
+    *   `is_active`: Trạng thái kích hoạt của phương thức thanh toán.
+    *   `created_at`: Thời gian tạo.
+*   **Payment**:
     *   `id` (PK): Mã thanh toán.
     *   `order_id` (FK): Mã đơn hàng.
+    *   `payment_method_id` (FK): Mã phương thức thanh toán.
     *   `amount`: Số tiền thanh toán.
-    *   `method`: Phương thức (thẻ tín dụng, ví điện tử, tiền mặt).
-    *   `status`: Trạng thái (thành công, thất bại).
+    *   `status`: Trạng thái (pending, processing, success, failed, cancelled, refunded).
+    *   `provider_txn_id`: ID giao dịch từ provider.
+    *   `provider_fee`: Phí thực tế từ provider.
+    *   `metadata`: Dữ liệu JSON từ provider.
+    *   `paid_at`: Thời điểm thanh toán thành công.
+    *   `idempotency_key`: Key đảm bảo tính idempotent.
     *   `created_at`: Thời gian tạo.
     *   `updated_at`: Thời gian cập nhật.
 *   **Shipping**:
@@ -280,7 +296,8 @@ Ghi chú về Review: - Để đảm bảo rằng chỉ những người dùng �
 *   **Order**: Khóa chính: `id`, khóa ngoại: `user_id` → `User.id`.
 *   **Cart**: Khóa chính: `id`, khóa ngoại: `user_id` → `User.id`.
 *   **Address**: Khóa chính: `id`, khóa ngoại: `user_id` → `User.id`.
-*   **Checkout**: Khóa chính: `id`, khóa ngoại: `order_id` → `Order.id`.
+*   **PaymentMethod**: Khóa chính: `id`.
+*   **Payment**: Khóa chính: `id`, khóa ngoại: `order_id` → `Order.id`, `payment_method_id` → `PaymentMethod.id`.
 *   **Shipping**: Khóa chính: `id`, khóa ngoại: `order_id` → `Order.id`.
 *   **Promotion**: Khóa chính: `id`.
 *   **DiscountCode**: Khóa chính: `id`.
@@ -334,9 +351,12 @@ Ghi chú về Review: - Để đảm bảo rằng chỉ những người dùng �
 *   **Order - Product**:
     *   Tỉ số: N:M (qua OrderDetail).
     *   Min-max: Một đơn hàng có thể chứa 1 hoặc nhiều sản phẩm, một sản phẩm có thể xuất hiện trong 0 hoặc nhiều đơn hàng.
-*   **Order - Checkout**:
-    *   Tỉ số: 1:1.
-    *   Min-max: Một đơn hàng có đúng 1 thanh toán, một thanh toán thuộc về đúng 1 đơn hàng.
+*   **Order - Payment**:
+    *   Tỉ số: 1:N.
+    *   Min-max: Một đơn hàng có thể có 1 hoặc nhiều thanh toán, một thanh toán thuộc về đúng 1 đơn hàng.
+*   **Payment - PaymentMethod**:
+    *   Tỉ số: N:1.
+    *   Min-max: Một thanh toán sử dụng đúng 1 phương thức thanh toán, một phương thức thanh toán có thể được sử dụng cho nhiều thanh toán.
 *   **Order - Shipping**:
     *   Tỉ số: 1:N.
     *   Min-max: Một đơn hàng có thể có 0 hoặc nhiều lô giao hàng, một lô giao hàng thuộc về đúng 1 đơn hàng.
@@ -493,12 +513,27 @@ erDiagram
     }
     
     %% Payment & Shipping
-    Checkout {
+    PaymentMethod {
+        string id PK
+        string code UK
+        string name
+        string provider
+        decimal fee_percent
+        boolean is_active
+        timestamp created_at
+    }
+
+    Payment {
         string id PK
         string order_id FK
+        string payment_method_id FK
         decimal amount
-        string method
         string status
+        string provider_txn_id
+        decimal provider_fee
+        json metadata
+        timestamp paid_at
+        string idempotency_key UK
         timestamp created_at
         timestamp updated_at
     }
@@ -608,7 +643,8 @@ erDiagram
     %% Order Relationships
     Order ||--o{ OrderDetail : "contains items"
     Product ||--o{ OrderDetail : "ordered in orders"
-    Order ||--|| Checkout : "has payment"
+    Order ||--o{ Payment : "has payments"
+    PaymentMethod ||--o{ Payment : "used for payments"
     Order ||--o{ Shipping : "has shipments"
     Address ||--o{ Shipping : "delivery address"
     User ||--o{ Shipping : "shipper"

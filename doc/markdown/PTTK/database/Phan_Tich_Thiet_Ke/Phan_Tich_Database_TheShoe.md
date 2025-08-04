@@ -36,7 +36,8 @@ erDiagram
     Product ||--o{ PromotionProduct : applies_to
     DiscountCode ||--o{ Order : applies_to
     Order ||--o{ OrderDetail : contains
-    Order ||--|| Payment : has
+    PaymentMethod ||--o{ Payment : used_for
+    Order ||--o{ Payment : has
     Order ||--|| Shipping : has
     Cart ||--o{ CartItem : contains
     Promotion ||--o{ PromotionProduct : applies_to
@@ -116,13 +117,28 @@ erDiagram
         TIMESTAMP created_at
         TIMESTAMP updated_at
     }
+    PaymentMethod {
+        UUID id PK
+        VARCHAR code UK
+        VARCHAR name
+        VARCHAR provider
+        NUMERIC fee_percent
+        BOOLEAN is_active
+        TIMESTAMP created_at
+    }
     Payment {
         UUID id PK
         UUID order_id FK
+        UUID payment_method_id FK
         DECIMAL amount
-        VARCHAR method
         VARCHAR status
+        VARCHAR provider_txn_id
+        DECIMAL provider_fee
+        JSONB metadata
+        TIMESTAMP paid_at
+        UUID idempotency_key UK
         TIMESTAMP created_at
+        TIMESTAMP updated_at
     }
     Shipping {
         UUID id PK
@@ -200,7 +216,8 @@ Dưới đây là danh sách các bảng được định nghĩa trong file [`sq
 | `Order` | Lưu trữ thông tin về các đơn hàng. | 7 |
 | `OrderDetail` | Chi tiết các sản phẩm trong mỗi đơn hàng (N:M). | 4 |
 | `Address` | Lưu trữ địa chỉ giao hàng của người dùng. | 7 |
-| `Payment` | Ghi nhận thông tin thanh toán cho đơn hàng. | 5 |
+| `PaymentMethod` | Bảng master quản lý các phương thức thanh toán. | 6 |
+| `Payment` | Bảng detail lưu trữ thông tin thanh toán chi tiết. | 10 |
 | `Shipping` | Quản lý thông tin vận chuyển của đơn hàng. | 7 |
 | `Promotion` | Quản lý các chương trình khuyến mãi. | 8 |
 | `Review` | Lưu trữ đánh giá của người dùng về sản phẩm. | 6 |
