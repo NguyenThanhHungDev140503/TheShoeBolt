@@ -310,3 +310,140 @@ Chạy tests: đọc scripts trong package.json; ưu tiên chạy từng file kh
 - Khi triển khai, luôn đối chiếu tài liệu tham khảo nội bộ (đường dẫn ở đầu tài liệu) cho cú pháp và best practices TypeORM/NestJS.
 - Mọi thay đổi cấu trúc mã nguồn sẽ được trình bày để xin chấp thuận trước khi thực hiện (tuân thủ quy ước của dự án).
 
+
+
+## 17. Ánh xạ ERD vào Bounded Contexts và kiến trúc chi tiết
+
+### 17.1. Bounded Contexts chính và Ownership (từ ERD)
+- Identity & Access (IAM): User, Role, Permission, UserRole, RolePermission, Address
+- Catalog: Product, Category, Brand, ProductImage, Collection, CollectionProduct
+- Customer Engagement: Review, Wishlist, WishlistItem, Favourite, Feedback
+- Ordering: Order, OrderDetail, OrderStatusHistory
+- Cart: Cart, CartItem
+- Payments: PaymentMethod, Payment
+- Promotions: Promotion, DiscountCode, DiscountCodeUses, PromotionProduct
+- Fulfillment: Shipping
+
+Sơ đồ Context Map (tổng quan):
+```mermaid
+flowchart LR
+  IAM((Identity & Access))
+  Catalog((Catalog))
+  Engagement((Engagement))
+  Cart((Cart))
+  Ordering((Ordering))
+  Payments((Payments))
+  Promotions((Promotions))
+  Fulfillment((Fulfillment))
+
+  Cart --- Ordering
+  Catalog --- Ordering
+  Promotions --- Ordering
+  Payments --- Ordering
+  Fulfillment --- Ordering
+  IAM --- Ordering
+  Engagement --- Catalog
+  IAM --- Engagement
+  Fulfillment --- IAM
+
+  Payments -.events.-> Ordering
+  Ordering -.events.-> Fulfillment
+  Promotions -.events.-> Catalog
+```
+
+### 17.2. Kiến trúc chi tiết từng BC (Clean Architecture)
+Nguyên tắc chung: Domain (thuần TS) ↔ Application ↔ Infrastructure (TypeORM). Mỗi BC có thư mục riêng: `src/contexts/<bc>/{domain,application,infrastructure,interface}`.
+
+- IAM
+  - Domain: User, Role, Permission; Ports: UserRepositoryPort, RoleRepositoryPort
+  - Infra: UserOrmEntity, RoleOrmEntity; Mappers; Repositories; Migrations (schema `iam` tuỳ chọn)
+  - Ví dụ User domain vs ORM:
+    - Domain: `id, clerkUserId?, username, email`
+    - ORM: cột unique cho `clerk_user_id`, `username`, `email`
+- Catalog
+  - Domain: Product (attributes: Record), Category, Brand
+  - Infra: ProductOrmEntity (JSONB attributes + GIN index), ProductImageOrmEntity; Migrations (schema `catalog`)
+- Ordering
+  - Domain: Order, OrderItem, OrderStatusHistory; Ports: OrderRepositoryPort
+  - Infra: OrderOrmEntity, OrderDetailOrmEntity (PK: order_id+product_id), OrderStatusHistoryOrmEntity
+  - Mapper xử lý priceAtPurchase dạng decimal → number
+- Cart
+  - Domain: Cart, CartItem; Port: CartRepositoryPort
+  - Infra: CartOrmEntity, CartItemOrmEntity (PK: cart_id+product_id)
+- Payments
+  - Domain: Payment, PaymentMethod
+  - Infra: PaymentOrmEntity (idempotency_key UK), PaymentMethodOrmEntity
+- Promotions
+  - Domain: DiscountCode, DiscountCodeUse, Promotion
+  - Infra: DiscountCodeOrmEntity, DiscountCodeUsesOrmEntity (PK kép), PromotionOrmEntity, PromotionProductOrmEntity
+- Fulfillment
+  - Domain: Shipping
+  - Infra: ShippingOrmEntity (FK: order_id, address_id)
+
+Ví dụ Port/Repo (Ordering):
+<augment_code_snippet path="src/contexts/ordering/domain/repositories/order.repository.port.ts" mode="EXCERPT">
+````typescript
+export interface OrderRepositoryPort {
+  save(order: Order): Promise<Order>;
+  findById(id: string): Promise<Order | null>;
+}
+````
+</augment_code_snippet>
+
+### 17.3. Hợp đồng tích hợp giữa các BC
+- DTOs (sync):
+  - Catalog → Ordering: ProductSummaryDTO { id, name, price }
+  - Promotions → Ordering: DiscountValidationDTO { code, eligible, amount }
+  - IAM → Ordering: UserProfileDTO { id, email }
+- Domain events (async):
+  - Payments → Ordering: PaymentSucceeded/Failed
+  - Ordering → Fulfillment: OrderReadyForShipment
+- Anti-Corruption Layer: Ordering dùng adapter/DTO khi áp khuyến mãi phức tạp, không import domain Promotions.
+
+Sơ đồ tích hợp:
+```mermaid
+flowchart LR
+  Catalog -- ProductSummaryDTO (sync) --> Ordering
+  Promotions -- DiscountValidationDTO (sync) --> Ordering
+  Payments -- PaymentSucceeded/Failed (event) --> Ordering
+  Ordering -- OrderReadyForShipment (event) --> Fulfillment
+  IAM -- UserProfileDTO (sync) --> Ordering
+```
+
+### 17.4. Migration strategy theo BC
+- Mỗi BC có thư mục migrations riêng: `src/contexts/<bc>/infrastructure/database/typeorm/migrations`
+- Tuỳ chọn schema Postgres per BC (iam.*, catalog.*, ordering.*, ...)
+- Thứ tự chạy: IAM → Catalog → Ordering → Cart → Payments → Promotions → Fulfillment → Engagement
+- Index chiến lược: JSONB GIN (Catalog.Product.attributes), UK cho idempotency_key (Payments), composite PK cho bảng liên kết
+
+### 17.5. Testing strategy theo BC
+- Unit: Domain entities/VO, mappers, domain services; repo impl với mock TypeORM
+- Component: TestingModule cho từng BC + Postgres thật (docker-compose/testcontainers); chạy migrations BC trước test; log gọn
+
+Ví dụ unit test mapper (Catalog):
+<augment_code_snippet path="test/unit/catalog/mappers/product.mapper.spec.ts" mode="EXCERPT">
+````typescript
+it('toDomain giữ nguyên attributes', () => {
+  const orm = Object.assign(new ProductOrmEntity(), { id:'p1', name:'N', price:'10.00', attributes:{ sizes:['40'] } });
+  const d = toDomain(orm);
+  expect((d.attributes as any).sizes).toContain('40');
+});
+````
+</augment_code_snippet>
+
+### 17.6. Cập nhật thứ tự ưu tiên triển khai
+1) IAM + Catalog (nền tảng)
+2) Ordering + Cart (luồng mua hàng)
+3) Payments (giao dịch)
+4) Promotions (giảm giá)
+5) Fulfillment (giao hàng)
+6) Engagement (đánh giá, wishlist, favourite, feedback)
+
+### 17.7. Definition of Done (mở rộng theo BC)
+- IAM: migrations users/roles/permissions/address; repo User pass unit & component
+- Catalog: products/categories/brands/images/collections; JSONB indexes; repo Product pass tests
+- Ordering: orders/order_details/status_history; snapshot giá; repo Order pass tests
+- Cart: carts/cart_items; repo Cart pass tests
+- Payments: payments/payment_methods; idempotency; repo Payment pass tests
+- Promotions: promotions/discount_codes/uses; validate DTO; repo DiscountCode pass tests
+- Fulfillment: shipping; event consumption từ Ordering; repo Shipping pass tests
