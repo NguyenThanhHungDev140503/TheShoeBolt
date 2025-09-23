@@ -11,26 +11,28 @@ Tài liệu này trình bày phân tích thiết kế Cơ sở dữ liệu của
 Tập thực thể đầy đủ của hệ thống bao gồm:
 
 1.  **User (Người dùng)**: Đại diện cho các vai trò như "khách hàng", "quản trị viên", "shipper".
-2.  **Permission (Quyền)**: Đại diện cho các quyền truy cập như "xem sản phẩm", "quản lý đơn hàng".
-3.  **Product (Sản phẩm)**: Đại diện cho sản phẩm trong hệ thống.
-4.  **Category (Danh mục)**: Phân loại sản phẩm.
-5.  **Brand (Thương hiệu)**: Thương hiệu của sản phẩm (Nike, Adidas, Converse, v.v.).
-6.  **Order (Đơn hàng)**: Thông tin về đơn hàng của người dùng.
-7.  **Cart (Giỏ hàng)**: Giỏ hàng của người dùng.
-8.  **Address (Địa chỉ)**: Địa chỉ giao hàng hoặc thông tin liên hệ của người dùng.
-9.  **Payment (Thanh toán)**: Thông tin thanh toán của đơn hàng.
-10. **PaymentMethod (Phương thức thanh toán)**: Các phương thức thanh toán được hỗ trợ.
-11. **Shipping (Giao hàng)**: Thông tin vận chuyển liên quan đến đơn hàng.
-12. **Promotion (Khuyến mãi)**: Các chương trình khuyến mãi.
-13. **DiscountCode (Mã giảm giá)**: Mã giảm giá áp dụng cho đơn hàng.
-14. **Review (Đánh giá)**: Đánh giá của người dùng về sản phẩm.
-15. **Wishlist (Danh sách mong muốn)**: Danh sách sản phẩm người dùng muốn nhận thông báo.
-16. **ProductImage (Hình ảnh sản phẩm)**: Lưu trữ hình ảnh của sản phẩm.
-17. **Collection (Bộ sưu tập)**: Đại diện cho các bộ sưu tập sản phẩm (VD: mùa hè, mùa đông).
-18. **Favourite (Yêu thích)**: Danh sách sản phẩm yêu thích của người dùng.
-19. **Feedback (Phản hồi)**: Phản hồi của khách hàng về dịch vụ.
-20. **OrderStatusHistory (Lịch sử trạng thái đơn hàng)**: Theo dõi lịch sử thay đổi trạng thái đơn hàng.
-21. **DiscountCodeUses (Sử dụng mã giảm giá)**: Theo dõi việc sử dụng mã giảm giá trong các đơn hàng.
+2.  **Role (Vai trò)**: Các vai trò trong hệ thống như "admin", "customer", "shipper".
+3.  **Permission (Quyền)**: Đại diện cho các quyền truy cập như "xem sản phẩm", "quản lý đơn hàng".
+4.  **Product (Sản phẩm)**: Đại diện cho sản phẩm trong hệ thống.
+5.  **Category (Danh mục)**: Phân loại sản phẩm.
+6.  **Brand (Thương hiệu)**: Thương hiệu của sản phẩm (Nike, Adidas, Converse, v.v.).
+7.  **Order (Đơn hàng)**: Thông tin về đơn hàng của người dùng.
+8.  **Cart (Giỏ hàng)**: Giỏ hàng của người dùng.
+9.  **Address (Địa chỉ)**: Địa chỉ giao hàng hoặc thông tin liên hệ của người dùng.
+10. **Payment (Thanh toán)**: Thông tin thanh toán của đơn hàng.
+11. **PaymentMethod (Phương thức thanh toán)**: Các phương thức thanh toán được hỗ trợ.
+12. **Shipping (Giao hàng)**: Thông tin vận chuyển liên quan đến đơn hàng.
+13. **Promotion (Khuyến mãi)**: Các chương trình khuyến mãi.
+14. **DiscountCode (Mã giảm giá)**: Mã giảm giá áp dụng cho đơn hàng.
+15. **Review (Đánh giá)**: Đánh giá của người dùng về sản phẩm.
+16. **Wishlist (Danh sách mong muốn)**: Danh sách sản phẩm người dùng muốn nhận thông báo.
+17. **ProductImage (Hình ảnh sản phẩm)**: Lưu trữ hình ảnh của sản phẩm.
+18. **Collection (Bộ sưu tập)**: Đại diện cho các bộ sưu tập sản phẩm (VD: mùa hè, mùa đông).
+19. **Favourite (Yêu thích)**: Danh sách sản phẩm yêu thích của người dùng.
+20. **Feedback (Phản hồi)**: Phản hồi của khách hàng về dịch vụ.
+21. **OrderStatusHistory (Lịch sử trạng thái đơn hàng)**: Theo dõi lịch sử thay đổi trạng thái đơn hàng.
+22. **ExternalIdentity (Định danh bên ngoài)**: Mapping giữa User nội bộ và các identity providers bên ngoài (Clerk, Google, Facebook, etc.).
+
 
 ### 2.2. Bước 2: Xác định mối quan hệ
 
@@ -42,6 +44,7 @@ Tập thực thể đầy đủ của hệ thống bao gồm:
 *   **User - Wishlist**: Một người dùng có một danh sách mong muốn (1:1).
 *   **User - Favourite**: Một người dùng có thể có nhiều sản phẩm yêu thích (1:N).
 *   **User - Feedback**: Một người dùng có thể gửi nhiều phản hồi (1:N).
+*   **User - ExternalIdentity**: Một người dùng có thể có nhiều external identities từ các providers khác nhau (1:N).
 *   **Product - Category**: Một sản phẩm thuộc một danh mục, một danh mục có thể chứa nhiều sản phẩm (1:N).
 *   **Product - Brand**: Một sản phẩm thuộc một thương hiệu, một thương hiệu có thể có nhiều sản phẩm (N:1).
 *   **Product - Review**: Một sản phẩm có thể có nhiều đánh giá, một đánh giá thuộc về một sản phẩm (1:N).
@@ -62,7 +65,6 @@ Ghi chú về Review: - Để đảm bảo rằng chỉ những người dùng �
 
 *   **User**:
     *   `id` (PK): Mã người dùng.
-    *   `clerk_user_id`: ID từ Clerk authentication (UNIQUE).
     *   `username`: Tên đăng nhập.
     *   `email`: Email người dùng.
     *   `password`: Mật khẩu (mã hóa).
@@ -283,7 +285,6 @@ Ghi chú về Review: - Để đảm bảo rằng chỉ những người dùng �
 
 *   **User**:
     *   `id`: UUID hoặc INT AUTO_INCREMENT.
-    *   `clerk_user_id`: VARCHAR(255) UNIQUE.
     *   `username`: VARCHAR(50) UNIQUE.
     *   `email`: VARCHAR(255) UNIQUE.
     *   `password`: VARCHAR(255).
@@ -393,7 +394,7 @@ Ghi chú về Review: - Để đảm bảo rằng chỉ những người dùng �
 
 ### 2.5. Bước 5: Xác định thuộc tính khóa
 
-*   **User**: Khóa chính: `id`, khóa duy nhất: `clerk_user_id`, `username`, `email`.
+*   **User**: Khóa chính: `id`, khóa duy nhất: `username`, `email`.
 *   **Product**: Khóa chính: `id`, khóa ngoại: `category_id` → `Category.id`, `brand_id` → `Brand.id`, khóa duy nhất: `sku`.
 *   **Brand**: Khóa chính: `id`, khóa duy nhất: `name`.
 *   **Role**: Khóa chính: `id`.
@@ -575,7 +576,6 @@ erDiagram
     %% Core User Management
     User {
         string id PK
-        string clerk_user_id UK
         string username UK
         string email UK
         string password
@@ -920,110 +920,121 @@ erDiagram
     Product ||--o{ WishlistItem : "in wishlists"
 ```
 
-## 5. Ghi Chú Về Các Thay Đổi Đã Thực Hiện
+## 6. Giải pháp External Identity Mapping
 
-### 5.1. Tóm Tắt Các Thay Đổi
+### 6.1. Vấn đề phụ thuộc Infrastructure
 
-Dựa trên báo cáo so sánh SRS-ERD-Database, các thay đổi sau đã được thực hiện để khắc phục thiếu sót:
+Trong thiết kế ban đầu, trường `clerk_user_id` tạo ra sự phụ thuộc chặt chẽ vào tầng Infrastructure (Clerk service), vi phạm các nguyên tắc:
 
-#### A. Bổ Sung Entity Mới (5 entity)
-1. **Brand**: Quản lý thương hiệu sản phẩm (Nike, Adidas, Converse...)
-2. **Message (MongoDB)**: Tin nhắn giữa người dùng và admin (sử dụng NoSQL)
-3. **Feedback**: Phản hồi khách hàng về dịch vụ
-4. **OrderStatusHistory**: Theo dõi lịch sử thay đổi trạng thái đơn hàng
+- **Dependency Inversion Principle**: Database layer không nên phụ thuộc vào Infrastructure layer
+- **Clean Architecture**: Core domain không nên biết về external services
+- **Vendor Lock-in**: Khó thay đổi authentication provider
 
-#### B. Cập Nhật Thuộc Tính Entity Hiện Có
+### 6.2. Giải pháp External Identity Mapping
 
-**User Entity:**
-- `clerk_user_id`: Tích hợp với Clerk authentication
-- `avatar_url`, `date_of_birth`, `gender`: Thông tin cá nhân đầy đủ
-- `last_login_at`, `is_active`, `email_verified`: Quản lý trạng thái tài khoản
+Thay vì lưu trực tiếp `clerk_user_id` trong bảng User, hệ thống sử dụng bảng mapping riêng biệt:
 
-**Product Entity:**
-- `brand_id`: Liên kết với thương hiệu
-- `sku`, `weight`, `dimensions`: Thông tin sản phẩm chi tiết
-- `is_featured`, `is_active`: Quản lý trạng thái sản phẩm
-- `meta_title`, `meta_description`: Tối ưu SEO
-- `attributes` (JSONB): Thay thế các cột riêng biệt cho sizes, colors, materials, tags
+```sql
+-- Bảng mapping cho external identity providers
+CREATE TABLE "ExternalIdentity" (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,
+    provider VARCHAR(50) NOT NULL, -- 'clerk', 'google', 'facebook', etc.
+    external_id VARCHAR(255) NOT NULL, -- ID từ external provider
+    metadata JSONB DEFAULT '{}', -- Thông tin bổ sung từ provider
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE(provider, external_id)
+);
 
-**Order Entity:**
-- `guest_email`, `guest_phone`: Hỗ trợ khách vãng lai
-- `tax_amount`, `shipping_cost`: Chi tiết tài chính
-- `notes`, `estimated_delivery_date`, `order_source`: Thông tin bổ sung
+-- Index để tối ưu truy vấn
+CREATE INDEX idx_external_identity_provider_id ON "ExternalIdentity"(provider, external_id);
+CREATE INDEX idx_external_identity_user_id ON "ExternalIdentity"(user_id);
+```
 
-**DiscountCode Entity:**
-- `is_active`, `user_limit`: Quản lý mã giảm giá linh hoạt hơn
+### 6.3. Ưu điểm của giải pháp
 
-#### C. Bổ Sung Mối Quan Hệ Mới (8 mối quan hệ)
-1. Product - Brand (N:1)
-2. User - Feedback (1:N)
-3. Order - OrderStatusHistory (1:N)
-4. User - OrderStatusHistory (1:N) - changed_by
-5. Các mối quan hệ JSONB attributes trong Product
+1. **Tách biệt concerns**: Database core không phụ thuộc vào external services
+2. **Linh hoạt**: Hỗ trợ nhiều authentication providers (Clerk, Google, Facebook, etc.)
+3. **Dễ migration**: Thay đổi provider không ảnh hưởng đến core data
+4. **Clean Architecture**: Tuân thủ nguyên tắc dependency inversion
+5. **Extensible**: Dễ dàng thêm metadata từ providers khác nhau
 
-### 5.2. Lý Do Thay Đổi
+### 6.4. Luồng xử lý Authentication
 
-#### A. Đáp Ứng Yêu Cầu SRS
-- **FR-007**: Lọc sản phẩm theo thương hiệu → Thêm Brand entity
-- **FR-018**: Nhắn tin với admin → Chuyển Message entity sang NoSQL (MongoDB)
-- **FR-034**: Phản hồi khách hàng → Thêm Feedback entity
-- **FR-015**: Theo dõi lịch sử đơn hàng → Thêm OrderStatusHistory entity
-- **FR-019**: Mua hàng không cần đăng nhập → Thêm guest_email, guest_phone
-- **FR-001, FR-002**: Tích hợp Clerk → Thêm clerk_user_id
+```mermaid
+sequenceDiagram
+    actor User
+    participant Frontend
+    participant Clerk
+    participant Backend
+    participant Database
+    
+    User->>Frontend: 1. Bấm nút "Đăng nhập bằng Clerk"
+    Frontend->>Clerk: 2. Chuyển hướng/Mở popup để xác thực
+    Clerk-->>User: Yêu cầu đăng nhập (email/pass, Google, etc.)
+    User->>Clerk: Cung cấp thông tin xác thực
+    Clerk-->>Frontend: 3. Xác thực thành công, trả về JWT Token
+    note right of Clerk: JWT payload chứa clerk_user_id trong trường "sub"
 
-#### B. Tối Ưu Hóa Hiệu Suất
-- **JSONB Attributes**: Giảm số lượng JOIN, tăng linh hoạt schema
-- **Index Strategy**: Tối ưu truy vấn cho JSONB và các trường thường dùng
-- **Normalization**: Tách Brand thành entity riêng để tránh redundancy
+    Frontend->>Backend: 4. Gửi JWT Token đến API (/api/auth/callback)
+    
+    Backend->>Backend: 5. Xác thực và decode JWT với Clerk SDK
+    note right of Backend: Extract clerk_user_id từ token.sub và thông tin khác
+    
+    Backend->>Database: 6. Tìm trong ExternalIdentity bằng clerk_user_id
+    note right of Backend: SELECT * FROM ExternalIdentity WHERE provider = 'clerk' AND external_id = [clerk_user_id]
+    
+    alt Đã tồn tại (Người dùng cũ - Các lần đăng nhập sau)
+        Database-->>Backend: 7a. Trả về bản ghi ExternalIdentity (chứa user_id)
+        Backend->>Database: 8a. Dùng user_id để lấy thông tin từ bảng User
+        Database-->>Backend: Trả về thông tin User
+    else Chưa tồn tại (Người dùng mới - Đăng ký/Đăng nhập lần đầu)
+        Database-->>Backend: 7b. Không tìm thấy bản ghi
+        
+        rect rgb(240, 248, 255)
+            note over Backend, Database: Xử lý người dùng mới
+            Backend->>Database: 8b. Tạo bản ghi mới trong bảng User
+            note right of Backend: INSERT INTO User (email, full_name, ...) VALUES ([data từ JWT], ...)
+            Database-->>Backend: Trả về user_id nội bộ vừa tạo
+            
+            Backend->>Database: 9b. Lưu clerk_user_id vào ExternalIdentity
+            note right of Backend: INSERT INTO ExternalIdentity (user_id, provider, external_id) VALUES ([user_id], 'clerk', [clerk_user_id từ JWT])
+            Database-->>Backend: Tạo liên kết thành công
+        end
+    end
 
-#### C. Cải Thiện Trải Nghiệm Người Dùng
-- **Guest Checkout**: Hỗ trợ mua hàng không cần đăng ký
-- **Rich User Profile**: Thông tin cá nhân đầy đủ
-- **Communication**: Hệ thống nhắn tin (MongoDB)
-- **Order Tracking**: Theo dõi lịch sử thay đổi trạng thái
+    Backend-->>Frontend: 10. Trả về session/JWT của hệ thống cho người dùng đã xác thực
+    Frontend-->>User: 11. Đăng nhập thành công, chuyển hướng đến trang chính
+```
 
-### 5.3. Tác Động Đến Hệ Thống
+### 6.5. Cập nhật ERD với ExternalIdentity
 
-#### A. Tác Động Tích Cực
-1. **Tuân Thủ SRS**: Tăng từ 74% lên 97% (33/34 yêu cầu)
-2. **Hiệu Suất**: JSONB giảm 20-30% thời gian truy vấn attributes
-3. **Linh Hoạt**: Dễ dàng thêm thuộc tính sản phẩm mới
-4. **Trải Nghiệm**: Hỗ trợ đầy đủ tính năng người dùng và admin
+Bảng mới được thêm vào:
 
-#### B. Cân Nhắc Khi Triển Khai
-1. **Migration**: Cần migration script cho dữ liệu hiện có
-2. **Application Logic**: Cập nhật code để xử lý JSONB
-3. **Validation**: Thêm validation cho JSONB structure
-4. **Index**: Tạo index phù hợp cho JSONB queries
+*   **ExternalIdentity**:
+    *   `id` (PK): Mã định danh mapping.
+    *   `user_id` (FK): Tham chiếu đến User.id.
+    *   `provider`: Tên provider (clerk, google, facebook).
+    *   `external_id`: ID từ external provider.
+    *   `metadata`: Thông tin bổ sung dạng JSONB.
+    *   `created_at`: Thời gian tạo.
+    *   `updated_at`: Thời gian cập nhật.
 
-### 5.4. Khuyến Nghị Triển Khai
+Mối quan hệ:
+*   **User - ExternalIdentity**: Một người dùng có thể có nhiều external identities (1:N).
 
-#### A. Giai Đoạn 1 (Ưu tiên CRITICAL)
-1. Tạo Brand entity và migration dữ liệu
-2. Thêm clerk_user_id vào User
-3. Thêm guest_email, guest_phone vào Order
-4. Implement JSONB attributes cho Product
+## 7. Phân tích tương tác Cross-Database (SQL - MongoDB)
 
-#### B. Giai Đoạn 2 (Ưu tiên HIGH)
-1. Tạo Feedback entity
-2. Implement OrderStatusHistory
-3. Cập nhật application logic cho JSONB
-
-#### C. Giai Đoạn 3 (Tối ưu hóa)
-1. Fine-tune JSONB indexes
-2. Performance testing và optimization
-3. Documentation và training team
-
-## 6. Phân tích tương tác Cross-Database (SQL - MongoDB)
-
-### 6.1. Tổng quan kiến trúc Hybrid Database
+### 7.1. Tổng quan kiến trúc Hybrid Database
 
 Hệ thống TheShoeBolt sẽ sử dụng kiến trúc hybrid database, kết hợp giữa cơ sở dữ liệu quan hệ (PostgreSQL) cho dữ liệu có cấu trúc và nhất quán cao, và cơ sở dữ liệu NoSQL (MongoDB) cho dữ liệu linh hoạt và có tần suất ghi/đọc cao như tin nhắn.
 
 - **PostgreSQL**: Lưu trữ các bảng như User, Product, Order, Payment, v.v. (dữ liệu chính của hệ thống).
 - **MongoDB**: Lưu trữ bảng Message (tin nhắn giữa người dùng và quản trị viên).
 
-### 6.2. Thiết kế bảng Message trong MongoDB
+### 7.2. Thiết kế bảng Message trong MongoDB
 
 Bảng `Message` trong MongoDB sẽ có cấu trúc linh hoạt hơn, không cần ràng buộc khóa ngoại cứng nhắc như SQL. Tuy nhiên, nó vẫn cần tham chiếu đến `User` (người gửi và người nhận) từ PostgreSQL.
 
@@ -1044,7 +1055,7 @@ Bảng `Message` trong MongoDB sẽ có cấu trúc linh hoạt hơn, không c�
 }
 ```
 
-### 6.3. Cơ chế tương tác Cross-Database
+### 7.3. Cơ chế tương tác Cross-Database
 
 Để tương tác giữa PostgreSQL và MongoDB, ứng dụng sẽ cần quản lý các tham chiếu và đảm bảo tính toàn vẹn dữ liệu ở mức ứng dụng (application layer).
 
@@ -1059,14 +1070,14 @@ Bảng `Message` trong MongoDB sẽ có cấu trúc linh hoạt hơn, không c�
 3.  **Đồng bộ hóa (nếu cần)**:
     *   Trong trường hợp `User` bị xóa khỏi PostgreSQL, ứng dụng cần có logic để xử lý các tin nhắn liên quan trong MongoDB (ví dụ: ẩn tin nhắn, đánh dấu người dùng là "đã xóa", hoặc xóa tin nhắn liên quan). Điều này thường được xử lý bằng các webhook hoặc event-driven architecture.
 
-### 6.4. Ưu điểm của kiến trúc Hybrid
+### 7.4. Ưu điểm của kiến trúc Hybrid
 
 -   **Hiệu suất cao cho tin nhắn**: MongoDB tối ưu cho việc ghi/đọc dữ liệu không cấu trúc và có tần suất cao, phù hợp cho tính năng chat.
 -   **Linh hoạt schema**: Dễ dàng thêm các trường mới vào tài liệu `Message` (ví dụ: `attachment_url`, `message_type`) mà không cần thay đổi schema database.
 -   **Khả năng mở rộng**: MongoDB dễ dàng mở rộng theo chiều ngang (horizontal scaling) để xử lý lượng tin nhắn lớn.
 -   **Giảm tải cho SQL**: Giảm gánh nặng cho PostgreSQL, giúp nó tập trung vào các giao dịch quan trọng khác.
 
-### 6.5. Nhược điểm và Thách thức
+### 7.5. Nhược điểm và Thách thức
 
 -   **Tính nhất quán dữ liệu**: Đảm bảo tính nhất quán giữa hai hệ thống database là một thách thức. Cần logic ứng dụng mạnh mẽ để xử lý các trường hợp như xóa người dùng.
 -   **Phức tạp trong phát triển**: Tăng độ phức tạp trong việc quản lý dữ liệu và truy vấn, đòi hỏi developer phải hiểu rõ cả hai loại database.
