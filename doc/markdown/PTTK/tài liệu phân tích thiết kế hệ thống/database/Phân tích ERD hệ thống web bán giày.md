@@ -380,17 +380,122 @@ Ghi chú về Review: - Để đảm bảo rằng chỉ những người dùng �
     *   `changed_by`: UUID hoặc INT (tương ứng với User.id).
     *   `notes`: TEXT.
     *   `changed_at`: TIMESTAMP.
-*   **Các thuộc tính khác**:
+*   **Category**:
     *   `id`: UUID hoặc INT AUTO_INCREMENT.
-    *   `name`, `description`, `street`, `city`, `state`, `country`, `comment`: VARCHAR.
-    *   `email`, `code`: VARCHAR (ràng buộc unique).
-    *   `password`: VARCHAR (mã hóa).
-    *   `role`, `status`, `method`: ENUM hoặc VARCHAR.
-    *   `price`, `total_amount`, `amount`, `discount_percentage`, `min_order_value`: DECIMAL.
-    *   `quantity`, `stock`, `max_uses`, `uses_count`, `rating`: INT.
-    *   `is_default`: BOOLEAN.
-    *   `created_at`, `updated_at`, `start_date`, `end_date`: TIMESTAMP.
-    *   `postal_code`: VARCHAR.
+    *   `name`: VARCHAR(100) UNIQUE.
+    *   `description`: TEXT.
+    *   `created_at`, `updated_at`: TIMESTAMP.
+*   **Order**:
+    *   `id`: UUID hoặc INT AUTO_INCREMENT.
+    *   `user_id`: UUID hoặc INT (nullable, tương ứng với User.id).
+    *   `status`: VARCHAR(20) CHECK (status IN ('pending', 'processing', 'shipped', 'delivered', 'cancelled')).
+    *   `total_amount`: DECIMAL(12,2).
+    *   `discount_code_id`: UUID hoặc INT (nullable, tương ứng với DiscountCode.id).
+    *   `guest_email`: VARCHAR(255).
+    *   `guest_phone`: VARCHAR(20).
+    *   `contact_name`: VARCHAR(100).
+    *   `contact_phone`: VARCHAR(20).
+    *   `contact_address`: TEXT.
+    *   `contact_email`: VARCHAR(255).
+    *   `tax_amount`: DECIMAL(10,2).
+    *   `shipping_cost`: DECIMAL(10,2).
+    *   `notes`: TEXT.
+    *   `estimated_delivery_date`: DATE.
+    *   `order_source`: VARCHAR(20) CHECK (order_source IN ('web', 'mobile', 'admin')).
+    *   `created_at`, `updated_at`: TIMESTAMP.
+*   **Cart**:
+    *   `id`: UUID hoặc INT AUTO_INCREMENT.
+    *   `user_id`: UUID hoặc INT (tương ứng với User.id).
+    *   `created_at`, `updated_at`: TIMESTAMP.
+*   **Address**:
+    *   `id`: UUID hoặc INT AUTO_INCREMENT.
+    *   `user_id`: UUID hoặc INT (tương ứng với User.id).
+    *   `street`: VARCHAR(255).
+    *   `city`: VARCHAR(100).
+    *   `state`: VARCHAR(100).
+    *   `postal_code`: VARCHAR(20).
+    *   `country`: VARCHAR(100).
+    *   `is_default`: BOOLEAN DEFAULT false.
+    *   `created_at`, `updated_at`: TIMESTAMP.
+*   **PaymentMethod**:
+    *   `id`: UUID hoặc INT AUTO_INCREMENT.
+    *   `code`: VARCHAR(50) UNIQUE.
+    *   `name`: VARCHAR(100).
+    *   `provider`: VARCHAR(100).
+    *   `fee_percent`: DECIMAL(5,4).
+    *   `is_active`: BOOLEAN DEFAULT true.
+    *   `created_at`: TIMESTAMP.
+*   **Payment**:
+    *   `id`: UUID hoặc INT AUTO_INCREMENT.
+    *   `order_id`: UUID hoặc INT (tương ứng với Order.id).
+    *   `payment_method_id`: UUID hoặc INT (tương ứng với PaymentMethod.id).
+    *   `amount`: DECIMAL(12,2).
+    *   `status`: VARCHAR(20) CHECK (status IN ('pending', 'processing', 'success', 'failed', 'cancelled', 'refunded')).
+    *   `provider_txn_id`: VARCHAR(255).
+    *   `provider_fee`: DECIMAL(10,2).
+    *   `metadata`: JSONB DEFAULT '{}' .
+    *   `paid_at`: TIMESTAMP.
+    *   `idempotency_key`: VARCHAR(255) UNIQUE.
+    *   `created_at`, `updated_at`: TIMESTAMP.
+*   **Shipping**:
+    *   `id`: UUID hoặc INT AUTO_INCREMENT.
+    *   `order_id`: UUID hoặc INT (tương ứng với Order.id).
+    *   `address_id`: UUID hoặc INT (tương ứng với Address.id).
+    *   `status`: VARCHAR(20) CHECK (status IN ('pending', 'in_transit', 'delivered')).
+    *   `shipper_id`: UUID hoặc INT (nullable, tương ứng với User.id).
+    *   `created_at`, `updated_at`: TIMESTAMP.
+*   **Promotion**:
+    *   `id`: UUID hoặc INT AUTO_INCREMENT.
+    *   `name`: VARCHAR(200).
+    *   `description`: TEXT.
+    *   `discount_percentage`: DECIMAL(5,2).
+    *   `start_date`: TIMESTAMP.
+    *   `end_date`: TIMESTAMP.
+    *   `created_at`, `updated_at`: TIMESTAMP.
+*   **DiscountCode**:
+    *   `id`: UUID hoặc INT AUTO_INCREMENT.
+    *   `code`: VARCHAR(50) UNIQUE.
+    *   `discount_type`: VARCHAR(20) CHECK (discount_type IN ('percentage', 'fixed_amount')).
+    *   `discount_percentage`: DECIMAL(5,2).
+    *   `max_uses`: INT.
+    *   `uses_count`: INT DEFAULT 0.
+    *   `min_order_value`: DECIMAL(12,2).
+    *   `is_active`: BOOLEAN DEFAULT true.
+    *   `user_limit`: INT.
+    *   `start_date`: TIMESTAMP.
+    *   `end_date`: TIMESTAMP.
+    *   `created_at`, `updated_at`: TIMESTAMP.
+*   **Review**:
+    *   `id`: UUID hoặc INT AUTO_INCREMENT.
+    *   `product_id`: UUID hoặc INT (tương ứng với Product.id).
+    *   `user_id`: UUID hoặc INT (tương ứng với User.id).
+    *   `rating`: INT CHECK (rating >= 1 AND rating <= 5).
+    *   `comment`: TEXT.
+    *   `created_at`, `updated_at`: TIMESTAMP.
+*   **Wishlist**:
+    *   `id`: UUID hoặc INT AUTO_INCREMENT.
+    *   `user_id`: UUID hoặc INT (tương ứng với User.id).
+    *   `created_at`, `updated_at`: TIMESTAMP.
+*   **ExternalIdentity**:
+    *   `id`: UUID hoặc INT AUTO_INCREMENT.
+    *   `user_id`: UUID hoặc INT (tương ứng với User.id).
+    *   `provider`: VARCHAR(50).
+    *   `external_id`: VARCHAR(255).
+    *   `metadata`: JSONB DEFAULT '{}' .
+    *   `created_at`, `updated_at`: TIMESTAMP.
+    *   UNIQUE(provider, external_id).
+*   **OrderDetail**:
+    *   `order_id`: UUID hoặc INT (tương ứng với Order.id).
+    *   `product_id`: UUID hoặc INT (tương ứng với Product.id).
+    *   `quantity`: INT CHECK (quantity > 0).
+    *   `price_at_purchase`: DECIMAL(10,2).
+*   **CartItem**:
+    *   `cart_id`: UUID hoặc INT (tương ứng với Cart.id).
+    *   `product_id`: UUID hoặc INT (tương ứng với Product.id).
+    *   `quantity`: INT CHECK (quantity > 0).
+*   **PromotionProduct**:
+    *   `promotion_id`: UUID hoặc INT (tương ứng với Promotion.id).
+    *   `product_id`: UUID hoặc INT (tương ứng với Product.id).
 
 ### 2.5. Bước 5: Xác định thuộc tính khóa
 
@@ -401,15 +506,15 @@ Ghi chú về Review: - Để đảm bảo rằng chỉ những người dùng �
 *   **Permission**: Khóa chính: `id`.
 *   **UserRole**: Khóa chính tổ hợp: (`user_id`, `role_id`), khóa ngoại: `user_id` → `User.id`, `role_id` → `Role.id`.
 *   **RolePermission**: Khóa chính tổ hợp: (`role_id`, `permission_id`), khóa ngoại: `role_id` → `Role.id`, `permission_id` → `Permission.id`.
-*   **Category**: Khóa chính: `id`.
-*   **Order**: Khóa chính: `id`, khóa ngoại: `user_id` → `User.id`.
+*   **Category**: Khóa chính: `id`, khóa duy nhất: `name`.
+*   **Order**: Khóa chính: `id`, khóa ngoại: `user_id` → `User.id` (nullable), `discount_code_id` → `DiscountCode.id` (nullable).
 *   **Cart**: Khóa chính: `id`, khóa ngoại: `user_id` → `User.id`.
 *   **Address**: Khóa chính: `id`, khóa ngoại: `user_id` → `User.id`.
-*   **PaymentMethod**: Khóa chính: `id`.
-*   **Payment**: Khóa chính: `id`, khóa ngoại: `order_id` → `Order.id`, `payment_method_id` → `PaymentMethod.id`.
-*   **Shipping**: Khóa chính: `id`, khóa ngoại: `order_id` → `Order.id`.
+*   **PaymentMethod**: Khóa chính: `id`, khóa duy nhất: `code`.
+*   **Payment**: Khóa chính: `id`, khóa ngoại: `order_id` → `Order.id`, `payment_method_id` → `PaymentMethod.id`, khóa duy nhất: `idempotency_key`.
+*   **Shipping**: Khóa chính: `id`, khóa ngoại: `order_id` → `Order.id`, `address_id` → `Address.id`, `shipper_id` → `User.id` (nullable).
 *   **Promotion**: Khóa chính: `id`.
-*   **DiscountCode**: Khóa chính: `id`.
+*   **DiscountCode**: Khóa chính: `id`, khóa duy nhất: `code`.
 *   **DiscountCodeUses**: Khóa chính tổ hợp: (`discount_code_id`, `order_id`), khóa ngoại: `discount_code_id` → `DiscountCode.id`, `order_id` → `Order.id`.
 *   **Review**: Khóa chính: `id`, khóa ngoại: `user_id` → `User.id`, `product_id` → `Product.id`.
 *   **Wishlist**: Khóa chính: `id`, khóa ngoại: `user_id` → `User.id`.
@@ -420,6 +525,10 @@ Ghi chú về Review: - Để đảm bảo rằng chỉ những người dùng �
 *   **CollectionProduct**: Khóa chính tổ hợp: (`collection_id`, `product_id`), khóa ngoại: `collection_id` → `Collection.id`, `product_id` → `Product.id`.
 *   **Feedback**: Khóa chính: `id`, khóa ngoại: `user_id` → `User.id`.
 *   **OrderStatusHistory**: Khóa chính: `id`, khóa ngoại: `order_id` → `Order.id`, `changed_by` → `User.id`.
+*   **ExternalIdentity**: Khóa chính: `id`, khóa ngoại: `user_id` → `User.id`, khóa duy nhất tổ hợp: (`provider`, `external_id`).
+*   **OrderDetail**: Khóa chính tổ hợp: (`order_id`, `product_id`), khóa ngoại: `order_id` → `Order.id`, `product_id` → `Product.id`.
+*   **CartItem**: Khóa chính tổ hợp: (`cart_id`, `product_id`), khóa ngoại: `cart_id` → `Cart.id`, `product_id` → `Product.id`.
+*   **PromotionProduct**: Khóa chính tổ hợp: (`promotion_id`, `product_id`), khóa ngoại: `promotion_id` → `Promotion.id`, `product_id` → `Product.id`.
 
 ### 2.6. Bước 6: Xác định ràng buộc (tỉ số, min-max, ràng buộc tham gia)
 
