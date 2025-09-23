@@ -41,6 +41,17 @@ CREATE TABLE "Category" (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Bảng Brand
+CREATE TABLE "Brand" (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    logo_url VARCHAR(255),
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Bảng Product
 CREATE TABLE "Product" (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -49,7 +60,16 @@ CREATE TABLE "Product" (
     stock_price DECIMAL(10,2) NOT NULL,
     price DECIMAL(10,2) NOT NULL,
     stock_quantity INT NOT NULL,
+    sku VARCHAR(100) UNIQUE,
+    weight DECIMAL(8,2),
+    dimensions VARCHAR(100),
+    is_featured BOOLEAN DEFAULT false,
+    is_active BOOLEAN DEFAULT true,
+    meta_title VARCHAR(200),
+    meta_description TEXT,
+    attributes JSONB DEFAULT '{}',
     category_id UUID REFERENCES "Category"(id),
+    brand_id UUID REFERENCES "Brand"(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -57,13 +77,18 @@ CREATE TABLE "Product" (
 -- Bảng DiscountCode
 CREATE TABLE "DiscountCode" (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    code VARCHAR(20) UNIQUE NOT NULL,
+    code VARCHAR(50) UNIQUE NOT NULL,
+    discount_type VARCHAR(20) CHECK (discount_type IN ('percentage', 'fixed_amount')),
     discount_percentage DECIMAL(5,2) NOT NULL,
     max_uses INT NOT NULL,
     uses_count INT DEFAULT 0,
-    min_order_value DECIMAL(10,2),
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL
+    min_order_value DECIMAL(12,2),
+    is_active BOOLEAN DEFAULT true,
+    user_limit INT,
+    start_date TIMESTAMP NOT NULL,
+    end_date TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Bảng Order
@@ -71,8 +96,19 @@ CREATE TABLE "Order" (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES "User"(id),
     status VARCHAR(20) CHECK (status IN ('pending', 'processing', 'shipped', 'delivered', 'cancelled')),
-    total_amount DECIMAL(10,2) NOT NULL,
+    total_amount DECIMAL(12,2) NOT NULL,
     discount_code_id UUID REFERENCES "DiscountCode"(id),
+    guest_email VARCHAR(255),
+    guest_phone VARCHAR(20),
+    contact_name VARCHAR(100),
+    contact_phone VARCHAR(20),
+    contact_address TEXT,
+    contact_email VARCHAR(255),
+    tax_amount DECIMAL(10,2),
+    shipping_cost DECIMAL(10,2),
+    notes TEXT,
+    estimated_delivery_date DATE,
+    order_source VARCHAR(20) CHECK (order_source IN ('web', 'mobile', 'admin')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -81,7 +117,7 @@ CREATE TABLE "Order" (
 CREATE TABLE "OrderDetail" (
     order_id UUID,
     product_id UUID,
-    quantity INT,
+    quantity INT CHECK (quantity > 0),
     price_at_purchase DECIMAL(10,2),
     PRIMARY KEY (order_id, product_id),
     FOREIGN KEY (order_id) REFERENCES "Order"(id),
@@ -94,7 +130,9 @@ CREATE TABLE "Address" (
     user_id UUID REFERENCES "User"(id) NOT NULL,
     street VARCHAR(255) NOT NULL,
     city VARCHAR(100) NOT NULL,
+    state VARCHAR(100),
     postal_code VARCHAR(20) NOT NULL,
+    country VARCHAR(100),
     is_default BOOLEAN DEFAULT false,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -180,7 +218,7 @@ CREATE TABLE "Cart" (
 CREATE TABLE "CartItem" (
     cart_id UUID REFERENCES "Cart"(id),
     product_id UUID REFERENCES "Product"(id),
-    quantity INT NOT NULL,
+    quantity INT CHECK (quantity > 0) NOT NULL,
     PRIMARY KEY (cart_id, product_id)
 );
 
@@ -207,6 +245,90 @@ CREATE TABLE "RolePermission" (
     PRIMARY KEY (role_id, permission_id)
 );
 
+-- Bảng Collection
+CREATE TABLE "Collection" (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Bảng CollectionProduct
+CREATE TABLE "CollectionProduct" (
+    collection_id UUID REFERENCES "Collection"(id),
+    product_id UUID REFERENCES "Product"(id),
+    PRIMARY KEY (collection_id, product_id)
+);
+
+-- Bảng ProductImage
+CREATE TABLE "ProductImage" (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_id UUID REFERENCES "Product"(id) NOT NULL,
+    image_url VARCHAR(255) NOT NULL,
+    is_primary BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Bảng Favourite
+CREATE TABLE "Favourite" (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES "User"(id) NOT NULL,
+    product_id UUID REFERENCES "Product"(id) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Bảng WishlistItem
+CREATE TABLE "WishlistItem" (
+    wishlist_id UUID REFERENCES "Wishlist"(id),
+    product_id UUID REFERENCES "Product"(id),
+    PRIMARY KEY (wishlist_id, product_id)
+);
+
+-- Bảng DiscountCodeUses
+CREATE TABLE "DiscountCodeUses" (
+    discount_code_id UUID REFERENCES "DiscountCode"(id),
+    order_id UUID REFERENCES "Order"(id),
+    used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (discount_code_id, order_id)
+);
+
+-- Bảng OrderStatusHistory
+CREATE TABLE "OrderStatusHistory" (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id UUID REFERENCES "Order"(id) NOT NULL,
+    old_status VARCHAR(20),
+    new_status VARCHAR(20),
+    changed_by UUID REFERENCES "User"(id),
+    notes TEXT,
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Bảng ExternalIdentity
+CREATE TABLE "ExternalIdentity" (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES "User"(id) NOT NULL,
+    provider VARCHAR(50) NOT NULL,
+    external_id VARCHAR(255) NOT NULL,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(provider, external_id)
+);
+
+-- Bảng Feedback
+CREATE TABLE "Feedback" (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES "User"(id) NOT NULL,
+    subject VARCHAR(200) NOT NULL,
+    content TEXT NOT NULL,
+    status VARCHAR(20) CHECK (status IN ('pending', 'in_progress', 'resolved')) DEFAULT 'pending',
+    admin_response TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- INDEXES
 
 -- Bảng Order
@@ -217,9 +339,12 @@ CREATE INDEX idx_order_created_at ON "Order" (created_at);
 
 -- Bảng Product
 CREATE INDEX idx_product_category ON "Product" (category_id);
+CREATE INDEX idx_product_brand ON "Product" (brand_id);
 CREATE INDEX idx_product_price ON "Product" (price);
 CREATE INDEX idx_product_stock ON "Product" (stock_quantity);
+CREATE INDEX idx_product_sku ON "Product" (sku);
 CREATE INDEX idx_product_category_price ON "Product" (category_id, price);
+CREATE INDEX idx_product_attributes ON "Product" USING GIN (attributes);
 
 -- Bảng Address
 CREATE INDEX idx_address_user ON "Address" (user_id);
@@ -278,6 +403,50 @@ CREATE INDEX idx_promotion_dates ON "Promotion" (start_date, end_date);
 CREATE INDEX idx_userrole_composite ON "UserRole" (user_id, role_id);
 CREATE INDEX idx_userrole_user ON "UserRole" (user_id);
 CREATE INDEX idx_userrole_role ON "UserRole" (role_id);
+
+-- Bảng Brand
+CREATE INDEX idx_brand_name ON "Brand" (name);
+CREATE INDEX idx_brand_active ON "Brand" (is_active);
+
+-- Bảng Collection
+CREATE INDEX idx_collection_name ON "Collection" (name);
+
+-- Bảng CollectionProduct
+CREATE INDEX idx_collectionproduct_collection ON "CollectionProduct" (collection_id);
+CREATE INDEX idx_collectionproduct_product ON "CollectionProduct" (product_id);
+
+-- Bảng ProductImage
+CREATE INDEX idx_productimage_product ON "ProductImage" (product_id);
+CREATE INDEX idx_productimage_primary ON "ProductImage" (product_id, is_primary);
+
+-- Bảng Favourite
+CREATE INDEX idx_favourite_user ON "Favourite" (user_id);
+CREATE INDEX idx_favourite_product ON "Favourite" (product_id);
+CREATE INDEX idx_favourite_user_product ON "Favourite" (user_id, product_id);
+
+-- Bảng WishlistItem
+CREATE INDEX idx_wishlistitem_wishlist ON "WishlistItem" (wishlist_id);
+CREATE INDEX idx_wishlistitem_product ON "WishlistItem" (product_id);
+
+-- Bảng DiscountCodeUses
+CREATE INDEX idx_discountcodeuses_code ON "DiscountCodeUses" (discount_code_id);
+CREATE INDEX idx_discountcodeuses_order ON "DiscountCodeUses" (order_id);
+CREATE INDEX idx_discountcodeuses_used_at ON "DiscountCodeUses" (used_at);
+
+-- Bảng OrderStatusHistory
+CREATE INDEX idx_orderstatushistory_order ON "OrderStatusHistory" (order_id);
+CREATE INDEX idx_orderstatushistory_changed_by ON "OrderStatusHistory" (changed_by);
+CREATE INDEX idx_orderstatushistory_changed_at ON "OrderStatusHistory" (changed_at);
+
+-- Bảng ExternalIdentity
+CREATE INDEX idx_externalidentity_user ON "ExternalIdentity" (user_id);
+CREATE INDEX idx_externalidentity_provider ON "ExternalIdentity" (provider);
+CREATE INDEX idx_externalidentity_external_id ON "ExternalIdentity" (external_id);
+
+-- Bảng Feedback
+CREATE INDEX idx_feedback_user ON "Feedback" (user_id);
+CREATE INDEX idx_feedback_status ON "Feedback" (status);
+CREATE INDEX idx_feedback_created_at ON "Feedback" (created_at);
 
 -- Comments cho bảng PaymentMethod
 COMMENT ON TABLE "PaymentMethod" IS 'Bảng master quản lý các phương thức thanh toán';
