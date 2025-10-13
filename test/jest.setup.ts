@@ -1,3 +1,9 @@
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+// Load environment variables from .env.development for all Jest tests
+dotenv.config({ path: path.resolve(process.cwd(), '.env.development') });
+
 import { Logger } from '@nestjs/common';
 
 // ANSI color codes for terminal output
@@ -69,10 +75,10 @@ const createCustomLogger = () => ({
   error: (message: string, trace?: string, context?: string) => {
     // Filter out expected test errors
     if (message.includes('Failed to get sessions') ||
-        message.includes('Failed to revoke session') ||
-        message.includes('Authentication failed') ||
-        message.includes('Session not found') ||
-        message.includes('User not found')) {
+      message.includes('Failed to revoke session') ||
+      message.includes('Authentication failed') ||
+      message.includes('Session not found') ||
+      message.includes('User not found')) {
       if (!isDebugMode) return; // Suppress in normal test mode
     }
     originalConsoleError(colorize('red', `[${context || 'ERROR'}]`), message);
