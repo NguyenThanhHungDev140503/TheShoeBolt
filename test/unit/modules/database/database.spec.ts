@@ -1,9 +1,6 @@
 import { DataSource } from 'typeorm';
 import { databaseConfig } from '@/config/database.config';
-import * as dotenv from 'dotenv';
 
-// Load environment variables từ .env.development
-dotenv.config({ path: '.env.development' });
 
 describe('Database Connection Tests', () => {
   let dataSource: DataSource;
