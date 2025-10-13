@@ -3,6 +3,7 @@ import { DatabaseConfig } from './env.types';
 
 export const databaseConfig = registerAs('database', (): DatabaseConfig => ({
   type: 'postgres',
+  url: process.env.DATABASE_URL!,
   host: process.env.DB_HOST!,
   port: parseInt(process.env.DB_PORT!, 10),
   username: process.env.DB_USERNAME!,

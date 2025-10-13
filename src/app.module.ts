@@ -8,7 +8,7 @@ import * as winston from 'winston';
 import { redisStore } from 'cache-manager-redis-yet';
 import { APP_GUARD } from '@nestjs/core';
 
-import { DatabaseModule } from './database/database.module';
+import { DatabaseModule } from '@/modules/database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { PaymentsModule } from './modules/payments/payments.module';
@@ -21,8 +21,8 @@ import { ClerkModule } from './modules/Infrastructure/clerk/clerk.module';
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
 
 // Interface imports for Dependency Inversion
-import { IAuthenticationService } from './modules/auth/interfaces/i-authentication-service.interface';
-import { IAuthGuard } from './modules/auth/interfaces/i-auth-guard.interface';
+import { IAuthenticationService } from '@/modules/auth/interfaces';
+import { IAuthGuard } from '@/modules/auth/interfaces';
 import { ClerkSessionService } from './modules/Infrastructure/clerk/clerk.session.service';
 import { ClerkAuthGuard } from './modules/Infrastructure/clerk/guards/clerk-auth.guard';
 
