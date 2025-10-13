@@ -1,5 +1,9 @@
 {
-  "moduleFileExtensions": ["js", "json", "ts"],
+  "moduleFileExtensions": [
+    "js",
+    "json",
+    "ts"
+  ],
   "rootDir": "../",
   "testEnvironment": "node",
   "testRegex": "test/unit/.*\\.spec\\.ts$",
@@ -7,9 +11,12 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "moduleNameMapper": {
+    "@/(.*)": "<rootDir>/src/$1",
     "^src/(.*)$": "<rootDir>/src/$1"
   },
-  "setupFilesAfterEnv": ["<rootDir>/test/jest.setup.ts"],
+  "setupFilesAfterEnv": [
+    "<rootDir>/test/jest.setup.ts"
+  ],
   "displayName": {
     "name": "🔬 Unit Tests",
     "color": "blue"
@@ -20,11 +27,14 @@
     "<rootDir>/test/reporters/enhanced-reporter.js",
     "<rootDir>/test/reporters/progress-reporter.js",
     "<rootDir>/test/reporters/coverage-reporter.js",
-    ["jest-junit", {
-      "outputDirectory": "./coverage",
-      "outputName": "unit-test-results.xml",
-      "suiteName": "Unit Tests"
-    }]
+    [
+      "jest-junit",
+      {
+        "outputDirectory": "./coverage",
+        "outputName": "unit-test-results.xml",
+        "suiteName": "Unit Tests"
+      }
+    ]
   ],
   "collectCoverageFrom": [
     "src/**/*.ts",
@@ -33,5 +43,9 @@
     "!src/main.ts"
   ],
   "coverageDirectory": "./coverage/unit",
-  "coverageReporters": ["text", "lcov", "html"]
+  "coverageReporters": [
+    "text",
+    "lcov",
+    "html"
+  ]
 }

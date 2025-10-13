@@ -12,6 +12,7 @@ export type LogLevel = 'error' | 'warn' | 'info' | 'debug' | 'verbose';
  */
 export interface DatabaseConfig {
   type: 'postgres';
+  url: string;
   host: string;
   port: number;
   username: string;
@@ -180,6 +181,7 @@ export const ENV_KEYS = {
   CORS_ORIGIN: 'CORS_ORIGIN',
 
   // Database
+  DATABASE_URL: 'DATABASE_URL',
   DB_HOST: 'DB_HOST',
   DB_PORT: 'DB_PORT',
   DB_USERNAME: 'DB_USERNAME',
