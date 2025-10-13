@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ENV_KEYS } from './env.constants';
 import {
     AppConfig,
-
     RedisConfig,
     ElasticsearchConfig,
     MongodbConfig,
@@ -17,9 +17,10 @@ import {
     HealthCheckConfig,
     NodeEnvironment,
     LogLevel,
-    ENV_KEYS,
+
     ENV_DEFAULTS,
 } from './env.types';
+import { databaseConfig } from '@/config/database.config';
 
 /**
  * Environment Configuration Service
@@ -229,9 +230,10 @@ export class EnvConfigService {
         return {
             port: this.port,
             nodeEnv: this.nodeEnv,
-
+            database: databaseConfig,
             redis: this.redis,
             elasticsearch: this.elasticsearch,
+
             mongodb: this.mongodb,
             clerk: this.clerk,
             email: this.email,
@@ -251,8 +253,18 @@ export class EnvConfigService {
      * Validate that all required environment variables are present
      */
     validateRequiredEnvVars(): void {
-        const requiredVars = [
 
+        const requiredVars = [
+            ENV_KEYS.DB_HOST,
+            ENV_KEYS.DB_PORT,
+            ENV_KEYS.DB_USERNAME,
+            ENV_KEYS.DB_PASSWORD,
+            ENV_KEYS.DB_NAME,
+            ENV_KEYS.DB_HOST,
+            ENV_KEYS.DB_PORT,
+            ENV_KEYS.DB_USERNAME,
+            ENV_KEYS.DB_PASSWORD,
+            ENV_KEYS.DB_NAME,
             ENV_KEYS.REDIS_HOST,
             ENV_KEYS.REDIS_PORT,
             ENV_KEYS.ES_NODE,

@@ -2,6 +2,9 @@
  * Environment Configuration Types
  * Provides type-safe access to environment variables throughout the application
  */
+import { databaseConfig } from "@/config/database.config";
+import { ENV_KEYS } from './env.constants';
+
 
 export type NodeEnvironment = 'development' | 'production' | 'test' | 'staging';
 
@@ -149,7 +152,7 @@ export interface HealthCheckConfig {
 export interface AppConfig {
   port: number;
   nodeEnv: NodeEnvironment;
-  database: DatabaseConfig;
+  database: typeof databaseConfig;
   redis: RedisConfig;
   elasticsearch: ElasticsearchConfig;
   mongodb: MongodbConfig;
@@ -169,74 +172,6 @@ export interface AppConfig {
     secret: string;
   };
 }
-
-/**
- * Environment Variable Keys
- * Used for type-safe access to process.env
- */
-export const ENV_KEYS = {
-  // Application
-  PORT: 'PORT',
-  NODE_ENV: 'NODE_ENV',
-  CORS_ORIGIN: 'CORS_ORIGIN',
-
-  // Redis
-  REDIS_HOST: 'REDIS_HOST',
-  REDIS_PORT: 'REDIS_PORT',
-  REDIS_PASSWORD: 'REDIS_PASSWORD',
-
-  // Elasticsearch
-  ES_NODE: 'ES_NODE',
-
-  // MongoDB
-  MONGODB_URI: 'MONGODB_URI',
-
-  // Clerk
-  CLERK_SECRET_KEY: 'CLERK_SECRET_KEY',
-  CLERK_PUBLISHABLE_KEY: 'CLERK_PUBLISHABLE_KEY',
-  CLERK_WEBHOOK_SECRET: 'CLERK_WEBHOOK_SECRET',
-
-  // Email
-  EMAIL_HOST: 'EMAIL_HOST',
-  EMAIL_PORT: 'EMAIL_PORT',
-  EMAIL_AUTH_USER: 'EMAIL_AUTH_USER',
-  EMAIL_AUTH_PASSWORD: 'EMAIL_AUTH_PASSWORD',
-  EMAIL_FROM: 'EMAIL_FROM',
-
-  // Stripe
-  STRIPE_SECRET_KEY: 'STRIPE_SECRET_KEY',
-  STRIPE_PUBLISHABLE_KEY: 'STRIPE_PUBLISHABLE_KEY',
-  STRIPE_WEBHOOK_SECRET: 'STRIPE_WEBHOOK_SECRET',
-
-  // AWS
-  AWS_ACCESS_KEY_ID: 'AWS_ACCESS_KEY_ID',
-  AWS_SECRET_ACCESS_KEY: 'AWS_SECRET_ACCESS_KEY',
-  AWS_REGION: 'AWS_REGION',
-  AWS_S3_BUCKET: 'AWS_S3_BUCKET',
-
-  // Rate Limiting
-  THROTTLE_TTL: 'THROTTLE_TTL',
-  THROTTLE_LIMIT: 'THROTTLE_LIMIT',
-
-  // Cache
-  CACHE_TTL: 'CACHE_TTL',
-
-  // Logging
-  LOG_LEVEL: 'LOG_LEVEL',
-  LOG_TO_FILE: 'LOG_TO_FILE',
-
-  // Security
-  ENABLE_HELMET: 'ENABLE_HELMET',
-  ENABLE_COMPRESSION: 'ENABLE_COMPRESSION',
-
-  // Health Check
-  HEALTH_CHECK_TIMEOUT: 'HEALTH_CHECK_TIMEOUT',
-
-  // Optional
-  RABBITMQ_URL: 'RABBITMQ_URL',
-  JWT_SECRET: 'JWT_SECRET',
-} as const;
-
 /**
  * Type for environment variable keys
  */

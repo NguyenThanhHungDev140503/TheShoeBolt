@@ -233,7 +233,7 @@ export function validateEnvironment(config: Record<string, unknown>): Environmen
     enableImplicitConversion: true,
   });
 
-  const errors = validateSync(validatedConfig, {
+  const errors = validateSync(validatedConfig, { // Kiểm tra xem  xem đối tượng validatedConfig có tuân thủ các quy tắc được định nghĩa trong class EnvironmentVariables hay không.
     skipMissingProperties: false,
     whitelist: true,
     forbidNonWhitelisted: true,
