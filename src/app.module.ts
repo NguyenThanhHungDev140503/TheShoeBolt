@@ -40,7 +40,7 @@ import { ShippingModule } from './modules/shipping/shipping.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env.local', '.env'],
+      envFilePath: [`.env.${process.env.NODE_ENV}`],
       load: [databaseConfig, redisConfig, elasticsearchConfig, mongodbConfig],
       validate: validateEnvironment,
       validationOptions: {
