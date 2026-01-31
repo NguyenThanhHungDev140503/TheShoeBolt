@@ -51,6 +51,16 @@ A robust, production-ready backend system built with NestJS, featuring PostgreSQ
    
    Update the `.env` file with your configuration.
 
+   **Hotel research environment (alternative)**
+   ```bash
+   cp .env.hotel-research .env
+   ```
+
+   Or run with:
+   ```bash
+   NODE_ENV=hotel-research npm run start:dev
+   ```
+
 ## 🐳 Docker Development
 
 1. **Start services with Docker Compose**
