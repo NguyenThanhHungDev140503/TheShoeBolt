@@ -24,11 +24,18 @@ import { redisConfig } from './config/redis.config';
 import { elasticsearchConfig } from './config/elasticsearch.config';
 import { mongodbConfig } from './config/mongodb.config';
 
+const nodeEnv = process.env.NODE_ENV;
+const envFilePaths = [
+  nodeEnv ? `.env.${nodeEnv}` : undefined,
+  '.env.local',
+  '.env',
+].filter(Boolean) as string[];
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env.local', '.env'],
+      envFilePath: envFilePaths,
       load: [databaseConfig, redisConfig, elasticsearchConfig, mongodbConfig],
     }),
     
